@@ -32,3 +32,6 @@ Copernicus.txt
 .vscode/
 .DS_Store
 Thumbs.db
+
+stitch_extracted/
+

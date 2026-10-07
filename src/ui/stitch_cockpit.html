@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>VeriCBAM Cockpit - EU Regulation 2023/956 Emissions Verification Engine</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "secondary-fixed-dim": "#4edea3",
+            "primary-fixed": "#c4e7ff",
+            "on-error-container": "#ffdad6",
+            "surface": "#0f131c",
+            "on-tertiary-container": "#2b29bb",
+            "tertiary-container": "#a7a9ff",
+            "on-surface": "#dfe2ee",
+            "error": "#ffb4ab",
+            "tertiary": "#c7c8ff",
+            "surface-container-highest": "#31353e",
+            "on-primary-fixed": "#001e2c",
+            "outline": "#87929a",
+            "on-surface-variant": "#bdc8d1",
+            "background": "#0f131c",
+            "secondary-container": "#00a572",
+            "surface-tint": "#7bd0ff",
+            "on-background": "#dfe2ee",
+            "surface-dim": "#0f131c",
+            "surface-container": "#1c2028",
+            "on-tertiary-fixed-variant": "#2f2ebe",
+            "on-tertiary-fixed": "#07006c",
+            "secondary-fixed": "#6ffbbe",
+            "on-primary-fixed-variant": "#004c69",
+            "on-secondary-container": "#00311f",
+            "tertiary-fixed": "#e1e0ff",
+            "outline-variant": "#3e484f",
+            "surface-container-high": "#262a33",
+            "on-primary": "#00354a",
+            "inverse-on-surface": "#2c3039",
+            "inverse-surface": "#dfe2ee",
+            "on-tertiary": "#1000a9",
+            "surface-container-lowest": "#0a0e16",
+            "inverse-primary": "#00668a",
+            "primary-fixed-dim": "#7bd0ff",
+            "on-secondary-fixed-variant": "#005236",
+            "surface-bright": "#353942",
+            "on-error": "#690005",
+            "on-secondary-fixed": "#002113",
+            "secondary": "#4edea3",
+            "tertiary-fixed-dim": "#c0c1ff",
+            "primary-container": "#38bdf8",
+            "error-container": "#93000a",
+            "on-secondary": "#003824",
+            "surface-variant": "#31353e",
+            "primary": "#8ed5ff",
+            "on-primary-container": "#004965",
+            "surface-container-low": "#181c24"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "margin-lg": "2rem",
+            "gutter": "1rem",
+            "space-xl": "2rem",
+            "space-sm": "0.5rem",
+            "space-md": "1rem",
+            "gutter-lg": "1.5rem",
+            "space-xs": "0.25rem",
+            "margin": "1.5rem",
+            "space-lg": "1.5rem"
+          },
+          "fontFamily": {
+            "label-md": ["JetBrains Mono"],
+            "telemetry-unit": ["JetBrains Mono"],
+            "headline-sm": ["Inter"],
+            "headline-xl-mobile": ["Inter"],
+            "label-sm": ["JetBrains Mono"],
+            "label-lg": ["JetBrains Mono"],
+            "headline-md": ["Inter"],
+            "body-md": ["Inter"],
+            "body-sm": ["Inter"],
+            "telemetry-metric": ["JetBrains Mono"],
+            "headline-xl": ["Inter"],
+            "headline-lg": ["Inter"],
+            "body-lg": ["Inter"]
+          },
+          "fontSize": {
+            "label-md": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+            "telemetry-unit": ["11px", { "lineHeight": "14px", "fontWeight": "400" }],
+            "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+            "headline-xl-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "700" }],
+            "label-sm": ["11px", { "lineHeight": "14px", "fontWeight": "400" }],
+            "label-lg": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+            "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }],
+            "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+            "telemetry-metric": ["24px", { "lineHeight": "28px", "fontWeight": "700" }],
+            "headline-xl": ["36px", { "lineHeight": "44px", "fontWeight": "700" }],
+            "headline-lg": ["28px", { "lineHeight": "36px", "fontWeight": "600" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+      font-size: 18px;
+      line-height: 1;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #0a0e16;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #3e484f;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #87929a;
+    }
+  </style>
+</head>
+<body class="bg-surface-container-lowest text-on-surface antialiased font-body-md flex h-screen overflow-hidden">
+<!-- SHARED COMPONENT: SideNavBar (Anchored from JSON) -->
+<aside class="flex flex-col justify-between h-full w-[280px] p-space-md border-r border-outline-variant bg-surface-container-lowest shrink-0 select-none z-30">
+<div class="flex flex-col gap-space-md">
+<!-- SideNav Header Brand -->
+<div class="flex items-center gap-space-sm pb-space-sm border-b border-outline-variant">
+<div class="w-8 h-8 rounded bg-primary-container text-on-primary-container flex items-center justify-center font-bold font-label-md">
+<span class="material-symbols-outlined" data-icon="verified_user">verified_user</span>
+</div>
+<div class="flex flex-col">
+<span class="text-label-lg font-label-lg font-bold text-primary tracking-widest uppercase">VeriCBAM Cockpit</span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">ETS/CBAM REG 2023/956</span>
+</div>
+</div>
+<!-- Audit Active CTA Button -->
+<button class="w-full flex items-center justify-center gap-space-xs py-space-sm px-space-md bg-primary-container text-on-primary-container font-label-md text-label-md uppercase tracking-wider font-semibold hover:bg-primary transition-colors duration-150">
+<span class="material-symbols-outlined text-[16px]" data-icon="policy">policy</span>
+        Audit Active Range
+      </button>
+<!-- Nav Items (JSON labels: Cockpit Overview, Geospatial Plumes, Facility Ledger, Stoichiometric Bounds, Triage Queue, Regulatory Vault) -->
+<nav class="flex flex-col gap-space-xs mt-space-xs">
+<a class="flex items-center gap-space-sm px-space-md py-space-sm bg-surface-container text-primary border-l-2 border-primary font-label-md text-label-md transition-colors duration-150" href="#cockpit">
+<span class="material-symbols-outlined text-primary" data-icon="dashboard">dashboard</span>
+<span>Cockpit Overview</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-md py-space-sm text-on-surface-variant font-label-md text-label-md hover:bg-surface-container hover:text-on-surface transition-colors duration-150" href="#geospatial">
+<span class="material-symbols-outlined" data-icon="satellite_alt">satellite_alt</span>
+<span>Geospatial Plumes</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-md py-space-sm text-on-surface-variant font-label-md text-label-md hover:bg-surface-container hover:text-on-surface transition-colors duration-150" href="#ledger">
+<span class="material-symbols-outlined" data-icon="factory">factory</span>
+<span>Facility Ledger</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-md py-space-sm text-on-surface-variant font-label-md text-label-md hover:bg-surface-container hover:text-on-surface transition-colors duration-150" href="#stoichiometric">
+<span class="material-symbols-outlined" data-icon="balance">balance</span>
+<span>Stoichiometric Bounds</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-md py-space-sm text-on-surface-variant font-label-md text-label-md hover:bg-surface-container hover:text-on-surface transition-colors duration-150" href="#triage">
+<span class="material-symbols-outlined" data-icon="gavel">gavel</span>
+<span>Triage Queue</span>
+<span class="ml-auto px-1.5 py-0.5 text-[10px] bg-error-container text-on-error-container font-label-sm">42</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-md py-space-sm text-on-surface-variant font-label-md text-label-md hover:bg-surface-container hover:text-on-surface transition-colors duration-150" href="#vault">
+<span class="material-symbols-outlined" data-icon="verified_user">verified_user</span>
+<span>Regulatory Vault</span>
+</a>
+</nav>
+</div>
+<!-- SideNav Footer -->
+<div class="flex flex-col gap-space-xs pt-space-sm border-t border-outline-variant">
+<div class="px-space-md py-space-xs text-label-sm font-label-sm text-outline uppercase tracking-wider">Accredited Body</div>
+<div class="flex items-center gap-space-xs px-space-md py-space-xs text-on-surface-variant text-label-sm font-label-sm">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span>DAkkS-DE-VER-8902</span>
+</div>
+<a class="flex items-center gap-space-sm px-space-md py-space-xs text-on-surface-variant font-label-md text-label-md hover:bg-surface-container hover:text-on-surface transition-colors duration-150" href="#docs">
+<span class="material-symbols-outlined" data-icon="menu_book">menu_book</span>
+<span>Documentation</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-md py-space-xs text-on-surface-variant font-label-md text-label-md hover:bg-surface-container hover:text-on-surface transition-colors duration-150" href="#telemetry">
+<span class="material-symbols-outlined" data-icon="tune">tune</span>
+<span>System Telemetry</span>
+</a>
+</div>
+</aside>
+<!-- MAIN CANVAS -->
+<div class="flex flex-col flex-1 h-full min-w-0 overflow-hidden bg-background">
+<!-- SHARED COMPONENT: TopNavBar (Anchored from JSON) -->
+<header class="flex justify-between items-center w-full px-margin-lg h-16 border-b border-outline-variant bg-surface-container-lowest shrink-0 z-20">
+<!-- Search Facility & Regulatory Context -->
+<div class="flex items-center gap-space-md">
+<div class="relative flex items-center w-72">
+<span class="material-symbols-outlined absolute left-2.5 text-outline" data-icon="search">search</span>
+<input class="w-full pl-9 pr-3 py-1.5 bg-surface text-on-surface font-label-md text-label-md border border-outline-variant focus:outline-none focus:border-primary-container" placeholder="Search Plant ID / CN / HS Code..." type="text" value="HS 2523.29 (Grey Clinker)"/>
+</div>
+<!-- Reporting Period Selector -->
+<div class="flex items-center gap-space-xs px-2.5 py-1.5 bg-surface border border-outline-variant text-label-md font-label-md text-on-surface">
+<span class="material-symbols-outlined text-outline" data-icon="calendar_month">calendar_month</span>
+<span class="text-on-surface-variant">Period:</span>
+<span class="text-primary font-semibold">Q4 2024 / Transitional Phase</span>
+<span class="material-symbols-outlined text-outline text-[14px]" data-icon="expand_more">expand_more</span>
+</div>
+<!-- Telemetry Feeds Indicators -->
+<div class="hidden xl:flex items-center gap-space-md pl-space-sm border-l border-outline-variant">
+<div class="flex items-center gap-space-xs text-label-sm font-label-sm">
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+<span class="text-on-surface-variant">Sentinel-5P Feed:</span>
+<span class="text-secondary font-semibold">LIVE</span>
+</div>
+<div class="flex items-center gap-space-xs text-label-sm font-label-sm">
+<span class="w-2 h-2 bg-primary"></span>
+<span class="text-on-surface-variant">Stoichiometric:</span>
+<span class="text-primary font-semibold">v4.2 Bound Active</span>
+</div>
+</div>
+</div>
+<!-- Trailing Action Buttons & Verifier Profile -->
+<div class="flex items-center gap-space-sm">
+<button class="flex items-center gap-space-xs px-3 py-1.5 border border-outline-variant text-on-surface font-label-md text-label-md hover:bg-surface-container transition-colors duration-150">
+<span class="material-symbols-outlined text-[16px]" data-icon="restart_alt">restart_alt</span>
+<span>Run Mass-Balance</span>
+</button>
+<button class="flex items-center gap-space-xs px-3 py-1.5 bg-primary-container text-on-primary-container font-label-md text-label-md font-semibold hover:bg-primary transition-colors duration-150">
+<span class="material-symbols-outlined text-[16px]" data-icon="download">download</span>
+<span>Export Dossier (PDF/MD)</span>
+</button>
+<!-- System Trailing Icon Actions -->
+<div class="flex items-center border-l border-outline-variant pl-space-sm gap-1">
+<button class="p-1.5 text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors" title="Notifications">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-1.5 text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors" title="Regulatory Guidance">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+</button>
+<button class="p-1.5 text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors" title="Settings">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+</div>
+<!-- Lead Verifier Profile Pill -->
+<div class="flex items-center gap-space-xs px-2.5 py-1 bg-surface-container border border-outline-variant ml-space-xs">
+<div class="w-6 h-6 rounded bg-primary text-on-primary flex items-center justify-center text-[10px] font-bold font-label-md">
+            AL
+          </div>
+<div class="flex flex-col text-left leading-tight">
+<span class="text-[11px] font-semibold text-on-surface">Dr. A. Lindqvist</span>
+<span class="text-[9px] font-label-sm text-outline uppercase tracking-tight">Accredited Lead Verifier, DAkkS</span>
+</div>
+</div>
+</div>
+</header>
+<!-- WORKSPACE SCROLL CANVAS -->
+<main class="flex-1 overflow-y-auto custom-scrollbar p-margin-lg space-y-space-lg">
+<!-- SECTION 1: TOP REGULATORY METRICS HEADER (4 Bento KPI Cards) -->
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter-lg">
+<!-- KPI 1 -->
+<div class="bg-surface-container-low border border-outline-variant p-space-md relative flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Audited Declarations</span>
+<span class="text-telemetry-unit font-telemetry-unit text-primary">CONF: 99.8%</span>
+</div>
+<div class="my-space-sm flex items-baseline gap-space-xs">
+<span class="text-telemetry-metric font-telemetry-metric text-on-surface">326</span>
+<span class="text-telemetry-unit font-telemetry-unit text-outline">/ 368 TOTAL</span>
+</div>
+<div class="space-y-1">
+<div class="w-full bg-surface-container-highest h-1.5 rounded-none overflow-hidden">
+<div class="bg-primary h-full" style="width: 88.6%;"></div>
+</div>
+<div class="flex justify-between items-center text-label-sm font-label-sm text-on-surface-variant">
+<span>+18 pending registry cross-check</span>
+<span class="text-primary font-semibold">89% Coverage</span>
+</div>
+</div>
+</div>
+<!-- KPI 2 -->
+<div class="bg-surface-container-low border border-outline-variant p-space-md relative flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Stoichiometric Violations</span>
+<span class="px-1.5 py-0.5 border border-error text-error text-[10px] font-label-sm flex items-center gap-1">
+<span class="w-1.5 h-1.5 bg-error"></span> 9.2% Rate
+            </span>
+</div>
+<div class="my-space-sm flex items-baseline gap-space-xs">
+<span class="text-telemetry-metric font-telemetry-metric text-error">30</span>
+<span class="text-telemetry-unit font-telemetry-unit text-on-surface-variant">FLAGGED IMPORTS</span>
+</div>
+<div class="flex items-center gap-space-xs text-label-sm font-label-sm text-error">
+<span class="material-symbols-outlined text-[14px]" data-icon="warning">warning</span>
+<span>14 exceed thermodynamic threshold</span>
+</div>
+</div>
+<!-- KPI 3 -->
+<div class="bg-surface-container-low border border-outline-variant p-space-md relative flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Mean Satellite Plume Contrast</span>
+<span class="px-1.5 py-0.5 border border-secondary text-secondary text-[10px] font-label-sm flex items-center gap-1">
+              +0.18σ vs cycle
+            </span>
+</div>
+<div class="my-space-sm flex items-baseline gap-space-xs">
+<span class="text-telemetry-metric font-telemetry-metric text-on-surface">+1.42 σ</span>
+<span class="text-telemetry-unit font-telemetry-unit text-outline">TROPOSPHERIC NO2</span>
+</div>
+<div class="text-label-sm font-label-sm text-on-surface-variant truncate">
+            Sentinel-5P TROPOMI column density corroboration
+          </div>
+</div>
+<!-- KPI 4 -->
+<div class="bg-surface-container-low border border-outline-variant p-space-md relative flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Avg Expected Calibration Error</span>
+<span class="text-telemetry-unit font-telemetry-unit text-secondary">σ: +0.02</span>
+</div>
+<div class="my-space-sm flex items-baseline gap-space-xs">
+<span class="text-telemetry-metric font-telemetry-metric text-secondary">0.11</span>
+<span class="text-telemetry-unit font-telemetry-unit text-outline">&lt; 0.15 TARGET</span>
+</div>
+<div class="flex items-center gap-space-xs text-label-sm font-label-sm text-secondary">
+<span class="material-symbols-outlined text-[14px]" data-icon="check_circle">check_circle</span>
+<span>Optimal convergence (Bayesian posterior)</span>
+</div>
+</div>
+</section>
+<!-- SECTION 2: CENTRAL SPLIT VIEW (GIS Plume Telemetry & Chemical Mass-Balance Inspection) -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-gutter-lg">
+<!-- LEFT PANEL: Interactive GIS Satellite Map (7 Columns) -->
+<div class="lg:col-span-7 bg-surface-container-low border border-outline-variant flex flex-col overflow-hidden">
+<!-- Map Header & Layer Toggles -->
+<div class="p-space-md border-b border-outline-variant flex flex-wrap items-center justify-between gap-space-sm bg-surface-container-lowest">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary" data-icon="satellite_alt">satellite_alt</span>
+<h2 class="text-headline-sm font-headline-sm text-on-surface">Geospatial Sentinel-5P NO2 Plume Telemetry</h2>
+</div>
+<!-- Layer Pills -->
+<div class="flex items-center gap-1 text-label-sm font-label-sm">
+<button class="px-2 py-0.5 border border-primary bg-primary/10 text-primary">TROPOMI NO2</button>
+<button class="px-2 py-0.5 border border-outline-variant text-on-surface-variant hover:text-on-surface">CO2 Anomaly</button>
+<button class="px-2 py-0.5 border border-outline-variant text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]" data-icon="air">air</span> 14 km/h WNW
+              </button>
+<button class="px-2 py-0.5 border border-primary-container text-primary-container">15km</button>
+<button class="px-2 py-0.5 border border-outline-variant text-on-surface-variant">30km</button>
+</div>
+</div>
+<!-- Interactive GIS Map Canvas Container -->
+<div class="relative h-[480px] w-full bg-[#070a0f] overflow-hidden flex items-center justify-center select-none">
+<!-- Simulated GIS Vector Grid and Coastline Background -->
+<svg class="absolute inset-0 w-full h-full opacity-40" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<pattern height="40" id="grid-pattern" patternunits="userSpaceOnUse" width="40">
+<path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1c2533" stroke-width="0.8"></path>
+</pattern>
+<!-- Plume Dispersion Gradient -->
+<radialgradient cx="48%" cy="50%" id="plume-emission-gradient" r="55%">
+<stop offset="0%" stop-color="#ef4444" stop-opacity="0.95"></stop>
+<stop offset="25%" stop-color="#f59e0b" stop-opacity="0.75"></stop>
+<stop offset="60%" stop-color="#38bdf8" stop-opacity="0.4"></stop>
+<stop offset="100%" stop-color="#38bdf8" stop-opacity="0"></stop>
+</radialgradient>
+</defs>
+<rect fill="url(#grid-pattern)" height="100%" width="100%"></rect>
+<!-- Subtle Vector Geographic Reference Shapes: Central European Basin & Rhine Tributaries -->
+<path d="M 50 180 Q 150 120 280 200 T 450 190 T 680 140 T 900 230" fill="none" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="1.5"></path>
+<path d="M 120 40 Q 220 180 320 280 T 460 360 T 580 480" fill="none" stroke="#1e293b" stroke-width="1.2"></path>
+<path d="M 380 0 L 380 480" stroke="#111827" stroke-width="1"></path>
+<path d="M 0 250 L 900 250" stroke="#111827" stroke-width="1"></path>
+</svg>
+<!-- Plume Dispersion Polygon (Simulated Wind: WNW spreading southeast) -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+<!-- Downwind dispersion plume from Geseke stack coords ~ (360, 240) -->
+<path d="M 360 240 Q 440 210 560 270 Q 640 310 580 380 Q 470 360 390 280 Z" fill="url(#plume-emission-gradient)" filter="blur(8px)"></path>
+<!-- 30km Buffer Ring (outer dash, subtle indigo) -->
+<circle cx="360" cy="240" fill="none" opacity="0.6" r="160" stroke="#6366f1" stroke-dasharray="6,4" stroke-width="1.2"></circle>
+<text fill="#a7a9ff" font-family="JetBrains Mono" font-size="10" letter-spacing="1" x="365" y="95">BUFFER: 30 KM RADIAL</text>
+<!-- 15km Buffer Ring (inner dash, cyan glow) -->
+<circle cx="360" cy="240" fill="none" opacity="0.8" r="85" stroke="#38bdf8" stroke-dasharray="4,3" stroke-width="1.5"></circle>
+<text fill="#38bdf8" font-family="JetBrains Mono" font-size="10" letter-spacing="1" x="365" y="170">BUFFER: 15 KM STACK PROXIMITY</text>
+<!-- Wind Vector Indicator Arrow -->
+<line marker-end="url(#arrow)" stroke="#f8fafc" stroke-dasharray="2,2" stroke-width="1.5" x1="360" x2="480" y1="240" y2="295"></line>
+</svg>
+<!-- Map Markers & Plant Pins -->
+<!-- Active Target: Heidelberg Materials - Geseke -->
+<div class="absolute left-[360px] top-[240px] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10">
+<div class="relative flex items-center justify-center">
+<span class="w-8 h-8 rounded-full bg-error/20 animate-ping absolute"></span>
+<span class="w-4 h-4 bg-error border-2 border-surface-container-lowest shadow-lg"></span>
+</div>
+<div class="mt-2 bg-surface-container border border-error p-2 shadow-2xl flex flex-col gap-0.5 text-left pointer-events-auto">
+<div class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 bg-error"></span>
+<span class="text-label-sm font-label-sm font-bold text-on-surface">Heidelberg Materials - Geseke Works</span>
+</div>
+<div class="text-[10px] font-label-sm text-outline">ID: DE-CEM-0491 | Lat 51.64° N, Lon 8.51° E</div>
+<div class="text-[10px] font-label-sm text-error font-semibold">TROPOMI Anomaly: +3.18σ (HIGH OVERRUN)</div>
+</div>
+</div>
+<!-- Neighboring Plant Pin: Thyssenkrupp Duisburg -->
+<div class="absolute left-[170px] top-[210px] -translate-x-1/2 -translate-y-1/2 flex items-center gap-1 text-[11px] font-label-sm text-on-surface-variant hover:text-on-surface cursor-pointer">
+<span class="w-2.5 h-2.5 bg-secondary border border-surface-container-lowest"></span>
+<span class="bg-surface/80 px-1 border border-outline-variant">Thyssenkrupp Duisburg (DE)</span>
+</div>
+<!-- Neighboring Plant Pin: Celsa Huta (East) -->
+<div class="absolute left-[700px] top-[280px] -translate-x-1/2 -translate-y-1/2 flex items-center gap-1 text-[11px] font-label-sm text-on-surface-variant hover:text-on-surface cursor-pointer">
+<span class="w-2.5 h-2.5 bg-secondary border border-surface-container-lowest"></span>
+<span class="bg-surface/80 px-1 border border-outline-variant">Ostrowiec EAF (PL)</span>
+</div>
+<!-- Neighboring Plant Pin: Voestalpine Linz (South) -->
+<div class="absolute left-[520px] top-[410px] -translate-x-1/2 -translate-y-1/2 flex items-center gap-1 text-[11px] font-label-sm text-on-surface-variant hover:text-on-surface cursor-pointer">
+<span class="w-2.5 h-2.5 bg-[#f59e0b] border border-surface-container-lowest"></span>
+<span class="bg-surface/80 px-1 border border-outline-variant">Voestalpine Linz (AT)</span>
+</div>
+<!-- Bottom Left GIS Telemetry Legend -->
+<div class="absolute bottom-3 left-3 bg-surface/90 border border-outline-variant p-2 backdrop-blur-sm z-10 text-[10px] font-label-sm flex flex-col gap-1">
+<div class="text-on-surface font-semibold uppercase tracking-wider">Tropospheric NO2 Column (μmol/m²)</div>
+<div class="flex items-center gap-1 mt-1">
+<span class="text-outline">0</span>
+<div class="w-32 h-2.5 bg-gradient-to-r from-[#00311f] via-[#38bdf8] via-[#f59e0b] to-[#ef4444]"></div>
+<span class="text-outline">180+</span>
+</div>
+<div class="flex items-center justify-between text-outline text-[9px] pt-1 border-t border-outline-variant/40">
+<span>Pass: 2024-11-20 11:42 UTC</span>
+<span>Orbit: 32091</span>
+</div>
+</div>
+<!-- Coordinate HUD Overlay -->
+<div class="absolute top-3 right-3 bg-surface/80 border border-outline-variant px-2 py-1 text-[10px] font-label-sm text-on-surface-variant">
+              CENTER: 51.642° N, 08.514° E | ALT: 7.2 km
+            </div>
+</div>
+<!-- GIS Metadata Footer -->
+<div class="p-space-sm border-t border-outline-variant bg-surface-container-lowest flex items-center justify-between text-label-sm font-label-sm text-on-surface-variant">
+<div class="flex items-center gap-space-md">
+<span>S5P Level 2 Tropospheric Nitrogen Dioxide Version 02.04.01</span>
+<span class="text-secondary">● Spatial Resolution: 5.5 x 3.5 km²</span>
+</div>
+<button class="text-primary hover:underline flex items-center gap-1">
+<span>Full GIS Inspector</span>
+<span class="material-symbols-outlined text-[14px]" data-icon="open_in_new">open_in_new</span>
+</button>
+</div>
+</div>
+<!-- RIGHT PANEL: Facility Deep-Dive & Chemical Mass-Balance (5 Columns) -->
+<div class="lg:col-span-5 bg-surface-container-low border border-outline-variant flex flex-col justify-between">
+<div>
+<!-- Facility Deep-Dive Header -->
+<div class="p-space-md border-b border-outline-variant bg-surface-container-lowest">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-outline uppercase tracking-wider">Facility Inspection Focus</span>
+<span class="px-2 py-0.5 border border-error text-error text-[11px] font-label-sm font-semibold uppercase">
+                  Article 35 Flagged
+                </span>
+</div>
+<h3 class="text-headline-sm font-headline-sm text-on-surface mt-1">Heidelberg Materials (Geseke Plant)</h3>
+<div class="flex items-center gap-space-sm text-label-sm font-label-sm text-on-surface-variant mt-1">
+<span>HS Code: <strong class="text-on-surface">2523.29</strong> (Portland Cement Clinker)</span>
+<span>•</span>
+<span>Scope 1 Direct Calcination</span>
+</div>
+</div>
+<!-- Chemical Stoichiometric Bounds Body -->
+<div class="p-space-md space-y-space-md">
+<!-- Stoichiometric Calcination Formula Card -->
+<div class="bg-surface-container border border-outline-variant p-space-sm">
+<div class="flex items-center justify-between text-label-sm font-label-sm text-on-surface-variant mb-1">
+<span class="uppercase tracking-wider">Stoichiometric Baseline Reaction</span>
+<span class="text-primary font-semibold">Molar Ratio: 44.01 / 56.08</span>
+</div>
+<div class="font-label-md text-label-md text-primary bg-surface p-2 border border-outline-variant text-center tracking-widest font-bold">
+                  CaCO3 (Limestone) + Heat → CaO (Lime) + CO2 ↑
+                </div>
+<div class="text-[11px] font-label-sm text-on-surface-variant mt-1.5 flex justify-between">
+<span>Thermodynamic Constant: 0.785 t CO2 / t CaO</span>
+<span>Clinker CaO Purity: ~65.0%</span>
+</div>
+</div>
+<!-- Declared vs Stoichiometric Floor Comparison -->
+<div class="grid grid-cols-2 gap-space-sm">
+<div class="bg-surface-container border border-error p-space-sm flex flex-col justify-between">
+<span class="text-label-sm font-label-sm text-on-surface-variant">Declared Scope 1 Intensity</span>
+<div class="my-1">
+<span class="text-telemetry-metric font-telemetry-metric text-error">0.462</span>
+<span class="text-telemetry-unit font-telemetry-unit text-on-surface-variant">t CO2/t clinker</span>
+</div>
+<span class="text-[10px] font-label-sm text-error uppercase font-semibold">Reported by Importer</span>
+</div>
+<div class="bg-surface-container border border-primary p-space-sm flex flex-col justify-between">
+<span class="text-label-sm font-label-sm text-on-surface-variant">Stoichiometric Minimum</span>
+<div class="my-1">
+<span class="text-telemetry-metric font-telemetry-metric text-primary">0.510</span>
+<span class="text-telemetry-unit font-telemetry-unit text-on-surface-variant">t CO2/t clinker</span>
+</div>
+<span class="text-[10px] font-label-sm text-primary uppercase font-semibold">Thermodynamic Limit</span>
+</div>
+</div>
+<!-- Severe Discrepancy Callout Banner -->
+<div class="bg-error-container/30 border border-error p-space-sm flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-error mt-0.5" data-icon="report_problem">report_problem</span>
+<div>
+<div class="text-label-md font-label-md font-bold text-error">
+                    -0.048 t CO2/t clinker (-9.41% UNDER-REPORTED)
+                  </div>
+<p class="text-body-sm font-body-sm text-on-surface-variant mt-0.5">
+                    Physical impossibility: Declared emission intensity falls significantly below the zero-combustion calcination stoichiometric floor. Importer omitted raw material decarbonation emissions.
+                  </p>
+</div>
+</div>
+<!-- Stoichiometric Delta Meter & Benchmarks Bar -->
+<div class="space-y-1.5">
+<div class="flex justify-between items-center text-label-sm font-label-sm">
+<span class="text-on-surface font-semibold">Thermodynamic Range Benchmark</span>
+<span class="text-outline">Unit: t CO2 / t clinker</span>
+</div>
+<!-- Graphic Gauge Bar -->
+<div class="relative w-full h-8 bg-surface border border-outline-variant flex items-center px-1">
+<!-- Physical Floor Line -->
+<div class="absolute left-[35%] top-0 bottom-0 w-0.5 bg-primary z-10" title="Physical Floor: 0.510"></div>
+<!-- Best Available Technique (BAT) Line -->
+<div class="absolute left-[45%] top-0 bottom-0 w-0.5 bg-secondary z-10" title="EU BAT: 0.518"></div>
+<!-- EU Average Line -->
+<div class="absolute left-[65%] top-0 bottom-0 w-0.5 bg-outline z-10" title="EU Average: 0.538"></div>
+<!-- Declared Point (Crimson Flag, illegal zone) -->
+<div class="absolute left-[15%] top-1 bottom-1 w-2.5 bg-error border border-white flex items-center justify-center z-20" title="Declared Value: 0.462 (Illegal Under-report)">
+</div>
+</div>
+<div class="flex justify-between items-center text-[10px] font-label-sm text-outline">
+<span class="text-error font-semibold">Declared (0.462)</span>
+<span class="text-primary font-semibold">Floor (0.510)</span>
+<span class="text-secondary font-semibold">BAT (0.518)</span>
+<span>EU Avg (0.538)</span>
+</div>
+</div>
+<!-- Satellite Corroboration Card -->
+<div class="bg-surface-container border border-outline-variant p-space-sm flex items-center justify-between">
+<div>
+<span class="text-label-sm font-label-sm text-on-surface-variant uppercase">Sentinel-5P Inferred Intensity</span>
+<div class="text-label-lg font-label-lg font-bold text-on-surface mt-0.5">
+                    0.584 ± 0.04 <span class="text-telemetry-unit font-telemetry-unit text-outline">t CO2/t</span>
+</div>
+</div>
+<div class="text-right">
+<span class="text-label-sm font-label-sm text-outline">Statistical Confidence</span>
+<div class="text-label-md font-label-md font-bold text-secondary">
+                    94.2% σ-Valid
+                  </div>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Action Buttons for Inspector Panel -->
+<div class="p-space-md border-t border-outline-variant bg-surface-container-lowest flex items-center gap-space-sm">
+<button class="flex-1 py-2 px-3 border border-error text-error font-label-md text-label-md uppercase tracking-wider font-semibold hover:bg-error hover:text-surface transition-colors duration-150 flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[16px]" data-icon="gavel">gavel</span>
+              Flag for Article 35 Inquiry
+            </button>
+<button class="flex-1 py-2 px-3 border border-outline-variant text-on-surface font-label-md text-label-md uppercase tracking-wider font-semibold hover:bg-surface-container transition-colors duration-150 flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[16px]" data-icon="lab_profile">lab_profile</span>
+              Request Raw Quarry Assay
+            </button>
+</div>
+</div>
+</section>
+<!-- SECTION 3: CBAM AUDIT TRIAGE LIST (Comprehensive Regulatory Telemetry Table) -->
+<section class="bg-surface-container-low border border-outline-variant flex flex-col">
+<!-- Table Header and Filter Tabs -->
+<div class="p-space-md border-b border-outline-variant flex flex-wrap items-center justify-between gap-space-sm bg-surface-container-lowest">
+<div class="flex items-center gap-space-md">
+<div>
+<h2 class="text-headline-sm font-headline-sm text-on-surface">CBAM Audit Triage Queue</h2>
+<span class="text-label-sm font-label-sm text-outline">Active Importer Declarations Under Regulation (EU) 2023/956</span>
+</div>
+<!-- Filter Tabs -->
+<div class="flex items-center border border-outline-variant text-label-sm font-label-sm">
+<button class="px-3 py-1 bg-surface-container text-on-surface font-semibold border-r border-outline-variant">
+                All (326)
+              </button>
+<button class="px-3 py-1 text-on-surface-variant hover:text-on-surface border-r border-outline-variant flex items-center gap-1">
+<span>Discrepant (42)</span>
+<span class="w-1.5 h-1.5 bg-[#f59e0b]"></span>
+</button>
+<button class="px-3 py-1 text-on-surface-variant hover:text-on-surface flex items-center gap-1">
+<span>Critical (12)</span>
+<span class="w-1.5 h-1.5 bg-error"></span>
+</button>
+</div>
+</div>
+<!-- Quick Batch Actions & Table Search -->
+<div class="flex items-center gap-space-sm">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-2 top-2 text-outline text-[16px]" data-icon="filter_alt">filter_alt</span>
+<input class="bg-surface border border-outline-variant pl-7 pr-3 py-1 text-label-sm font-label-sm text-on-surface focus:outline-none focus:border-primary w-56" placeholder="Filter by facility or HS Code..." type="text"/>
+</div>
+<button class="px-3 py-1 border border-outline-variant text-on-surface font-label-md text-label-md hover:bg-surface-container flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]" data-icon="file_download">file_download</span>
+              Export Selected (CSV)
+            </button>
+</div>
+</div>
+<!-- High-Density Telemetry Table -->
+<div class="overflow-x-auto custom-scrollbar">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-lowest border-b border-outline-variant text-label-sm font-label-sm text-outline uppercase tracking-wider">
+<th class="p-space-sm w-8 text-center">
+<input class="bg-surface border-outline-variant rounded-none text-primary focus:ring-0" type="checkbox"/>
+</th>
+<th class="p-space-sm">Facility &amp; Country</th>
+<th class="p-space-sm">CBAM Sector / HS Code</th>
+<th class="p-space-sm text-right">Declared Intensity</th>
+<th class="p-space-sm text-right">Stoichiometric / BAT Floor</th>
+<th class="p-space-sm text-right">Satellite Delta (σ)</th>
+<th class="p-space-sm">Triage Status</th>
+<th class="p-space-sm text-right">Audit Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/60 font-label-md text-label-md">
+<!-- ROW 1: Consistent (Emerald Green) -->
+<tr class="hover:bg-surface-container transition-colors duration-150">
+<td class="p-space-sm text-center">
+<input class="bg-surface border-outline-variant rounded-none text-primary focus:ring-0" type="checkbox"/>
+</td>
+<td class="p-space-sm">
+<div class="font-semibold text-on-surface">Celsa Huta Ostrowiec</div>
+<div class="text-[10px] text-outline">PL-STL-0021 • Poland</div>
+</td>
+<td class="p-space-sm text-on-surface-variant">
+<div>Electric Arc Furnace Steel</div>
+<div class="text-[10px] text-outline">HS 7206.10 (Ingots/Primary)</div>
+</td>
+<td class="p-space-sm text-right font-mono font-semibold text-on-surface">
+                  0.420 <span class="text-telemetry-unit font-telemetry-unit text-outline">t CO2/t</span>
+</td>
+<td class="p-space-sm text-right font-mono text-on-surface-variant">
+                  0.395 <span class="text-telemetry-unit font-telemetry-unit text-outline">EU BAT</span>
+</td>
+<td class="p-space-sm text-right font-mono text-secondary">
+                  +0.12 σ
+                </td>
+<td class="p-space-sm">
+<!-- REQUIRED BADGE: Consistent (#10B981) -->
+<span class="inline-flex items-center gap-1 px-2 py-0.5 border border-[#10B981] bg-[#10B981]/10 text-[#10B981] text-[11px] font-label-sm uppercase">
+<span class="w-1.5 h-1.5 bg-[#10B981]"></span> Consistent
+                  </span>
+</td>
+<td class="p-space-sm text-right">
+<button class="px-2 py-1 border border-outline-variant text-on-surface hover:bg-surface-container-high transition-colors text-[11px]">
+                    Verify
+                  </button>
+</td>
+</tr>
+<!-- ROW 2: High Inconsistency Risk (Crimson Red) - Highlighted row -->
+<tr class="bg-error/5 hover:bg-error/10 border-l-2 border-l-error transition-colors duration-150">
+<td class="p-space-sm text-center">
+<input checked="" class="bg-surface border-outline-variant rounded-none text-primary focus:ring-0" type="checkbox"/>
+</td>
+<td class="p-space-sm">
+<div class="font-semibold text-on-surface">Heidelberg Materials Geseke</div>
+<div class="text-[10px] text-outline">DE-CEM-0491 • Germany</div>
+</td>
+<td class="p-space-sm text-on-surface-variant">
+<div>Grey Portland Clinker</div>
+<div class="text-[10px] text-outline">HS 2523.29 (Hydraulic)</div>
+</td>
+<td class="p-space-sm text-right font-mono font-semibold text-error">
+                  0.462 <span class="text-telemetry-unit font-telemetry-unit text-outline">t CO2/t</span>
+</td>
+<td class="p-space-sm text-right font-mono text-error font-semibold">
+                  0.510 <span class="text-telemetry-unit font-telemetry-unit text-outline">(-9.4% Floor)</span>
+</td>
+<td class="p-space-sm text-right font-mono text-error font-bold">
+                  +3.18 σ
+                </td>
+<td class="p-space-sm">
+<!-- REQUIRED BADGE: High Inconsistency Risk (#EF4444) -->
+<span class="inline-flex items-center gap-1 px-2 py-0.5 border border-[#EF4444] bg-[#EF4444]/10 text-[#EF4444] text-[11px] font-label-sm uppercase font-bold">
+<span class="w-1.5 h-1.5 bg-[#EF4444]"></span> High Inconsistency Risk
+                  </span>
+</td>
+<td class="p-space-sm text-right">
+<button class="px-2 py-1 border border-error bg-error/20 text-error hover:bg-error hover:text-surface transition-colors text-[11px] font-semibold">
+                    Article 35 Notice
+                  </button>
+</td>
+</tr>
+<!-- ROW 3: Potential Inconsistency (Amber) -->
+<tr class="hover:bg-surface-container transition-colors duration-150">
+<td class="p-space-sm text-center">
+<input class="bg-surface border-outline-variant rounded-none text-primary focus:ring-0" type="checkbox"/>
+</td>
+<td class="p-space-sm">
+<div class="font-semibold text-on-surface">Voestalpine Linz BF-BOF</div>
+<div class="text-[10px] text-outline">AT-STL-0084 • Austria</div>
+</td>
+<td class="p-space-sm text-on-surface-variant">
+<div>Blast Furnace Crude Steel</div>
+<div class="text-[10px] text-outline">HS 7208 (Flat Rolled)</div>
+</td>
+<td class="p-space-sm text-right font-mono font-semibold text-on-surface">
+                  1.840 <span class="text-telemetry-unit font-telemetry-unit text-outline">t CO2/t</span>
+</td>
+<td class="p-space-sm text-right font-mono text-[#F59E0B]">
+                  1.620 <span class="text-telemetry-unit font-telemetry-unit text-outline">(+0.22 vs BAT)</span>
+</td>
+<td class="p-space-sm text-right font-mono text-[#F59E0B]">
+                  +1.44 σ
+                </td>
+<td class="p-space-sm">
+<!-- REQUIRED BADGE: Potential Inconsistency (#F59E0B) -->
+<span class="inline-flex items-center gap-1 px-2 py-0.5 border border-[#F59E0B] bg-[#F59E0B]/10 text-[#F59E0B] text-[11px] font-label-sm uppercase">
+<span class="w-1.5 h-1.5 bg-[#F59E0B]"></span> Potential Inconsistency
+                  </span>
+</td>
+<td class="p-space-sm text-right">
+<button class="px-2 py-1 border border-outline-variant text-on-surface hover:bg-surface-container-high transition-colors text-[11px]">
+                    Inspect
+                  </button>
+</td>
+</tr>
+<!-- ROW 4: Insufficient Evidence (Slate Blue) -->
+<tr class="hover:bg-surface-container transition-colors duration-150">
+<td class="p-space-sm text-center">
+<input class="bg-surface border-outline-variant rounded-none text-primary focus:ring-0" type="checkbox"/>
+</td>
+<td class="p-space-sm">
+<div class="font-semibold text-on-surface">Alcoa San Ciprián</div>
+<div class="text-[10px] text-outline">ES-ALU-0114 • Spain</div>
+</td>
+<td class="p-space-sm text-on-surface-variant">
+<div>Primary Unwrought Aluminium</div>
+<div class="text-[10px] text-outline">HS 7601 (Electrolytic Smelt)</div>
+</td>
+<td class="p-space-sm text-right font-mono font-semibold text-on-surface">
+                  6.120 <span class="text-telemetry-unit font-telemetry-unit text-outline">t CO2/t</span>
+</td>
+<td class="p-space-sm text-right font-mono text-outline">
+                  6.050 <span class="text-telemetry-unit font-telemetry-unit text-outline">EU Benchmark</span>
+</td>
+<td class="p-space-sm text-right font-mono text-outline">
+                  N/A (Cloud &gt;65%)
+                </td>
+<td class="p-space-sm">
+<!-- REQUIRED BADGE: Insufficient Evidence (#6366F1) -->
+<span class="inline-flex items-center gap-1 px-2 py-0.5 border border-[#6366F1] bg-[#6366F1]/10 text-[#6366F1] text-[11px] font-label-sm uppercase">
+<span class="w-1.5 h-1.5 bg-[#6366F1]"></span> Insufficient Evidence
+                  </span>
+</td>
+<td class="p-space-sm text-right">
+<button class="px-2 py-1 border border-outline-variant text-on-surface hover:bg-surface-container-high transition-colors text-[11px]">
+                    Re-Pass S5P
+                  </button>
+</td>
+</tr>
+<!-- ROW 5: Consistent (Emerald Green) -->
+<tr class="hover:bg-surface-container transition-colors duration-150">
+<td class="p-space-sm text-center">
+<input class="bg-surface border-outline-variant rounded-none text-primary focus:ring-0" type="checkbox"/>
+</td>
+<td class="p-space-sm">
+<div class="font-semibold text-on-surface">Thyssenkrupp Duisburg Plant 2</div>
+<div class="text-[10px] text-outline">DE-STL-0008 • Germany</div>
+</td>
+<td class="p-space-sm text-on-surface-variant">
+<div>Direct Reduced Iron / EAF</div>
+<div class="text-[10px] text-outline">HS 7201.20 (Pig Iron)</div>
+</td>
+<td class="p-space-sm text-right font-mono font-semibold text-on-surface">
+                  0.980 <span class="text-telemetry-unit font-telemetry-unit text-outline">t CO2/t</span>
+</td>
+<td class="p-space-sm text-right font-mono text-secondary">
+                  0.985 <span class="text-telemetry-unit font-telemetry-unit text-outline">Verified Mass-Bal</span>
+</td>
+<td class="p-space-sm text-right font-mono text-secondary">
+                  -0.08 σ
+                </td>
+<td class="p-space-sm">
+<!-- REQUIRED BADGE: Consistent (#10B981) -->
+<span class="inline-flex items-center gap-1 px-2 py-0.5 border border-[#10B981] bg-[#10B981]/10 text-[#10B981] text-[11px] font-label-sm uppercase">
+<span class="w-1.5 h-1.5 bg-[#10B981]"></span> Consistent
+                  </span>
+</td>
+<td class="p-space-sm text-right">
+<button class="px-2 py-1 border border-outline-variant text-on-surface hover:bg-surface-container-high transition-colors text-[11px]">
+                    Verify
+                  </button>
+</td>
+</tr>
+<!-- ROW 6: High Inconsistency Risk (Crimson Red) -->
+<tr class="hover:bg-error/10 border-l-2 border-l-error transition-colors duration-150">
+<td class="p-space-sm text-center">
+<input class="bg-surface border-outline-variant rounded-none text-primary focus:ring-0" type="checkbox"/>
+</td>
+<td class="p-space-sm">
+<div class="font-semibold text-on-surface">Taranto Acciaierie d'Italia</div>
+<div class="text-[10px] text-outline">IT-STL-0045 • Italy</div>
+</td>
+<td class="p-space-sm text-on-surface-variant">
+<div>Sintered Ore &amp; Coke Blast</div>
+<div class="text-[10px] text-outline">HS 7201.10 (Non-alloy Pig)</div>
+</td>
+<td class="p-space-sm text-right font-mono font-semibold text-error">
+                  2.190 <span class="text-telemetry-unit font-telemetry-unit text-outline">t CO2/t</span>
+</td>
+<td class="p-space-sm text-right font-mono text-outline">
+                  1.710 <span class="text-telemetry-unit font-telemetry-unit text-outline">Benchmark</span>
+</td>
+<td class="p-space-sm text-right font-mono text-error font-bold">
+                  +2.85 σ
+                </td>
+<td class="p-space-sm">
+<!-- REQUIRED BADGE: High Inconsistency Risk (#EF4444) -->
+<span class="inline-flex items-center gap-1 px-2 py-0.5 border border-[#EF4444] bg-[#EF4444]/10 text-[#EF4444] text-[11px] font-label-sm uppercase font-bold">
+<span class="w-1.5 h-1.5 bg-[#EF4444]"></span> High Inconsistency Risk
+                  </span>
+</td>
+<td class="p-space-sm text-right">
+<button class="px-2 py-1 border border-error bg-error/20 text-error hover:bg-error hover:text-surface transition-colors text-[11px] font-semibold">
+                    Article 35 Notice
+                  </button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Table Footer / Pagination -->
+<div class="p-space-sm border-t border-outline-variant bg-surface-container-lowest flex items-center justify-between text-label-sm font-label-sm text-on-surface-variant">
+<div class="flex items-center gap-space-sm">
+<span>Showing 1-6 of 326 declarations</span>
+<span>•</span>
+<span>Regulated Importer Ledger Cryptographically Sealed</span>
+</div>
+<div class="flex items-center gap-1">
+<button class="px-2 py-1 border border-outline-variant text-outline hover:text-on-surface disabled:opacity-50" disabled="">
+              Previous
+            </button>
+<button class="px-2.5 py-1 bg-surface-container text-primary border border-primary">1</button>
+<button class="px-2.5 py-1 border border-outline-variant hover:bg-surface-container text-on-surface">2</button>
+<button class="px-2.5 py-1 border border-outline-variant hover:bg-surface-container text-on-surface">3</button>
+<span class="px-1 text-outline">...</span>
+<button class="px-2.5 py-1 border border-outline-variant hover:bg-surface-container text-on-surface">55</button>
+<button class="px-2 py-1 border border-outline-variant text-on-surface hover:bg-surface-container">
+              Next
+            </button>
+</div>
+</div>
+</section>
+</main>
+</div>
+</body></html>
