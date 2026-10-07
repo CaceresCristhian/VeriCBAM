@@ -66,20 +66,44 @@ class FusionAuditDecision:
 
 
 class ProbabilisticEvidenceFusionEngine:
-    """
-    Synthesizes independent physical, operational, and historical evidence streams
-    using a confidence-weighted Bayesian log-odds formulation.
+    """Synthesizes physical, satellite, historical, and registry evidence streams into calibrated risk posteriors.
+
+    Formulation:
+        logit P(H | E) = logit P(H) + sum_i [ w_i * C_i * ln(LR_i) ]
+        P(H | E) = sigmoid( logit P(H | E) )
+
+    Where:
+        H   = Material inconsistency in CBAM declaration
+        P(H)= Base prior probability (~0.08 baseline)
+        LR_i= Likelihood ratio P(E_i | H) / P(E_i | not H)
+        C_i = Observational reliability / confidence factor in [0, 1]
+        w_i = Modality weight
+
+    Args:
+        prior_inconsistency_prob (float, optional): Base prior probability of declaration inconsistency P(H)
+            (default: 0.08, reflecting EU ETS historical discrepancy rate).
     """
 
-    def __init__(self, prior_inconsistency_prob: float = 0.08):
+    def __init__(self, prior_inconsistency_prob: float = 0.08) -> None:
+        """Initializes the probabilistic fusion engine with a specified base prior."""
         self.prior = prior_inconsistency_prob
         self.prior_logit = float(np.log(self.prior / (1.0 - self.prior)))
 
     @staticmethod
     def _sigmoid(x: float) -> float:
+        """Computes numerically stable sigmoid activation function."""
         return float(1.0 / (1.0 + np.exp(-np.clip(x, -25.0, 25.0))))
 
     def build_evidence_streams(self, ev: EvidenceInput) -> List[EvidenceStream]:
+        """Constructs list of individual EvidenceStream objects with likelihood ratios and confidence factors.
+
+        Args:
+            ev (EvidenceInput): Multi-source observation inputs including stoichiometric discrepancy,
+                satellite plume anomaly, cloud cover, historical variance, and registry capacity checks.
+
+        Returns:
+            List[EvidenceStream]: List of formatted evidence streams ready for logit fusion.
+        """
         streams = []
 
         # 1. Stoichiometric Physics Evidence
@@ -199,8 +223,22 @@ class ProbabilisticEvidenceFusionEngine:
         physical_min_tco2: float,
         n_mc_samples: int = 500,
     ) -> FusionAuditDecision:
-        """
-        Executes the confidence-weighted Bayesian log-odds update with Monte Carlo uncertainty propagation.
+        """Executes the confidence-weighted Bayesian log-odds update with Monte Carlo uncertainty propagation.
+
+        Formulation:
+            logit P(H | E) = logit P(H) + sum_i [ w_i * C_i * ln(LR_i) ]
+
+        Decouples posterior inconsistency risk P(H | E) from observational evidence confidence C_overall.
+
+        Args:
+            ev (EvidenceInput): Container of multi-source evidence observations.
+            reported_emissions_tco2 (float): Reported Scope 1 direct emissions in tonnes CO2.
+            physical_min_tco2 (float): First-principles physical minimum expected emissions in tonnes CO2.
+            n_mc_samples (int, optional): Number of Monte Carlo draws for 95% sensitivity interval propagation (default: 500).
+
+        Returns:
+            FusionAuditDecision: Calibrated decision object containing posterior risk, confidence score,
+                95% uncertainty interval, categorical audit verdict, primary evidence driver, and counterfactual delta.
         """
         streams = self.build_evidence_streams(ev)
         stoich_violation_flag = bool(ev.stoichiometric_violated)
@@ -294,9 +332,19 @@ class ProbabilisticEvidenceFusionEngine:
         physical_min_tco2: float,
         candidate_priors: Optional[List[float]] = None,
     ) -> Dict[float, float]:
-        """
-        Evaluates the sensitivity of posterior inconsistency risk across different base priors P(H).
-        Demonstrates ranking stability under varying prior assumptions (e.g., 2%, 5%, 8%, 15%).
+        """Evaluates sensitivity of posterior inconsistency risk across varying base priors P(H).
+
+        Demonstrates ranking stability under varying prior discrepancy assumptions (e.g., 2%, 5%, 8%, 12%, 15%).
+
+        Args:
+            ev (EvidenceInput): Container of multi-source evidence observations.
+            reported_emissions_tco2 (float): Reported Scope 1 direct emissions in tonnes CO2.
+            physical_min_tco2 (float): First-principles physical minimum expected emissions in tonnes CO2.
+            candidate_priors (Optional[List[float]], optional): List of prior probabilities to evaluate
+                (default: [0.02, 0.05, 0.08, 0.12, 0.15]).
+
+        Returns:
+            Dict[float, float]: Dictionary mapping base prior probabilities to fused posterior risk scores.
         """
         priors = candidate_priors or [0.02, 0.05, 0.08, 0.12, 0.15]
         results = {}
