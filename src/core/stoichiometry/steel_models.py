@@ -71,9 +71,27 @@ class SteelStoichiometricAuditResult:
 
 
 def audit_steel_declaration(declaration: SteelDeclarationInput) -> SteelStoichiometricAuditResult:
-    """
-    Audits a CBAM steel declaration against production route thermodynamics and mass balances.
-    Detects both under-reporting and route misclassification (e.g. declaring scrap-EAF while operating BF-BOF).
+    """Audits a CBAM steel declaration against production route thermodynamics and mass balances.
+
+    Evaluates emissions against route-specific thermodynamic lower bounds, taking into account
+    stoichiometric carbon requirements for hematite reduction:
+        Fe2O3 + 3 C -> 2 Fe + 3 CO
+    and subsequent carbon oxidation (yielding ~1.182 t CO2 / t crude iron minimum reduction emissions in BF-BOF routes).
+    Detects both direct under-reporting and route misclassification (e.g., declaring Scrap-EAF or Green DRI
+    while operating a carbon-intensive BF-BOF facility).
+
+    Args:
+        declaration (SteelDeclarationInput): The CBAM declaration input containing facility, production,
+            claimed production route ('BF-BOF', 'DRI-NG-EAF', 'DRI-H2-EAF', or 'Scrap-EAF'),
+            reported direct Scope 1 emissions, scrap ratio, and CCUS captured CO2.
+
+    Returns:
+        SteelStoichiometricAuditResult: Audit result containing specific intensities, theoretical floor,
+            typical benchmarks, total physical minimum expected t CO2, feasibility determination,
+            discrepancy, route misclassification detection status, suspected actual route, and audit reason.
+
+    Raises:
+        ValueError: If `declaration.claimed_production_route` is not one of the supported benchmark routes.
     """
     route = declaration.claimed_production_route
     if route not in ROUTE_BENCHMARKS:

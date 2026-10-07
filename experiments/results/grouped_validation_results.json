@@ -48,24 +48,24 @@
     },
     {
       "calibration_method": "Platt Scaling (GroupKFold)",
-      "brier_score": 0.0168,
-      "ece": 0.0312,
-      "log_loss": 0.0596,
+      "brier_score": 0.0166,
+      "ece": 0.0184,
+      "log_loss": 0.0593,
       "f1_score": 0.9859,
       "precision": 0.9859,
       "recall": 0.9859,
-      "roc_auc": 0.9977,
-      "pr_auc": 0.9991
+      "roc_auc": 0.9981,
+      "pr_auc": 0.9992
     },
     {
       "calibration_method": "Isotonic Regression (GroupKFold)",
-      "brier_score": 0.0186,
-      "ece": 0.0192,
+      "brier_score": 0.02,
+      "ece": 0.0236,
       "log_loss": 0.3014,
-      "f1_score": 0.9859,
-      "precision": 0.9859,
+      "f1_score": 0.979,
+      "precision": 0.9722,
       "recall": 0.9859,
-      "roc_auc": 0.9927,
+      "roc_auc": 0.9925,
       "pr_auc": 0.9958
     }
   ]

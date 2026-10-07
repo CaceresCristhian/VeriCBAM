@@ -70,11 +70,21 @@ def compute_cement_process_emissions_minimum(
     cao_fraction: float = 0.650,
     mgo_fraction: float = 0.015,
 ) -> float:
-    """
-    Computes stoichiometric minimum CO2 released purely from raw limestone calcination.
-    CaCO3 -> CaO + CO2 (0.7848 t CO2 / t CaO)
-    MgCO3 -> MgO + CO2 (1.0919 t CO2 / t MgO)
-    This is fixed chemical mass balance; cannot be eliminated without altering clinker mineralogy.
+    """Computes stoichiometric minimum CO2 released purely from raw limestone calcination.
+
+    Chemical calcination reactions:
+        CaCO3 -> CaO + CO2 (0.7848 t CO2 / t CaO)
+        MgCO3 -> MgO + CO2 (1.0919 t CO2 / t MgO)
+
+    This represents a fixed chemical mass balance that cannot be eliminated without altering clinker mineralogy.
+
+    Args:
+        clinker_tonnes (float): Total mass of clinker produced in tonnes.
+        cao_fraction (float, optional): Fraction of CaO in clinker (default: 0.650, i.e., 65.0%).
+        mgo_fraction (float, optional): Fraction of MgO in clinker (default: 0.015, i.e., 1.5%).
+
+    Returns:
+        float: Minimum process CO2 emissions in tonnes (t CO2).
     """
     process_factor = (cao_fraction * RATIO_CO2_CAO) + (mgo_fraction * RATIO_CO2_MGO)
     return clinker_tonnes * process_factor
@@ -85,9 +95,21 @@ def compute_cement_thermal_combustion_minimum(
     fuel_type: str = "coal",
     efficiency_mj_per_tonne: float = BAT_THERMAL_CONSUMPTION_DRY_MJ_T,
 ) -> float:
-    """
-    Computes thermodynamic minimum combustion CO2 required to supply the endothermic reaction enthalpy
-    (Delta H = +178.2 kJ/mol CaCO3) plus thermodynamic heat losses in state-of-the-art kilns.
+    """Computes thermodynamic minimum combustion CO2 required to supply kiln thermal energy.
+
+    Supplies the endothermic calcination enthalpy (CaCO3 -> CaO + CO2, Delta H = +178.2 kJ/mol CaCO3)
+    plus thermodynamic heat losses in state-of-the-art kilns.
+
+    Args:
+        clinker_tonnes (float): Total mass of clinker produced in tonnes.
+        fuel_type (str, optional): Fuel type used for combustion (default: "coal").
+            Supported types include 'natural_gas', 'heavy_fuel_oil', 'coal', 'petcoke',
+            'waste_derived_fuel_50pct_bio', and 'zero_carbon_hydrogen'.
+        efficiency_mj_per_tonne (float, optional): Thermal energy consumption efficiency in MJ per tonne of clinker
+            (default: 3000.0 MJ/t representing BAT preheater/precalciner kiln).
+
+    Returns:
+        float: Minimum thermal combustion CO2 emissions in tonnes (t CO2).
     """
     fuel_ef = FUEL_EMISSION_FACTORS_T_CO2_PER_GJ.get(fuel_type.lower(), 0.0946)
     # Energy per tonne in GJ = MJ / 1000
@@ -97,9 +119,18 @@ def compute_cement_thermal_combustion_minimum(
 
 
 def audit_cement_declaration(declaration: CementDeclarationInput) -> StoichiometricAuditResult:
-    """
-    Audits a CBAM cement declaration against stoichiometric and thermodynamic bounds.
-    Returns audit result detailing physical compliance.
+    """Audits a CBAM cement declaration against stoichiometric and thermodynamic bounds.
+
+    Calculates minimum process emissions from limestone calcination (CaCO3 -> CaO + CO2 and MgCO3 -> MgO + CO2)
+    and minimum combustion emissions based on kiln thermal requirements to verify physical compliance.
+
+    Args:
+        declaration (CementDeclarationInput): The CBAM declaration input containing facility, production,
+            oxide fractions, reported emissions, fuel type, and CCUS details.
+
+    Returns:
+        StoichiometricAuditResult: Audit result detailing minimum process emissions, minimum combustion
+            emissions, total physical floor, specific intensities, discrepancy, and compliance status.
     """
     clinker = declaration.clinker_produced_tonnes
     if clinker <= 0 and declaration.cement_produced_tonnes > 0:
