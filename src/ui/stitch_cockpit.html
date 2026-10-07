@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VeriCBAM | Google Stitch Cockpit View</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-canvas: #0f131c;
+            --surface-container: #1c2028;
+            --surface-border: #2d3440;
+            --accent-cyan: #8ed5ff;
+            --accent-emerald: #4edea3;
+            --accent-amber: #facc15;
+            --accent-crimson: #ef4444;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --font-sans: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-canvas);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            padding: 24px;
+            line-height: 1.5;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--surface-border);
+            margin-bottom: 24px;
+        }
+
+        .header-title h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: var(--text-primary);
+        }
+
+        .header-title span {
+            color: var(--accent-cyan);
+        }
+
+        .header-title p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .badge-live {
+            background: rgba(78, 222, 163, 0.15);
+            border: 1px solid var(--accent-emerald);
+            color: var(--accent-emerald);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            font-family: var(--font-mono);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .badge-live::before {
+            content: "";
+            width: 8px;
+            height: 8px;
+            background-color: var(--accent-emerald);
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 8px var(--accent-emerald);
+        }
+
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .bento-card {
+            background-color: var(--surface-container);
+            border: 1px solid var(--surface-border);
+            border-radius: 12px;
+            padding: 20px;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .bento-card:hover {
+            border-color: var(--accent-cyan);
+            transform: translateY(-2px);
+        }
+
+        .card-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: 600;
+            color: var(--text-secondary);
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+        }
+
+        .card-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .card-sub {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .card-sub span.cyan { color: var(--accent-cyan); }
+        .card-sub span.emerald { color: var(--accent-emerald); }
+        .card-sub span.crimson { color: var(--accent-crimson); }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        .panel {
+            background-color: var(--surface-container);
+            border: 1px solid var(--surface-border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .panel-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .formula-box {
+            background: rgba(15, 19, 28, 0.7);
+            border: 1px dashed var(--surface-border);
+            border-radius: 8px;
+            padding: 12px;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--accent-cyan);
+            margin-bottom: 16px;
+        }
+
+        .status-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .status-table th {
+            text-align: left;
+            padding: 10px;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--surface-border);
+            font-weight: 600;
+        }
+
+        .status-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid rgba(45, 52, 64, 0.5);
+            color: var(--text-primary);
+        }
+
+        .pill {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            font-family: var(--font-mono);
+        }
+
+        .pill-green {
+            background: rgba(78, 222, 163, 0.15);
+            color: var(--accent-emerald);
+            border: 1px solid rgba(78, 222, 163, 0.3);
+        }
+
+        .pill-red {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--accent-crimson);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .pill-yellow {
+            background: rgba(250, 204, 21, 0.15);
+            color: var(--accent-amber);
+            border: 1px solid rgba(250, 204, 21, 0.3);
+        }
+
+        .gauge-container {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .gauge-score {
+            font-size: 2.5rem;
+            font-weight: 800;
+            font-family: var(--font-mono);
+            color: var(--accent-cyan);
+        }
+
+        .gauge-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-title">
+            <h1>Veri<span>CBAM</span> Google Stitch Regulatory Cockpit</h1>
+            <p>Multimodal Evidence Fusion & Decision Support for EU CBAM Compliance Audit</p>
+        </div>
+        <div class="badge-live">SYSTEM OPERATIONAL • 30 COHORT SITES ACTIVE</div>
+    </div>
+
+    <div class="bento-grid">
+        <div class="bento-card">
+            <div class="card-label">Cement Calcination Floor</div>
+            <div class="card-value">0.5265 <span style="font-size: 1rem; color: var(--text-secondary);">tCO₂/t</span></div>
+            <div class="card-sub"><span class="emerald">CaCO₃ → CaO + CO₂</span> (0.7848 factor)</div>
+        </div>
+        <div class="bento-card">
+            <div class="card-label">BF-BOF Steel Reduction Floor</div>
+            <div class="card-value">1.350 <span style="font-size: 1rem; color: var(--text-secondary);">tCO₂/t</span></div>
+            <div class="card-sub"><span class="emerald">Fe₂O₃ + 3C → 2Fe + 3CO</span> (1.182 factor)</div>
+        </div>
+        <div class="bento-card">
+            <div class="card-label">Copernicus Sentinel-5P</div>
+            <div class="card-value">301 Overpasses</div>
+            <div class="card-sub"><span class="cyan">Real TROPOMI NO₂</span> Range-Reads</div>
+        </div>
+        <div class="bento-card">
+            <div class="card-label">Fused Model ROC-AUC</div>
+            <div class="card-value">0.9984</div>
+            <div class="card-sub"><span class="emerald">+0.0984</span> over single-modality baseline</div>
+        </div>
+    </div>
+
+    <div class="main-layout">
+        <div class="panel">
+            <div class="panel-title">
+                <span>Core Bayesian Evidence Fusion Architecture</span>
+                <span style="font-size: 0.8rem; color: var(--text-secondary); font-family: var(--font-mono);">MODEL E FUSED</span>
+            </div>
+            <div class="formula-box">
+                logit P(H|E) = logit P(H) + ∑ wᵢ · Cᵢ · ln(LRᵢ)
+            </div>
+            <table class="status-table">
+                <thead>
+                    <tr>
+                        <th>Modality Stream</th>
+                        <th>Weight (wᵢ)</th>
+                        <th>Confidence (Cᵢ)</th>
+                        <th>Evidence Driver</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Stoichiometric Physics</strong></td>
+                        <td>0.45</td>
+                        <td>1.00</td>
+                        <td>Limestone Calcination / Steel Reduction Floor</td>
+                        <td><span class="pill pill-green">DETERMINISTIC</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Sentinel-5P NO₂ Plume</strong></td>
+                        <td>0.25</td>
+                        <td>0.85 (1 - Cloud)</td>
+                        <td>TROPOMI Atmospheric Column Anomaly (Z-Score)</td>
+                        <td><span class="pill pill-green">REMOTE SENSING</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>5-Year E-PRTR Baseline</strong></td>
+                        <td>0.20</td>
+                        <td>0.90 (Years / 5)</td>
+                        <td>Temporal Variance & Shift Detection</td>
+                        <td><span class="pill pill-green">HISTORICAL</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>GEM Registry Check</strong></td>
+                        <td>0.10</td>
+                        <td>0.80</td>
+                        <td>Capacity & Technology Route Cross-Match</td>
+                        <td><span class="pill pill-yellow">REGISTRY</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">
+                <span>Live Audit Decision Synthesis</span>
+            </div>
+            <div class="gauge-container">
+                <div class="gauge-score">99.2%</div>
+                <div class="gauge-label">Audit Confidence & Calibrated Discrimination</div>
+            </div>
+            <div style="margin-top: 16px; font-size: 0.85rem; color: var(--text-secondary);">
+                <p><strong>Primary Recommendation:</strong> Automated pre-audit triage prioritizes physical site inspections for installations violating stoichiometric floors or claiming route misclassifications.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
