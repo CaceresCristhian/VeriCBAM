@@ -1,0 +1,6 @@
+model_name,threshold,accuracy,precision,recall,f1_score,specificity,fpr,roc_auc,pr_auc,brier_score,ece,tp,fp,tn,fn,specificity_BASELINE_CONCORDANT,recall_HISTORICAL_DROP_ANOMALY,recall_PHYSICAL_BOUND_VIOLATION,recall_ROUTE_MISCLASSIFICATION
+Model A (Declaration Baseline),0.5,0.7624,0.9434,0.7042,0.8065,0.9,0.1,0.8671,0.9515,0.1807,0.1864,50,3,27,21,0.9,0.6667,1.0,0.0
+Model B (Stoichiometry Alone),0.5,0.7525,1.0,0.6479,0.7863,1.0,0.0,0.8692,0.9384,0.1685,0.1467,46,0,30,25,1.0,0.5333,1.0,0.0
+Model C (Satellite Alone),0.5,0.297,0.0,0.0,0.0,1.0,0.0,0.5174,0.7112,0.5425,0.5751,0,0,30,71,1.0,0.0,0.0,0.0
+Model D (Historical Alone),0.5,0.297,0.0,0.0,0.0,1.0,0.0,0.9859,0.9916,0.3094,0.4525,0,0,30,71,1.0,0.0,0.0,0.0
+Model E (VeriCBAM Fused),0.5,0.9505,1.0,0.9296,0.9635,1.0,0.0,0.9991,0.9996,0.0423,0.0758,66,0,30,5,1.0,0.8333,1.0,1.0

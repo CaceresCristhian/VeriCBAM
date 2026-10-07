@@ -1,0 +1,28 @@
+# VeriCBAM - Python Dependencies
+# Environment: Python >= 3.10
+
+# Core Data & Numerics
+pandas>=2.1.0
+numpy>=1.26.0
+pyarrow>=14.0.0
+scipy>=1.11.0
+scikit-learn>=1.3.0
+openpyxl>=3.1.0
+
+# Remote Sensing & Satellite HDF5 Range-Reads
+requests>=2.31.0
+truststore>=0.9.0
+h5py>=3.10.0
+fsspec>=2023.10.0
+aiohttp>=3.9.0
+
+# User Interface & Visualizations
+streamlit>=1.30.0
+plotly>=5.18.0
+
+# PDF & Document Processing
+pymupdf>=1.24.0
+pypdf>=4.0.0
+
+# Testing & Reproducibility
+pytest>=7.4.0

@@ -1,0 +1,4 @@
+calibration_method,brier_score,ece,log_loss,f1_score,precision,recall,accuracy,roc_auc
+Raw Bayesian Posterior (Uncalibrated),0.0423,0.0758,0.1279,0.9635,1.0,0.9296,0.9505,0.9991
+Platt Scaling (5-Fold CV),0.0195,0.0322,0.0658,0.9859,0.9859,0.9859,0.9802,0.9972
+Isotonic Regression (5-Fold CV),0.0297,0.0297,0.2737,0.979,0.9722,0.9859,0.9703,0.9596

@@ -1,0 +1,149 @@
+{
+  "dataset_size": 101,
+  "cv_folds": 5,
+  "comparison": [
+    {
+      "calibration_method": "Raw Bayesian Posterior (Uncalibrated)",
+      "brier_score": 0.0423,
+      "ece": 0.0763,
+      "log_loss": 0.1283,
+      "f1_score": 0.9635,
+      "precision": 1.0,
+      "recall": 0.9296,
+      "accuracy": 0.9505,
+      "roc_auc": 0.9991
+    },
+    {
+      "calibration_method": "Platt Scaling (5-Fold CV)",
+      "brier_score": 0.0195,
+      "ece": 0.0322,
+      "log_loss": 0.0658,
+      "f1_score": 0.9859,
+      "precision": 0.9859,
+      "recall": 0.9859,
+      "accuracy": 0.9802,
+      "roc_auc": 0.9972
+    },
+    {
+      "calibration_method": "Isotonic Regression (5-Fold CV)",
+      "brier_score": 0.0297,
+      "ece": 0.0297,
+      "log_loss": 0.2737,
+      "f1_score": 0.979,
+      "precision": 0.9722,
+      "recall": 0.9859,
+      "accuracy": 0.9703,
+      "roc_auc": 0.9596
+    }
+  ],
+  "reliability_bins": [
+    {
+      "calibration_method": "Raw Bayesian Posterior (Uncalibrated)",
+      "bin_index": 1,
+      "mean_predicted_prob": 0.0287,
+      "fraction_of_positives": 0.0
+    },
+    {
+      "calibration_method": "Raw Bayesian Posterior (Uncalibrated)",
+      "bin_index": 2,
+      "mean_predicted_prob": 0.112,
+      "fraction_of_positives": 0.5
+    },
+    {
+      "calibration_method": "Raw Bayesian Posterior (Uncalibrated)",
+      "bin_index": 3,
+      "mean_predicted_prob": 0.2367,
+      "fraction_of_positives": 0.6667
+    },
+    {
+      "calibration_method": "Raw Bayesian Posterior (Uncalibrated)",
+      "bin_index": 4,
+      "mean_predicted_prob": 0.3402,
+      "fraction_of_positives": 1.0
+    },
+    {
+      "calibration_method": "Raw Bayesian Posterior (Uncalibrated)",
+      "bin_index": 5,
+      "mean_predicted_prob": 0.5563,
+      "fraction_of_positives": 1.0
+    },
+    {
+      "calibration_method": "Raw Bayesian Posterior (Uncalibrated)",
+      "bin_index": 6,
+      "mean_predicted_prob": 0.7534,
+      "fraction_of_positives": 1.0
+    },
+    {
+      "calibration_method": "Raw Bayesian Posterior (Uncalibrated)",
+      "bin_index": 7,
+      "mean_predicted_prob": 0.8531,
+      "fraction_of_positives": 1.0
+    },
+    {
+      "calibration_method": "Raw Bayesian Posterior (Uncalibrated)",
+      "bin_index": 8,
+      "mean_predicted_prob": 0.9963,
+      "fraction_of_positives": 1.0
+    },
+    {
+      "calibration_method": "Platt Scaling (5-Fold CV)",
+      "bin_index": 1,
+      "mean_predicted_prob": 0.017,
+      "fraction_of_positives": 0.0
+    },
+    {
+      "calibration_method": "Platt Scaling (5-Fold CV)",
+      "bin_index": 2,
+      "mean_predicted_prob": 0.1529,
+      "fraction_of_positives": 0.3333
+    },
+    {
+      "calibration_method": "Platt Scaling (5-Fold CV)",
+      "bin_index": 3,
+      "mean_predicted_prob": 0.2135,
+      "fraction_of_positives": 0.0
+    },
+    {
+      "calibration_method": "Platt Scaling (5-Fold CV)",
+      "bin_index": 4,
+      "mean_predicted_prob": 0.4182,
+      "fraction_of_positives": 0.0
+    },
+    {
+      "calibration_method": "Platt Scaling (5-Fold CV)",
+      "bin_index": 5,
+      "mean_predicted_prob": 0.5684,
+      "fraction_of_positives": 1.0
+    },
+    {
+      "calibration_method": "Platt Scaling (5-Fold CV)",
+      "bin_index": 6,
+      "mean_predicted_prob": 0.6405,
+      "fraction_of_positives": 1.0
+    },
+    {
+      "calibration_method": "Platt Scaling (5-Fold CV)",
+      "bin_index": 7,
+      "mean_predicted_prob": 0.7773,
+      "fraction_of_positives": 0.6667
+    },
+    {
+      "calibration_method": "Platt Scaling (5-Fold CV)",
+      "bin_index": 8,
+      "mean_predicted_prob": 0.995,
+      "fraction_of_positives": 1.0
+    },
+    {
+      "calibration_method": "Isotonic Regression (5-Fold CV)",
+      "bin_index": 1,
+      "mean_predicted_prob": 0.0,
+      "fraction_of_positives": 0.0345
+    },
+    {
+      "calibration_method": "Isotonic Regression (5-Fold CV)",
+      "bin_index": 2,
+      "mean_predicted_prob": 1.0,
+      "fraction_of_positives": 0.9722
+    }
+  ]
+}

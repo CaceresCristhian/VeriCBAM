@@ -1,0 +1,26 @@
+facility_id,facility_name,sector,country,latitude,longitude,reporting_year,annual_mean_no2_mol_m2,valid_months,total_samples
+https://registry.gdi-de.org/id/de.bb.inspire.pf.eureg/23020947,CEMEX Zement GmbH,Cement,Germany,52.48907,13.83693,2019,4.4428959054508595e-05,12,575219
+https://registry.gdi-de.org/id/de.bb.inspire.pf.eureg/23020947,CEMEX Zement GmbH,Cement,Germany,52.48907,13.83693,2020,3.701785363369179e-05,9,519409
+https://registry.gdi-de.org/id/de.bb.inspire.pf.eureg/23020947,CEMEX Zement GmbH,Cement,Germany,52.48907,13.83693,2021,2.9364378992347866e-05,6,187945
+https://registry.gdi-de.org/id/de.bb.inspire.pf.eureg/23020947,CEMEX Zement GmbH,Cement,Germany,52.48907,13.83693,2022,3.713714511016091e-05,5,92996
+https://registry.gdi-de.org/id/de.bb.inspire.pf.eureg/23020947,CEMEX Zement GmbH,Cement,Germany,52.48907,13.83693,2023,3.733169101029651e-05,10,485524
+https://registry.gdi-de.org/id/de.th/5bf25e39-19d5-4254-adac-63f1b1cec499/77012792,"Dyckerhoff GmbH, Werk Deuna ",Cement,Germany,51.36276,10.48357,2019,2.9760398156762697e-05,11,505920
+https://registry.gdi-de.org/id/de.th/5bf25e39-19d5-4254-adac-63f1b1cec499/77012792,"Dyckerhoff GmbH, Werk Deuna ",Cement,Germany,51.36276,10.48357,2020,2.700464920705163e-05,6,224223
+https://registry.gdi-de.org/id/de.th/5bf25e39-19d5-4254-adac-63f1b1cec499/77012792,"Dyckerhoff GmbH, Werk Deuna ",Cement,Germany,51.36276,10.48357,2021,2.519786416427952e-05,2,68423
+https://registry.gdi-de.org/id/de.th/5bf25e39-19d5-4254-adac-63f1b1cec499/77012792,"Dyckerhoff GmbH, Werk Deuna ",Cement,Germany,51.36276,10.48357,2022,2.6290192874393673e-05,8,366398
+https://registry.gdi-de.org/id/de.th/5bf25e39-19d5-4254-adac-63f1b1cec499/77012792,"Dyckerhoff GmbH, Werk Deuna ",Cement,Germany,51.36276,10.48357,2023,2.8879480970102273e-05,7,365107
+https://registry.gdi-de.org/id/de.nw.inspire.pf.bube-eureg/arb-2017-566040-500-0106867,Dyckerhoff GmbH,Cement,Germany,52.17499,7.88783,2019,5.658645432358987e-05,12,591463
+https://registry.gdi-de.org/id/de.nw.inspire.pf.bube-eureg/arb-2017-566040-500-0106867,Dyckerhoff GmbH,Cement,Germany,52.17499,7.88783,2020,4.609421040185646e-05,6,205468
+https://registry.gdi-de.org/id/de.nw.inspire.pf.bube-eureg/arb-2017-566040-500-0106867,Dyckerhoff GmbH,Cement,Germany,52.17499,7.88783,2021,3.644413028790925e-05,9,365504
+https://registry.gdi-de.org/id/de.nw.inspire.pf.bube-eureg/arb-2017-566040-500-0106867,Dyckerhoff GmbH,Cement,Germany,52.17499,7.88783,2022,3.9530476206120485e-05,10,429071
+https://registry.gdi-de.org/id/de.nw.inspire.pf.bube-eureg/arb-2017-566040-500-0106867,Dyckerhoff GmbH,Cement,Germany,52.17499,7.88783,2023,3.9613723938423634e-05,9,257802
+https://registry.gdi-de.org/id/de.sh/10038078,Holcim (Deutschland) GmbH ,Cement,Germany,53.87707,9.57999,2019,4.656193345083772e-05,12,606952
+https://registry.gdi-de.org/id/de.sh/10038078,Holcim (Deutschland) GmbH ,Cement,Germany,53.87707,9.57999,2020,3.954556800243915e-05,12,382293
+https://registry.gdi-de.org/id/de.sh/10038078,Holcim (Deutschland) GmbH ,Cement,Germany,53.87707,9.57999,2021,2.9727236983386902e-05,7,235750
+https://registry.gdi-de.org/id/de.sh/10038078,Holcim (Deutschland) GmbH ,Cement,Germany,53.87707,9.57999,2022,3.07284395831534e-05,9,499774
+https://registry.gdi-de.org/id/de.sh/10038078,Holcim (Deutschland) GmbH ,Cement,Germany,53.87707,9.57999,2023,3.372792972072282e-05,11,455063
+https://registry.gdi-de.org/id/de.by.inspire.pf.ied/S00600,"Heidelberg Materials AG, Zementwerk Burglengenfeld",Cement,Germany,49.21282917234831,12.028282784446738,2019,3.165275384385321e-05,12,677332
+https://registry.gdi-de.org/id/de.by.inspire.pf.ied/S00600,"Heidelberg Materials AG, Zementwerk Burglengenfeld",Cement,Germany,49.21282917234831,12.028282784446738,2020,2.9934211573593784e-05,10,496156
+https://registry.gdi-de.org/id/de.by.inspire.pf.ied/S00600,"Heidelberg Materials AG, Zementwerk Burglengenfeld",Cement,Germany,49.21282917234831,12.028282784446738,2021,2.7036720509693134e-05,8,366766
+https://registry.gdi-de.org/id/de.by.inspire.pf.ied/S00600,"Heidelberg Materials AG, Zementwerk Burglengenfeld",Cement,Germany,49.21282917234831,12.028282784446738,2022,4.320564678298562e-05,8,359527
+https://registry.gdi-de.org/id/de.by.inspire.pf.ied/S00600,"Heidelberg Materials AG, Zementwerk Burglengenfeld",Cement,Germany,49.21282917234831,12.028282784446738,2023,3.191540994261445e-05,13,729837

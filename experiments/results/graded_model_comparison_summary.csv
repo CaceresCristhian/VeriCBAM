@@ -1,0 +1,6 @@
+model_name,roc_auc,pr_auc,brier_score,ece
+Model B (Stoichiometry Alone),0.6897,0.5248,0.2865,0.2647
+Model C (Satellite Alone),0.5221,0.3859,0.3719,0.3461
+Model D (Historical Alone),0.9659,0.9479,0.2352,0.339
+Model E1 (Expert Bayesian Fusion),0.7693,0.5625,0.2716,0.1108
+Model E2 (Learned Logistic Regression - GroupKFold),0.9654,0.9502,0.0754,0.0469
