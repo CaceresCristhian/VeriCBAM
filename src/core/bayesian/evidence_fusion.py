@@ -1,18 +1,19 @@
 """
 VeriCBAM Probabilistic Evidence-Fusion Engine
-Implements calibrated Bayesian log-odds synthesis combining deterministic physical constraints,
+Implements expert-parameterized Bayesian log-odds synthesis combining deterministic physical constraints,
 satellite-derived operational indicators, historical facility fingerprints, and registry data.
 
 Mathematical Formulation:
-    logit P(H | E) = logit P(H) + sum_i [ C_i * log(LR_i) ]
-    P(H | E) = sigmoid( logit P(H) + sum_i [ C_i * log(LR_i) ] )
+    logit P(H | E) = logit P(H) + sum_i [ w_i * C_i * ln(LR_i) ]
+    P(H | E) = sigmoid( logit P(H) + sum_i [ w_i * C_i * ln(LR_i) ] )
 
 Where:
     H   = Material inconsistency in CBAM declaration
-    E_i = Independent evidence stream i
+    E_i = Heterogeneous evidence stream i
     P(H)= Base prior probability (~8% historical ETS discrepancy baseline)
     LR_i= Likelihood ratio P(E_i | H) / P(E_i | not H)
     C_i = Observational reliability / confidence factor in [0, 1]
+    w_i = Modality weight (w_i > 0)
 
 Separates Inconsistency Risk P(H | E) from Evidence Confidence C_overall.
 Distinguishes four explicit categorical outcomes:
@@ -39,9 +40,9 @@ class EvidenceStream:
 
 @dataclass
 class EvidenceInput:
-    """Raw multi-source observations to be converted into calibrated likelihood streams."""
-    stoichiometric_discrepancy_sigma: float  # Distance from physical floor in std deviations
-    stoichiometric_violated: bool           # True if strictly below thermodynamic floor
+    """Raw multi-source observations to be converted into likelihood streams."""
+    stoichiometric_discrepancy_sigma: Optional[float] = None  # Distance from stoichiometric floor in std deviations (None if capacity unknown)
+    stoichiometric_violated: bool = False                   # True if strictly below stoichiometric lower bound
     satellite_plume_anomaly_zscore: Optional[float] = None  # Sentinel-5P NO2/CO activity proxy
     satellite_cloud_fraction: float = 0.0   # 0.0 to 1.0 (Sentinel-5P cloud radiance fraction)
     temporal_variance_zscore: Optional[float] = None  # Deviation from historical baseline
@@ -53,7 +54,7 @@ class EvidenceInput:
 
 @dataclass
 class FusionAuditDecision:
-    """Calibrated audit decision separating Inconsistency Risk from Evidence Confidence."""
+    """Audit decision separating Inconsistency Risk from Evidence Confidence."""
     posterior_inconsistency_risk: float      # P(H | E) in [0.0, 1.0]
     evidence_confidence_score: float         # C_overall in [0.0, 1.0]
     uncertainty_interval_95: Tuple[float, float]  # 95% uncertainty interval [P_low, P_high]
@@ -66,7 +67,7 @@ class FusionAuditDecision:
 
 
 class ProbabilisticEvidenceFusionEngine:
-    """Synthesizes physical, satellite, historical, and registry evidence streams into calibrated risk posteriors.
+    """Synthesizes physical, satellite, historical, and registry evidence streams into expert-parameterized risk posteriors.
 
     Formulation:
         logit P(H | E) = logit P(H) + sum_i [ w_i * C_i * ln(LR_i) ]
@@ -112,19 +113,24 @@ class ProbabilisticEvidenceFusionEngine:
             lr_stoich = 1e6  # Deterministic overrule
             c_stoich = 1.0   # Chemistry is 100% reliable
             note = "Deterministic physical bound violation (mass balance floor breach)"
-        elif ev.stoichiometric_discrepancy_sigma < 0.5:
-            lr_stoich = 2.2  # Suspiciously tight margin
-            c_stoich = 0.95
-            note = "Near-zero thermodynamic margin (<0.5 sigma)"
-        elif ev.stoichiometric_discrepancy_sigma < 1.0:
-            lr_stoich = 1.3
-            c_stoich = 0.95
-            note = "Moderate thermodynamic margin (0.5 - 1.0 sigma)"
+            streams.append(EvidenceStream("Stoichiometry", lr_stoich, c_stoich, weight=1.5, diagnostic_note=note))
+        elif ev.stoichiometric_discrepancy_sigma is not None:
+            if ev.stoichiometric_discrepancy_sigma < 0.5:
+                lr_stoich = 2.2  # Suspiciously tight margin
+                c_stoich = 0.95
+                note = "Near-zero stoichiometric margin (<0.5 sigma)"
+            elif ev.stoichiometric_discrepancy_sigma < 1.0:
+                lr_stoich = 1.3
+                c_stoich = 0.95
+                note = "Moderate stoichiometric margin (0.5 - 1.0 sigma)"
+            else:
+                lr_stoich = 0.45  # Substantial comfortable margin
+                c_stoich = 0.95
+                note = "Comfortable stoichiometric margin (>1.0 sigma)"
+            streams.append(EvidenceStream("Stoichiometry", lr_stoich, c_stoich, weight=1.5, diagnostic_note=note))
         else:
-            lr_stoich = 0.45  # Substantial comfortable margin
-            c_stoich = 0.95
-            note = "Comfortable thermodynamic margin (>1.0 sigma)"
-        streams.append(EvidenceStream("Stoichiometry", lr_stoich, c_stoich, weight=1.5, diagnostic_note=note))
+            # Capacity unobserved or missing: stream abstains
+            streams.append(EvidenceStream("Stoichiometry", 1.0, 0.0, weight=1.5, diagnostic_note="Stoichiometric capacity unknown or unobserved (abstains)"))
 
         # 2. Copernicus Satellite Operational Activity Evidence
         if ev.satellite_plume_anomaly_zscore is not None:

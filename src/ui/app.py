@@ -283,17 +283,17 @@ if menu == "1. Executive Overview & Cockpit":
         st.markdown("### The Empirical Problem: The Verification Bottleneck")
         st.markdown(
             """
-            Under **Regulation (EU) 2023/956**, **Implementing Regulation (EU) 2025/2546** (verification rules),
-            **Implementing Regulation (EU) 2025/2551** (verifier accreditation), and **Implementing Regulation (EU) 2025/2547**
+            Under **Regulation (EU) 2023/956**, **Commission Implementing Regulation (EU) 2025/2546** (verification rules),
+            **Commission Delegated Regulation (EU) 2025/2551** (verifier accreditation), and **Commission Implementing Regulation (EU) 2025/2547**
             (calculation of embedded emissions), EU importers of heavy industrial commodities (primarily **Cement and Steel**)
-            who report actual embedded emissions must undergo mandatory third-party verification, including an initial physical on-site inspection.
+            who report actual embedded emissions must undergo third-party verification, with physical on-site inspections as the regulatory default under Implementing Regulation (EU) 2025/2546.
 
-            This introduces a severe operational and economic market failure:
-            1. **Steep Verification Costs:** Standard facility audits cost **€15,000–€50,000**, escalating to **€50,000–€150,000+** per site for complex integrated metallurgical complexes (BF-BOF) and cement kilns when factoring in international auditor travel to third countries (India, China, Turkey, Brazil), laboratory assays, and MRV infrastructure (GMK Center, 2024; EC SWD(2021) 643).
-            2. **The "Arithmetic of Scarcity":** Approximately **12,000 EU import entities** are seeking authorized CBAM declarant status, yet only **~403 verification bodies globally** hold accreditation under the EU Accreditation and Verification Regulation (**AVR 2018/2067** / **(EU) 2025/2551**).
+            This introduces a severe operational and economic bottleneck:
+            1. **Estimated Verification Costs:** Standard facility audits cost **€15,000–€50,000**, escalating to **€50,000–€150,000+** per site for complex integrated metallurgical complexes (BF-BOF) and cement kilns when factoring in international auditor travel to third countries (India, China, Turkey, Brazil), laboratory assays, and MRV infrastructure (industry estimates; GMK Center, 2024; EC SWD(2021) 643).
+            2. **The "Arithmetic of Scarcity":** An estimated **~12,000 EU import entities** are seeking authorized CBAM declarant status, while only **~403 verification bodies globally** currently hold EU ETS accreditation under the EU Accreditation and Verification Regulation (**AVR 2018/2067**; dedicated CBAM verifier accreditations under **Commission Delegated Regulation (EU) 2025/2551** roll out from late 2026).
             3. **Administrative Deadlocks:** Complete audit cycles require **3 to 6 months**. Importers unable to schedule verifiers are forced to declare default values carrying punitive mark-ups (**+10% in 2026, +20% in 2027, +30% in 2028**), costing importers millions in excess certificate surcharges.
 
-            **VeriCBAM** directly resolves this crisis by providing automated, deterministic, and satellite-corroborated pre-audit screening,
+            **VeriCBAM** directly addresses this screening bottleneck by providing automated, multimodal, and explainable decision support,
             allowing customs authorities and buyers to triage physical audits to high-risk installations while prioritizing declarations for further verification.
             """
         )
@@ -303,9 +303,9 @@ if menu == "1. Executive Overview & Cockpit":
                 """
                 - **European Commission (2021):** *Impact Assessment Report on CBAM*, SWD(2021) 643 final (Section 6.6 & Annex 6).
                 - **Regulation (EU) 2023/956:** Establishing a carbon border adjustment mechanism (Articles 8 & 9).
-                - **Commission Implementing Regulation (EU) 2025/2546:** Principles and rules for verification of emissions declarations.
-                - **Commission Implementing Regulation (EU) 2025/2551:** Rules for accreditation of verifiers.
-                - **Commission Implementing Regulation (EU) 2025/2547:** Rules for calculation of embedded direct and indirect emissions.
+                - **Commission Implementing Regulation (EU) 2025/2546:** Principles and rules for verification of emissions declarations. http://data.europa.eu/eli/reg_impl/2025/2546/oj
+                - **Commission Delegated Regulation (EU) 2025/2551:** Rules for accreditation and oversight of verifiers. http://data.europa.eu/eli/reg_del/2025/2551/oj
+                - **Commission Implementing Regulation (EU) 2025/2547:** Rules for calculation of embedded direct and indirect emissions. http://data.europa.eu/eli/reg_impl/2025/2547/oj
                 - **Commission Implementing Regulation (EU) 2018/2067:** General rules on accreditation and verification (AVR).
                 - **GMK Center (2024):** *CBAM Verification: Requirements, Costs and Industry Bottlenecks in the Steel Sector*.
                 - **European Environment Agency (2026):** *EEA Industrial Reporting Database (E-PRTR / IED v16)* (100% empirical validation cohort).

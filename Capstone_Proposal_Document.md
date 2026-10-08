@@ -21,14 +21,14 @@ In **2026, the European Union's Carbon Border Adjustment Mechanism (CBAM) entere
 European industrial buyers, customs declarants, and National Competent Authorities (such as Germany's *Deutsche Emissionshandelsstelle - DEHSt*) face an acute operational and economic bottleneck under the CBAM definitive regime:
 
 1. **The Escalating Financial Cost of Physical Audits:**  
-   Under Regulation (EU) 2023/956 (Articles 8 & 9), Commission Implementing Regulation (EU) 2025/2546 (verification rules), Implementing Regulation (EU) 2025/2551 (verifier accreditation), and Implementing Regulation (EU) 2025/2547 (calculation of embedded emissions), physical on-site audits are mandatory for verification when claiming actual embedded emissions. Empirical industry research (GMK Center, 2024; European Commission SWD(2021) 643 final) demonstrates that third-party verification costs scale steeply with industrial complexity:
+   Under Regulation (EU) 2023/956 (Articles 8 & 9), Commission Implementing Regulation (EU) 2025/2546 (verification rules), Commission Delegated Regulation (EU) 2025/2551 (verifier accreditation), and Commission Implementing Regulation (EU) 2025/2547 (calculation of embedded emissions), physical on-site audits represent the regulatory default under Implementing Regulation (EU) 2025/2546 when claiming actual embedded emissions (with strict conditions for waivers). Estimated third-party verification costs scale steeply with industrial complexity (GMK Center, 2024; European Commission SWD(2021) 643 final):
    * **Simple / Single-Product Units:** €5,000 to €15,000 per facility (e.g., standalone scrap electric arc furnace or rolling mill with pre-existing ISO 14064 MRV).
    * **Medium Heavy Industrial Sites:** €15,000 to €50,000 per facility (e.g., merchant cement clinker rotary kiln).
-   * **Complex Integrated Heavy Industry (The VeriCBAM Target Focus):** **€50,000 to €150,000+ per site visit** for integrated Blast Furnace–Basic Oxygen Furnace (BF-BOF) steelworks and multi-kiln cement mega-complexes. When factoring in mandatory international auditor travel to non-EU jurisdictions (e.g., India, China, Turkey, Brazil), forensic chemical assay of raw meal/coke, and local security/logistics, full compliance costs frequently reach **€75,000 to €210,000+ per enterprise**.
+   * **Complex Integrated Heavy Industry (The VeriCBAM Target Focus):** **€50,000 to €150,000+ per site visit** (industry estimates; GMK Center, 2024) for integrated Blast Furnace–Basic Oxygen Furnace (BF-BOF) steelworks and multi-kiln cement mega-complexes. When factoring in international auditor travel to non-EU jurisdictions (e.g., India, China, Turkey, Brazil), forensic chemical assay of raw meal/coke, and local security/logistics, full compliance costs frequently reach **€75,000 to €210,000+ per enterprise**.
 
 2. **The "Arithmetic of Scarcity" & Administrative Timeline Delays:**  
    A severe structural market failure compounds this cost burden:
-   * **Demand vs. Supply Deficit:** Approximately **12,000 EU import entities** are seeking authorized CBAM declarant status across tens of thousands of supplying installations, yet only **~403 verification bodies globally** hold active accreditation under the EU Accreditation and Verification Regulation (**AVR - Commission Implementing Regulation (EU) 2018/2067** / **(EU) 2025/2551**).
+   * **Demand vs. Supply Deficit:** An estimated **~12,000 EU import entities** are seeking authorized CBAM declarant status across tens of thousands of supplying installations, yet only **~403 verification bodies globally** currently hold EU ETS accreditation under the EU Accreditation and Verification Regulation (**AVR - Commission Implementing Regulation (EU) 2018/2067**; dedicated CBAM verifier accreditations under **Commission Delegated Regulation (EU) 2025/2551** roll out from late 2026).
    * **Extended Verification Lead Times:** A complete physical site verification cycle takes **3 to 6 months** from initial engagement, monitoring plan reconciliation, on-site physical walk-through, to final report sign-off. Importers failing to contract verifiers 6–9 months ahead of annual deadlines face complete scheduling lockouts.
    * **The Punitive Alternative (Default Value Mark-Up):** If an overseas installation cannot secure physical verification in time, importers are forced to surrender CBAM certificates calculated via the European Commission's **default emissions values**, which carry punitive administrative mark-ups:
      $$\text{Markup} = +10\% \text{ (2026)} \longrightarrow +20\% \text{ (2027)} \longrightarrow +30\% \text{ (from 2028)}.$$
@@ -44,7 +44,7 @@ Rather than claiming to replace accredited legal certification bodies or directl
 * It establishes **physical plausibility** via first-principles chemical engineering process bounds and Best Available Techniques (BAT) benchmarks.
 * It evaluates **operational activity consistency** via Copernicus Sentinel-5P TROPOMI tropospheric $\text{NO}_2$ atmospheric plume contrast.
 * It compares behavior against **facility historical fingerprints and multi-pollutant co-emission ratios** ($\text{NO}_x/\text{CO}_2$ and $\text{SO}_x/\text{CO}_2$) from verified industrial registries.
-* It integrates these independent data streams through a **weighted Bayesian evidence-fusion engine** that quantifies risk alongside explicit confidence and uncertainty intervals.
+* It integrates these heterogeneous data streams through a **weighted Bayesian evidence-fusion engine** that quantifies risk alongside explicit confidence and uncertainty intervals.
 * It delivers an **explainable reasoning graph and audit dossier** for human decision-makers, including a **standalone pre-screening tool** for importers and overseas suppliers.
 
 ---
@@ -52,7 +52,7 @@ Rather than claiming to replace accredited legal certification bodies or directl
 ## 2. Research Questions & Hypotheses
 
 ### 2.1 Central Research Question
-> **To what extent can independent physical, observational, historical, and multi-pollutant evidence be fused into an explainable decision-support model that identifies controlled CBAM emissions inconsistencies more reliably than isolated single-modality sources?**
+> **To what extent can heterogeneous physical, observational, historical, and multi-pollutant evidence be fused into an explainable decision-support model that identifies controlled CBAM emissions inconsistencies more reliably than isolated single-modality sources?**
 
 ### 2.2 Research Sub-Questions
 * **RQ1 (Physical Plausibility):** How accurately can chemical engineering mass-balance and stoichiometric lower bounds identify physically implausible declared specific emissions ($SEE_g$)?
@@ -70,7 +70,7 @@ Rather than claiming to replace accredited legal certification bodies or directl
 flowchart TD
     A["CBAM Declaration (PDF / Excel / Manual Entry)"] --> B["Document Intelligence & Parameter Extraction"]
     
-    subgraph Evidence_Generation["Independent Evidence Generation Layers"]
+    subgraph Evidence_Generation["Heterogeneous Evidence Generation Layers"]
         B --> C1["Layer 1: Stoichiometric Bound Engine\n(Chemical Mass & Energy Balances)"]
         B --> C2["Layer 2: Earth Observation Engine\n(Copernicus Sentinel-5P NO2 Plume Contrast)"]
         B --> C3["Layer 3: Historical Profile & Co-Pollutant Engine\n(Registry Drift & NOx/CO2 Combustion Ratios)"]
@@ -102,12 +102,12 @@ VeriCBAM organizes verification into an auditable four-level evidence hierarchy:
 
 1. **Level 1 — Physical Consistency (Chemical Engineering Stoichiometry):**  
    Evaluates process-specific lower bounds conditioned on declared technology:
-   * **Cement Clinker Calcination Floor:** Decomposition of calcium carbonate ($\text{CaCO}_3 \xrightarrow{\Delta} \text{CaO} + \text{CO}_2$) establishes a rigid chemical floor of $0.7848\text{ t CO}_2/\text{t CaO}$. For standard European clinker containing $65\%\text{ CaO}$, this sets an unevadable process emission floor of $0.510\text{–}0.525\text{ t CO}_2/\text{t clinker}$. Adding BAT thermodynamic thermal energy consumption ($3,000\text{ MJ/t clinker}$) establishes absolute lower bounds on total specific direct emissions ($SEE_g \ge 0.650\text{ t CO}_2/\text{t clinker}$).
+   * **Cement Clinker Calcination Floor:** Decomposition of calcium carbonate ($\text{CaCO}_3 \xrightarrow{\Delta} \text{CaO} + \text{CO}_2$) establishes a rigid chemical floor of $0.7848\text{ t CO}_2/\text{t CaO}$. For standard European clinker containing $65\%\text{ CaO}$, this sets an unevadable process emission floor of $0.510\text{–}0.525\text{ t CO}_2/\text{t clinker}$. Adding BAT route thermal energy consumption ($3,000\text{ MJ/t clinker}$) establishes absolute lower bounds on total specific direct emissions ($SEE_g \ge 0.650\text{ t CO}_2/\text{t clinker}$).
    * **Steelmaking Process Routes:** Hematite reduction mass balance establishes an iron reduction floor of $1.182\text{ t CO}_2/\text{t iron}$. Process route minimums enforce distinct physical thresholds:
      * Integrated Blast Furnace–Basic Oxygen Furnace (BF-BOF): $SEE_g \ge 1.350\text{ t CO}_2/\text{t crude steel}$.
      * Direct Reduced Iron–Electric Arc Furnace (DRI-EAF): $SEE_g \ge 0.400\text{ t CO}_2/\text{t crude steel}$.
      * Scrap-based Electric Arc Furnace (Scrap-EAF): $SEE_g \ge 0.050\text{ t CO}_2/\text{t crude steel}$.
-   Declarations reporting specific emissions below these thermodynamic floors are flagged deterministically.
+   Declarations reporting specific emissions below these stoichiometric and route-specific engineering lower bounds are flagged deterministically.
 
 2. **Level 2 — Operational Consistency (Copernicus Earth Observation):**  
    Ingests Copernicus Sentinel-5P TROPOMI Level-2 tropospheric $\text{NO}_2$ column densities over a target facility coordinates:
@@ -120,7 +120,7 @@ VeriCBAM organizes verification into an auditable four-level evidence hierarchy:
    * **Multi-Pollutant Combustion Consistency ($\text{NO}_x/\text{CO}_2$ and $\text{SO}_x/\text{CO}_2$ Ratios):** Heavy industrial combustion produces coupled co-pollutants. Cement kilns and blast furnaces exhibit characteristic $\text{NO}_x/\text{CO}_2$ mass ratios ($1.0\text{–}3.5\text{ kg NO}_x/\text{t CO}_2$). A supplier attempting to under-report $\text{CO}_2$ while reporting authentic local regulatory $\text{NO}_x$ generates an anomalous spike in the co-pollutant ratio, exposing manipulation independently of satellite data.
 
 4. **Level 4 — Multimodal Synthesis (Weighted Bayesian Evidence Fusion):**  
-   Combines independent evidence streams into a posterior inconsistency probability using a confidence-weighted and stream-weighted Bayesian log-odds formulation:
+   Combines heterogeneous evidence streams into a posterior inconsistency probability using a confidence-weighted and stream-weighted Bayesian log-odds formulation:
    $$\text{logit } P(H \mid E) = \text{logit } P(H) + \sum_{i=1}^{M} w_i C_i \ln(\text{LR}_i)$$
    $$P(H \mid E) = \sigma\left(\text{logit } P(H) + \sum_{i=1}^{M} w_i C_i \ln(\text{LR}_i)\right)$$
    where:
@@ -128,11 +128,13 @@ VeriCBAM organizes verification into an auditable four-level evidence hierarchy:
    * $P(H) \approx 0.08$ is the baseline prior (tested across sensitivity range $0.02\text{–}0.15$).
    * $\text{LR}_i = \frac{P(E_i \mid H)}{P(E_i \mid \neg H)}$ is the likelihood ratio generated by evidence stream $i$.
    * $C_i \in [0, 1]$ represents the dynamic observational confidence factor (e.g., $C_{\text{sat}} = 1 - \text{cloud\_fraction}$, $C_{\text{hist}} = \min(1.0, N_{\text{years}} / 5)$).
-   * $w_i \in [0, 1]$ represents the calibrated reliability weight of the stream:
-     * $w_1 = 1.00$ for Stoichiometric Lower Bounds (deterministic physical law).
-     * $w_2 = 0.35$ for Satellite Plume Contrast (down-weighted due to empirical atmospheric noise).
-     * $w_3 = 0.80$ for Longitudinal Historical Drift (verified regulatory registry).
-     * $w_4 = 0.60$ for Multi-Pollutant Combustion Ratios ($\text{NO}_x/\text{CO}_2$).
+   * $w_i > 0$ represents the evidential reliability weight of the stream (parameterized from `src/core/bayesian/evidence_fusion.py`):
+     * $w_{\text{stoich}} = 1.50$ for Stoichiometric Lower Bounds (deterministic physical law).
+     * $w_{\text{sat}} = 1.00$ for Satellite Plume Contrast (auxiliary operational activity indicator).
+     * $w_{\text{hist}} = 1.00$ for Longitudinal Historical Drift (verified regulatory registry).
+     * $w_{\text{nox}} = 1.20$ for Multi-Pollutant Combustion Ratios ($\text{NO}_x/\text{CO}_2$).
+     * $w_{\text{reg}} = 0.80$ for Registry Capacity Utilization.
+     * $w_{\text{route}} = 2.00$ for Process Technology Route Verification.
 
 ---
 
@@ -156,7 +158,7 @@ Because authentic regulatory violation labels for overseas CBAM declarations do 
 1. **177 Authentic Real-Year Negatives:** Unperturbed real facility-years ($y \in [2018, 2023]$) across the 30 industrial facilities. Natural operating emissions variance is modeled using a robust pooled Median Absolute Deviation ($\sigma = 0.0911$), providing an authentic non-violation baseline.
 2. **140 Graded Understatement Cases:** Synthetic declarations generated across 5 distinct perturbation magnitudes:
    $$\delta \in \{5\%, 10\%, 20\%, 30\%, 50\%\},$$
-   testing the system's sensitivity threshold from subtle manipulation ($\delta = 5\%$) to severe fraud ($\delta = 50\%$).
+   testing the system's sensitivity threshold from subtle deviation ($\delta = 5\%$) to severe understatement ($\delta = 50\%$).
 3. **9 Route Mismatch Cases:** Structural misclassifications (e.g., claiming scrap EAF route emissions for an integrated BF-BOF facility).
 
 > **Methodological Independence & Zero Circularity:**  
@@ -320,9 +322,9 @@ The empirical problem statement, baseline datasets, and stoichiometric threshold
    * *Key Evidence:* Articles 8 & 9 mandate independent third-party verification for actual emissions and govern on-site inspection requirements; Annex IV specifies system boundaries for clinker calcination and crude steel reduction.
 
 3. **European Commission (2018 & 2025):**
-   * *Commission Implementing Regulation (EU) 2025/2546 laying down principles and rules for the verification of emissions declarations under Regulation (EU) 2023/956.*
-   * *Commission Implementing Regulation (EU) 2025/2551 laying down rules for the accreditation of verifiers under Regulation (EU) 2023/956.*
-   * *Commission Implementing Regulation (EU) 2025/2547 laying down rules for the calculation of embedded emissions under Regulation (EU) 2023/956.*
+   * *Commission Implementing Regulation (EU) 2025/2546 laying down principles and rules for the verification of emissions declarations under Regulation (EU) 2023/956. http://data.europa.eu/eli/reg_impl/2025/2546/oj*
+   * *Commission Delegated Regulation (EU) 2025/2551 laying down rules for the accreditation of verifiers under Regulation (EU) 2023/956. http://data.europa.eu/eli/reg_del/2025/2551/oj*
+   * *Commission Implementing Regulation (EU) 2025/2547 laying down rules for the calculation of embedded emissions under Regulation (EU) 2023/956. http://data.europa.eu/eli/reg_impl/2025/2547/oj*
    * *Commission Implementing Regulation (EU) 2018/2067 on the verification of data and on the accreditation of verifiers pursuant to Directive 2003/87/EC (Accreditation and Verification Regulation - AVR).*
    * *Key Evidence:* Establishes ISO 14065/ISO 14064-3 accreditation requirements, physical site visit rules, and documents the limited global pool of ~403 accredited verification bodies.
 

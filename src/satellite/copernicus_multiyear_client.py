@@ -32,11 +32,18 @@ class CopernicusMultiYearClient:
     TOKEN_URL = "https://identity.dataspace.copernicus.eu/auth/realms/CDSE/protocol/openid-connect/token"
     STAT_URL = "https://sh.dataspace.copernicus.eu/api/v1/statistics"
 
-    def __init__(self, credentials_path: Path = CREDS_FILE):
-        if not credentials_path.exists():
-            raise FileNotFoundError(f"Copernicus credentials file missing: {credentials_path}")
-        
-        self.client_id, self.client_secret = self._load_credentials(credentials_path)
+    def __init__(self, credentials_path: Optional[Path] = CREDS_FILE):
+        env_cid = os.getenv("CDSE_CLIENT_ID")
+        env_sec = os.getenv("CDSE_CLIENT_SECRET")
+        if env_cid and env_sec:
+            self.client_id = env_cid.strip()
+            self.client_secret = env_sec.strip()
+        else:
+            if credentials_path is None or not credentials_path.exists():
+                raise FileNotFoundError(
+                    f"Copernicus CDSE credentials not found. Set CDSE_CLIENT_ID and CDSE_CLIENT_SECRET environment variables or provide a credentials file at: {credentials_path}"
+                )
+            self.client_id, self.client_secret = self._load_credentials(credentials_path)
         self.access_token = None
         self.token_expiry_time = 0
 
@@ -45,15 +52,18 @@ class CopernicusMultiYearClient:
             lines = [l.strip() for l in f if l.strip() and not l.startswith("#")]
         cid, sec = None, None
         for l in lines:
-            if "id" in l.lower() and ":" in l:
-                cid = l.split(":", 1)[1].strip()
-            elif "secret" in l.lower() and ":" in l:
-                sec = l.split(":", 1)[1].strip()
-            elif len(lines) == 2 and not cid:
-                cid = lines[0]
-                sec = lines[1]
+            if ":" in l:
+                key, val = [part.strip() for part in l.split(":", 1)]
+                k_clean = key.lower().replace(" ", "_").replace("-", "_")
+                if k_clean in ("client_id", "id", "cdse_client_id"):
+                    cid = val
+                elif k_clean in ("client_secret", "secret", "cdse_client_secret"):
+                    sec = val
+        if (not cid or not sec) and len(lines) == 2 and ":" not in lines[0] and ":" not in lines[1]:
+            cid = lines[0]
+            sec = lines[1]
         if not cid or not sec:
-            raise ValueError("Could not parse Client ID and Client Secret from Copernicus.txt")
+            raise ValueError(f"Could not parse valid client ID and client secret from {p.name}")
         return cid, sec
 
     def get_token(self) -> str:

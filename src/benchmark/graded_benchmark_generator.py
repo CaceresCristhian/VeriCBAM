@@ -224,7 +224,9 @@ def generate_graded_benchmark():
         case_idx += 1
 
     # 2. GRADED POSITIVES: Understatement deltas applied to 2023 observations across all 30 facilities
-    # Deliberate materiality threshold: delta >= 10% is material inconsistency under EU CBAM verification (Implementing Reg 2025/2546)
+    # Project-defined screening threshold: delta >= 10% (primary benchmark rule; delta >= 5% evaluated for sensitivity).
+    # Note: Commission Implementing Regulation (EU) 2025/2546 (Article 5) defines materiality at the level of goods
+    # (product-level specific embedded emissions); this benchmark evaluates plant-level E-PRTR Scope 1 emissions.
     deltas = [0.05, 0.10, 0.20, 0.30, 0.50]
     c2023 = cohort[cohort["reportingYear"] == 2023]
 

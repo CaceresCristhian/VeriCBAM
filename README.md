@@ -16,15 +16,15 @@
 
 ## 1. Executive Summary & Research Question
 
-Under **Regulation (EU) 2023/956**, **Implementing Regulation (EU) 2025/2546** (verification rules), **Implementing Regulation (EU) 2025/2551** (verifier accreditation), and **Implementing Regulation (EU) 2025/2547** (calculation of embedded emissions), EU importers of carbon-intensive commodities (**Cement and Steel**) declaring actual embedded Scope 1 emissions face an acute verification bottleneck:
-- Complex facility audits cost **€50,000 to €150,000+** per integrated site when factoring in international auditor travel to third countries (India, China, Turkey, Brazil).
-- Only **~403 verification bodies globally** hold accreditation under the EU Accreditation and Verification Regulation (**AVR 2018/2067** / **(EU) 2025/2551**) to serve over **~12,000 EU import entities**.
+Under **Regulation (EU) 2023/956**, **Commission Implementing Regulation (EU) 2025/2546** (verification rules), **Commission Delegated Regulation (EU) 2025/2551** (verifier accreditation), and **Commission Implementing Regulation (EU) 2025/2547** (calculation of embedded emissions), EU importers of carbon-intensive commodities (**Cement and Steel**) declaring actual embedded Scope 1 emissions face an acute verification bottleneck:
+- Complex facility audits cost **€50,000 to €150,000+** per integrated site when factoring in international auditor travel to third countries (industry estimates; GMK Center, 2024; EC SWD(2021) 643).
+- Only **~403 verification bodies globally** currently hold EU ETS accreditation under the EU Accreditation and Verification Regulation (**AVR 2018/2067**; dedicated CBAM verifier accreditations under **Commission Delegated Regulation (EU) 2025/2551** roll out from late 2026) to serve an estimated **~12,000 EU import entities**.
 - Audit cycles require **3 to 6 months**, causing administrative backlogs and exposing importers to punitive mark-up penalties (+10% in 2026, +20% in 2027, +30% in 2028).
 
 ### Central Research Question
-> **To what extent can independent physical, observational, historical, and documentary evidence be fused into an explainable decision-support model that identifies controlled CBAM emissions inconsistencies more reliably than isolated evidence sources?**
+> **To what extent can heterogeneous physical, observational, historical, and documentary evidence be fused into an explainable decision-support model that identifies controlled CBAM emissions inconsistencies more reliably than isolated evidence sources?**
 
-**Scientific Position:** VeriCBAM does **not** claim autonomous legal CBAM compliance certification. It provides explainable, probabilistic decision support for human verifiers and customs authorities to prioritize high-risk installations and clear concordant claims.
+**Scientific Position:** VeriCBAM does **not** claim autonomous legal CBAM compliance certification or real-world fraud detection. It provides explainable, probabilistic decision support for human verifiers and customs authorities to prioritize high-risk installations and clear concordant claims.
 
 ---
 
@@ -82,9 +82,15 @@ Where:
 - $P(H)$: Baseline prior probability ($8\%$ historical discrepancy baseline, evaluated via sensitivity analysis across $[2\%, 15\%]$).
 - $\text{LR}_i = \frac{P(E_i \mid H)}{P(E_i \mid \neg H)}$: Evidence-specific likelihood ratio.
 - $C_i \in [0, 1]$: Observational confidence factor (accounting for cloud fraction, QA flags, and historical data completeness).
-- $w_i \in [0, 1]$: Evidential reliability weights ($w_1 = 1.0$ stoichiometry, $w_2 = 0.35$ satellite remote sensing, $w_3 = 0.80$ historical drift, $w_4 = 0.60$ multi-pollutant ratio).
+- $w_i > 0$: Evidential reliability weights from `src/core/bayesian/evidence_fusion.py`:
+  - $w_{\text{stoich}} = 1.50$ (Stoichiometric lower bounds)
+  - $w_{\text{sat}} = 1.00$ (Satellite remote sensing activity proxy)
+  - $w_{\text{hist}} = 1.00$ (Longitudinal historical drift)
+  - $w_{\text{nox}} = 1.20$ (Multi-pollutant $\text{NO}_x/\text{CO}_2$ combustion ratio)
+  - $w_{\text{reg}} = 0.80$ (Registry nameplate capacity utilization)
+  - $w_{\text{route}} = 2.00$ (Process technology route verification)
 - **Uncertainty Interval:** 95% sensitivity bounds generated via Monte Carlo sampling under likelihood-ratio parameter uncertainty.
-- **Formal Insufficient Evidence Gate:** If $C_{\text{overall}} < 0.50$, the system automatically outputs `Insufficient Evidence` to prevent false positive screening under overcast skies.
+- **Formal Insufficient Evidence Gate:** If $C_{\text{overall}} < 0.50$, the system automatically outputs `Insufficient Evidence` to prevent false positive screening under overcast skies or missing baselines.
 
 ---
 
