@@ -1,4 +1,4 @@
 calibration_method,brier_score,ece,log_loss,f1_score,precision,recall,roc_auc,pr_auc
 Raw Posterior (No Calibration),0.0423,0.0758,0.1279,0.9635,1.0,0.9296,0.9991,0.9996
-Platt Scaling (GroupKFold),0.0166,0.0184,0.0593,0.9859,0.9859,0.9859,0.9981,0.9992
-Isotonic Regression (GroupKFold),0.02,0.0236,0.3014,0.979,0.9722,0.9859,0.9925,0.9958
+Platt Scaling (GroupKFold),0.0168,0.0312,0.0596,0.9859,0.9859,0.9859,0.9977,0.9991
+Isotonic Regression (GroupKFold),0.0186,0.0192,0.3014,0.9859,0.9859,0.9859,0.9927,0.9958

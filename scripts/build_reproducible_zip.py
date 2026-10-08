@@ -21,6 +21,7 @@ EXCLUDE_DIRS = {
     ".vscode",
     "archive",
     "csv_tables",
+    "stitch_extracted",
 }
 
 EXCLUDE_EXTENSIONS = {

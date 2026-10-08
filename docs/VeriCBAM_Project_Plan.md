@@ -119,20 +119,20 @@ VeriCBAM follows a decoupled, deterministic-first architecture where AI models s
 
 VeriCBAM organizes verification into an auditable four-level evidence hierarchy:
 * **Level 1 — Physical Consistency:** Process-specific lower bounds conditioned on declared technology (limestone calcination and hematite reduction stoichiometry). Deterministically flags physical impossibilities.
-* **Level 2 — Operational Consistency:** Sentinel-5P TROPOMI trace-gas plumes ($NO_2/CO$) and Sentinel-2 Short-Wave Infrared (SWIR Bands 11/12) operational activity indicators.
-* **Level 3 — Historical Consistency:** Multivariate facility fingerprints and longitudinal drift ($Z_{\text{temp}}$) from verified reference reporting baselines.
-* **Level 4 — Multimodal Synthesis:** Confidence-weighted Bayesian log-odds synthesis:
+* **Level 2 — Operational Consistency:** Sentinel-5P TROPOMI trace-gas plumes ($NO_2$) plume contrast ($Z_{\text{plume}}$) relative to regional background (down-weighted due to empirical noise).
+* **Level 3 — Historical Consistency & Co-Pollutants:** Longitudinal facility fingerprints and temporal drift ($Z_{\text{temp}}$), combined with multi-pollutant combustion ratio consistency ($\text{NO}_x/\text{CO}_2$ and $\text{SO}_x/\text{CO}_2$).
+* **Level 4 — Multimodal Synthesis:** Confidence-weighted and stream-weighted Bayesian log-odds synthesis:
 
-$$\text{logit } P(H \mid E) = \text{logit } P(H) + \sum_{i} C_i \cdot \log(LR_i)$$
+$$\text{logit } P(H \mid E) = \text{logit } P(H) + \sum_{i=1}^M w_i \cdot C_i \cdot \ln(LR_i)$$
 
-$$P(H \mid E) = \sigma\left(\text{logit } P(H) + \sum_{i} C_i \log(LR_i)\right)$$
+$$P(H \mid E) = \sigma\left(\text{logit } P(H) + \sum_{i=1}^M w_i C_i \ln(LR_i)\right)$$
 
 Where:
 * $H$: Material inconsistency event in the declaration.
 * $P(H) \approx 0.08$: Base prior probability (derived from international ETS audit baseline discrepancies).
 * $LR_i = \frac{P(E_i \mid H)}{P(E_i \mid \neg H)}$: Likelihood ratio of evidence stream $i$.
 * $C_i \in [0, 1]$: Observational confidence/reliability factor (e.g. $C_{\text{sat}} = \max(0, 1 - \text{cloud\_fraction})$).
-* The model approximates conditional independence between evidence channels while applying explicit confidence weights and dependency-aware adjustments.
+* $w_i \in [0, 1]$: Calibrated evidential stream weight ($w_1 = 1.0$ stoichiometry, $w_2 = 0.35$ satellite remote sensing, $w_3 = 0.80$ historical drift, $w_4 = 0.60$ multi-pollutant ratio).
 
 ### 3.2 Explicit Uncertainty & Four Categorical System Outcomes
 VeriCBAM strictly separates **Inconsistency Risk** ($P(H \mid E)$) from **Observational Confidence** ($C_{\text{overall}}$). When cloud cover or missing records degrade data quality, the system enters an explicit **Insufficient Evidence** state rather than forcing a binary classification:
@@ -225,6 +225,25 @@ To guarantee rigorous scientific defense, VeriCBAM does not merely showcase a fu
 * **False Positive Rate (FPR):** Ensuring compliant installations are not erroneously flagged.
 * **Brier Score & Expected Calibration Error (ECE):** Demonstrating that an 80% risk rating corresponds to an actual 80% empirical inconsistency frequency.
 * **Uncertainty Calibration:** Accuracy of predicted confidence bounds under varying atmospheric cloud cover.
+
+### 6.1 Graded Evaluation Benchmark Results (326 Cases)
+Evaluated across 177 authentic real-year negatives, 140 graded understatements ($\delta \in \{5\%, 10\%, 20\%, 30\%, 50\%\}$), and 9 route mismatches:
+
+| Model Architecture | ROC-AUC | PR-AUC | Brier Score | ECE (10 Bins) |
+| :--- | :---: | :---: | :---: | :---: |
+| **Model B (Stoichiometry Alone)** | 0.6897 | 0.5248 | 0.2865 | 0.2647 |
+| **Model C (Satellite Alone)** | 0.5221 | 0.3859 | 0.3719 | 0.3461 |
+| **Model D (Historical Alone)** | 0.9659 | 0.9479 | 0.2352 | 0.3390 |
+| **Model E1 (Expert Bayesian Fusion)** | 0.7693 | 0.5625 | 0.2716 | **0.1108** |
+| **Model E2 (Learned Logistic Regression - GroupKFold)** | **0.9654** | **0.9502** | **0.0754** | **0.0469** |
+
+### 6.2 Key Empirical Finding: The Satellite Remote Sensing Limitation
+Multi-year empirical analysis against verified European facility emissions established that **Sentinel-5P TROPOMI NO₂ column density cannot reliably track annual plant-level CO₂ emissions in isolation**:
+- Cross-sectional correlation (2023): $\rho = 0.198$ ($p = 0.312$, statistically insignificant).
+- Longitudinal within-plant correlation (2019–2023 via CDSE): mean $\rho = -0.100$, median $\rho = -0.462$.
+- Single-modality Model C achieves ROC-AUC $= 0.5221$ (indistinguishable from random guessing).
+
+*Scientific Defense:* This rigorous negative finding disproves simplistic claims of spaceborne CBAM verification and justifies VeriCBAM's core architecture: downweighting satellite evidence ($w_2 = 0.35$) and fusing it with deterministic stoichiometry and multi-pollutant ratios.
 
 ---
 
