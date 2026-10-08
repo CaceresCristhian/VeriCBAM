@@ -24,8 +24,14 @@ test_*.pdf
 *.zip
 Capstone_BACKUP*
 Copernicus.txt
+copernicus.txt
 *.env
 .env*
+*.key
+*.pem
+*.token
+*credential*
+*secrets*
 
 # IDE and OS
 .idea/
@@ -34,4 +40,5 @@ Copernicus.txt
 Thumbs.db
 
 stitch_extracted/
+
 

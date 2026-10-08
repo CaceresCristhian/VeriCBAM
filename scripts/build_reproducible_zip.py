@@ -24,12 +24,25 @@ EXCLUDE_DIRS = {
     "stitch_extracted",
 }
 
+EXCLUDE_FILES = {
+    "Copernicus.txt",
+    "copernicus.txt",
+    ".env",
+    ".env.local",
+    "credentials.json",
+    "secrets.json",
+}
+
 EXCLUDE_EXTENSIONS = {
     ".pyc",
     ".pyo",
     ".pyd",
     ".zip",
     ".log",
+    ".key",
+    ".pem",
+    ".crt",
+    ".token",
 }
 
 
@@ -48,6 +61,16 @@ def build_zip():
             for file in files:
                 file_path = Path(root) / file
                 rel_path = file_path.relative_to(WORKSPACE)
+
+                # Skip sensitive files and credentials
+                if (
+                    file in EXCLUDE_FILES
+                    or file.lower() in EXCLUDE_FILES
+                    or file.lower().startswith(".env")
+                    or "copernicus.txt" in file.lower()
+                    or "secret" in file.lower()
+                ):
+                    continue
 
                 # Skip excluded extensions
                 if file_path.suffix in EXCLUDE_EXTENSIONS:
