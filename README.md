@@ -157,18 +157,33 @@ VeriCBAM/
 
 ## 6. Experimental Benchmarks & Empirical Findings
 
-### 6.1 Advanced Graded Evaluation Benchmark (326 Cases)
-Evaluated across 177 authentic real-year negatives (pooled MAD $\sigma = 0.0911$), 140 graded understatements ($\delta \in \{5\%, 10\%, 20\%, 30\%, 50\%\}$), and 9 route mismatches across 30 European installations:
+### 6.1 Advanced Graded Evaluation Benchmark (325 Cases)
+Evaluated across 177 authentic real-year negatives (pooled MAD $\sigma = 0.0911$), 140 graded understatements ($\delta \in \{5\%, 10\%, 20\%, 30\%, 50\%\}$), and 8 route mismatches across 30 European installations (with 95% facility-level cluster bootstrap confidence intervals across 1,000 resamples of facilities):
 
-| Model Architecture | Mechanism | ROC-AUC | PR-AUC | Brier Score | ECE (10 Bins) |
-| :--- | :--- | :---: | :---: | :---: | :---: |
-| **Model B** | Stoichiometry Alone | 0.6897 | 0.5248 | 0.2865 | 0.2647 |
-| **Model C** | Satellite Alone (Sentinel-5P $\text{NO}_2$) | 0.5221 | 0.3859 | 0.3719 | 0.3461 |
-| **Model D** | Historical Baseline Alone | 0.9659 | 0.9479 | 0.2352 | 0.3390 |
-| **Model E1** | **VeriCBAM Expert Bayesian Fusion (Zero-Shot)** | **0.7693** | **0.5625** | **0.2716** | **0.1108** |
-| **Model E2** | **Learned Logistic Regression (`GroupKFold` Baseline)** | **0.9654** | **0.9502** | **0.0754** | **0.0469** |
+| Model Architecture | ROC-AUC (95% CI) | PR-AUC (95% CI) | Brier Score | ECE (10 Bins) | False Positive Rate (Real Years) |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Model B (Stoichiometry Alone)** | 0.7081 [0.647, 0.791] | 0.5325 [0.463, 0.636] | 0.2673 | 0.2337 | 32.20% |
+| **Model C (Satellite Alone)** | 0.5183 [0.499, 0.544] | 0.3781 [0.359, 0.396] | 0.3731 | 0.3474 | 96.61% |
+| **Model D (Historical Alone)** | 0.9657 [0.960, 0.973] | 0.9470 [0.938, 0.959] | 0.2359 | 0.3400 | 51.98% |
+| **Model E1 (Expert Bayesian Fusion)** | 0.7761 [0.703, 0.853] | 0.5740 [0.493, 0.695] | 0.2525 | 0.1159 | 22.60% |
+| **Model E2 (Learned Logistic Regression - GroupKFold)** | 0.9615 [0.953, 0.971] | 0.9450 [0.934, 0.958] | 0.0818 | 0.0654 | 7.34% |
 
-*Scientific Negative Result on Satellite Trace-Gas Sensing:* Multi-year Sentinel-5P overpasses (2019–2023) against 177 facility-years proved that satellite $\text{NO}_2$ plume contrast does not track annual facility $\text{CO}_2$ ($\rho = 0.198$, within-plant mean $\rho = -0.100$). This justifies why single-modality remote sensing fails and why multimodal Bayesian fusion is necessary.
+#### Attribution Study across Methodological Fixes
+| Step | Model Architecture | ROC-AUC | PR-AUC | Brier Score | ECE | Cases |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: |
+| 1. Baseline (Phase 0) | Model B (Stoich) | 0.6897 | 0.5248 | 0.2865 | 0.2647 | 326 |
+| 1. Baseline (Phase 0) | Model D (Historical) | 0.9659 | 0.9479 | 0.2352 | 0.3390 | 326 |
+| 1. Baseline (Phase 0) | Model E1 (Bayesian) | 0.7693 | 0.5625 | 0.2716 | 0.1108 | 326 |
+| 1. Baseline (Phase 0) | Model E2 (Logistic) | 0.9654 | 0.9502 | 0.0754 | 0.0469 | 326 |
+| 2. +M3 (No Cap Fallback) | Model B (Stoich) | 0.7081 | 0.5325 | 0.2673 | 0.2337 | 325 |
+| 2. +M3 (No Cap Fallback) | Model E1 (Bayesian) | 0.7697 | 0.5697 | 0.2538 | 0.1126 | 325 |
+| 2. +M3 (No Cap Fallback) | Model E2 (Logistic) | 0.9295 | 0.8960 | 0.0943 | 0.0518 | 325 |
+| 3. +M6 (Leave-One-Out NOx) | Model E1 (Bayesian) | 0.7697 | 0.5697 | 0.2538 | 0.1126 | 325 |
+| 3. +M6 (Leave-One-Out NOx) | Model E2 (Logistic) | 0.9295 | 0.8960 | 0.0943 | 0.0518 | 325 |
+| 4. +M5 Primary (max(0, -z)) | Model E1 (Bayesian) | 0.7761 | 0.5740 | 0.2525 | 0.1159 | 325 |
+| 4. +M5 Primary (max(0, -z)) | Model E2 (Logistic) | 0.9615 | 0.9450 | 0.0818 | 0.0654 | 325 |
+| 5. Sensitivity (delta >= 5%) | Model E1 (Bayesian) | 0.7586 | 0.6409 | 0.2841 | 0.1743 | 325 |
+| 5. Sensitivity (delta >= 5%) | Model E2 (Logistic) | 0.9458 | 0.9442 | 0.0969 | 0.0422 | 325 |
 
 ### 6.2 5-Model Ablation Study Results (Layer B: 101 Controlled Cases)
 Evaluated across 30 Baseline Concordant, 30 Physical Bound Violations, 30 Historical Drop Anomalies, and 11 controlled route-mismatch cases constructed from facilities with independently documented production routes:
@@ -210,7 +225,7 @@ pip install -r requirements.txt
 ```powershell
 pytest -v
 ```
-*Expected: 19/19 tests pass.*
+*Expected: 24/24 tests pass.*
 
 ### 3. Run Master Deterministic Reproduction Pipeline
 ```powershell

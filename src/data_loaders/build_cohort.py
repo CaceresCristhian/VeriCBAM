@@ -13,6 +13,13 @@ WORKSPACE_ROOT = Path(__file__).parents[2]
 RAW_DIR = WORKSPACE_ROOT / "data" / "01_raw" / "eprtr_reference" / "csv_tables"
 PROCESSED_DIR = WORKSPACE_ROOT / "data" / "02_processed"
 
+try:
+    from src.data_loaders.nox_baseline import compute_leave_one_year_out_nox_ratios
+except ImportError:
+    from nox_baseline import compute_leave_one_year_out_nox_ratios
+
+__all__ = ["build_cohort", "compute_leave_one_year_out_nox_ratios"]
+
 
 def build_cohort():
     print("Building authentic multi-pollutant cohort from raw EEA tables...")
@@ -125,23 +132,16 @@ def build_cohort():
     print(f"Facility-years with NOx: {cohort_output['nox_tonnes'].notna().sum()}")
     print(f"Facility-years with SOx: {cohort_output['sox_tonnes'].notna().sum()}")
 
-    # Compute NOx/CO2 baseline ratio per facility (historical 2018-2022)
-    hist_mask = cohort_output["reportingYear"] < 2023
-    ratios = []
-    for fid, grp in cohort_output[hist_mask].groupby("FacilityInspireId"):
-        valid = grp[(grp["co2_tonnes"] > 0) & (grp["nox_tonnes"] > 0)]
-        if len(valid) >= 2:
-            r = valid["nox_tonnes"] / valid["co2_tonnes"]
-            ratios.append({
-                "facility_inspire_id": fid,
-                "nox_co2_ratio_mean": r.mean(),
-                "nox_co2_ratio_std": r.std(),
-                "nox_co2_ratio_cv": r.std() / r.mean() if r.mean() > 0 else 0.0,
-                "n_ratio_obs": len(valid),
-            })
-    df_ratios = pd.DataFrame(ratios)
+    # Compute leave-one-year-out NOx/CO2 baseline ratio per facility-year (M6)
+    try:
+        from src.data_loaders.nox_baseline import compute_leave_one_year_out_nox_ratios
+    except ImportError:
+        from nox_baseline import compute_leave_one_year_out_nox_ratios
+
+    df_ratios = compute_leave_one_year_out_nox_ratios(cohort_output, min_years=3)
     df_ratios.to_csv(PROCESSED_DIR / "facility_nox_co2_ratios.csv", index=False)
-    print(f"Calculated NOx/CO2 baseline fingerprints for {len(df_ratios)} facilities.")
+    valid_fingerprints = df_ratios["nox_co2_ratio_mean"].notna().sum()
+    print(f"Calculated leave-one-year-out NOx/CO2 baselines ({valid_fingerprints} valid facility-year fingerprints across {len(df_ratios)} pairs).")
 
 
 if __name__ == "__main__":

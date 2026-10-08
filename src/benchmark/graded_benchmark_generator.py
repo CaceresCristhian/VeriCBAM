@@ -32,9 +32,9 @@ class GradedBenchmarkCase:
     # Technology & Activity
     actual_technology_route: str
     declared_production_route: str
-    nameplate_capacity_mtpa: float
-    assumed_production_tonnes_central: float
-    assumed_production_tonnes_max: float
+    nameplate_capacity_mtpa: Optional[float]
+    assumed_production_tonnes_central: Optional[float]
+    assumed_production_tonnes_max: Optional[float]
 
     # Reported & Declared Emissions
     original_reported_co2_tonnes: float
@@ -42,12 +42,13 @@ class GradedBenchmarkCase:
     understatement_delta_pct: float
     benchmark_label: int  # 0 = Concordant/Neg, 1 = Material Inconsistency
 
-    # Modality 1: Stoichiometric Bounding
-    stoich_floor_central_tco2: float
-    stoich_floor_max_tco2: float
+    # Modality 1: Stoichiometric Bounding (M3: None when capacity is unobserved or missing)
+    stoich_available: bool
+    stoich_floor_central_tco2: Optional[float]
+    stoich_floor_max_tco2: Optional[float]
     stoich_violation_central: bool
     stoich_violation_conservative: bool  # True only if violated even at max capacity
-    stoich_margin_tonnes: float
+    stoich_margin_tonnes: Optional[float]
 
     # Modality 2: Longitudinal Robust Historical Drift (E6)
     historical_median_co2_tonnes: float
@@ -82,9 +83,21 @@ def generate_graded_benchmark():
     cohort = pd.read_parquet(cohort_path)
     reg = pd.read_csv(PROCESSED_DIR / "facility_technology_registry.csv").set_index("FacilityInspireId")
 
-    # Load NOx/CO2 baseline fingerprints if available
+    # Load leave-one-year-out NOx/CO2 baseline fingerprints (M6)
     nox_ratio_path = PROCESSED_DIR / "facility_nox_co2_ratios.csv"
-    nox_ratios = pd.read_csv(nox_ratio_path).set_index("facility_inspire_id") if nox_ratio_path.exists() else pd.DataFrame()
+    if nox_ratio_path.exists():
+        nox_df = pd.read_csv(nox_ratio_path)
+        if "reporting_year" in nox_df.columns:
+            nox_ratios = nox_df.set_index(["facility_inspire_id", "reporting_year"])
+        else:
+            nox_ratios = nox_df.set_index("facility_inspire_id")
+    else:
+        try:
+            from src.data_loaders.nox_baseline import compute_leave_one_year_out_nox_ratios
+        except ImportError:
+            from nox_baseline import compute_leave_one_year_out_nox_ratios
+        nox_df = compute_leave_one_year_out_nox_ratios(cohort, min_years=3)
+        nox_ratios = nox_df.set_index(["facility_inspire_id", "reporting_year"])
 
     # Load satellite 2023 cache
     sat_path = SATELLITE_DIR / "s5p_no2_overpasses_2023.parquet"
@@ -139,27 +152,44 @@ def generate_graded_benchmark():
         country = r_info["country"]
         route = r_info["verified_technology_route"]
 
-        # Capacity & production range [0.50, 0.95]
+        # Capacity & production range [0.50, 0.95] (M3: strictly no fallback)
         if sector == "Cement":
-            cap_mtpa = float(r_info.get("clinker_capacity_mtpa", 1.2))
+            cap_raw = r_info.get("clinker_capacity_mtpa", np.nan)
+            cap_mtpa = float(cap_raw) if pd.notna(cap_raw) else np.nan
             if pd.isna(cap_mtpa) or cap_mtpa <= 0:
-                cap_mtpa = float(r_info.get("cement_capacity_mtpa", 1.5)) * 0.75
+                cem_raw = r_info.get("cement_capacity_mtpa", np.nan)
+                cap_mtpa = float(cem_raw) * 0.75 if pd.notna(cem_raw) else np.nan
         else:
-            cap_mtpa = float(r_info.get("crude_steel_capacity_mtpa", 2.0))
-            if pd.isna(cap_mtpa) or cap_mtpa <= 0:
-                cap_mtpa = 2.0
+            stl_raw = r_info.get("crude_steel_capacity_mtpa", np.nan)
+            cap_mtpa = float(stl_raw) if pd.notna(stl_raw) else np.nan
 
-        prod_central = cap_mtpa * 1e6 * 0.75
-        prod_max = cap_mtpa * 1e6 * 0.95
-
-        # Stoichiometric floors
-        if sector == "Cement":
-            floor_central = prod_central * CEMENT_CALCINATION_FLOOR
-            floor_max = prod_max * CEMENT_CALCINATION_FLOOR
+        if pd.isna(cap_mtpa) or cap_mtpa <= 0:
+            cap_mtpa_val = None
+            prod_central = None
+            prod_max = None
+            floor_central = None
+            floor_max = None
+            stoich_available = False
+            stoich_violation_central = False
+            stoich_violation_conservative = False
+            stoich_margin = None
         else:
-            unit_floor = BF_BOF_STOICH_FLOOR if "BF" in route else EAF_STOICH_FLOOR
-            floor_central = prod_central * unit_floor
-            floor_max = prod_max * unit_floor
+            cap_mtpa_val = float(cap_mtpa)
+            stoich_available = True
+            prod_central = cap_mtpa_val * 1e6 * 0.75
+            prod_max = cap_mtpa_val * 1e6 * 0.95
+
+            # Stoichiometric floors
+            if sector == "Cement":
+                floor_central = prod_central * CEMENT_CALCINATION_FLOOR
+                floor_max = prod_max * CEMENT_CALCINATION_FLOOR
+            else:
+                unit_floor = BF_BOF_STOICH_FLOOR if "BF" in route else EAF_STOICH_FLOOR
+                floor_central = prod_central * unit_floor
+                floor_max = prod_max * unit_floor
+            stoich_violation_central = bool(rep_co2 < floor_central)
+            stoich_violation_conservative = bool(rep_co2 < floor_max)
+            stoich_margin = round(rep_co2 - floor_central, 1)
 
         # Robust leave-one-year-out historical drift
         fac_all = cohort[cohort["FacilityInspireId"] == fid]
@@ -168,18 +198,22 @@ def generate_graded_benchmark():
         log_r = np.log(rep_co2 / hist_med) if hist_med > 0 else 0.0
         z_robust = (log_r - med_lr) / sigma_pooled
 
-        # Multi-pollutant NOx/CO2 anomaly
+        # Multi-pollutant NOx/CO2 anomaly (M6: leave-one-year-out key: (fid, year))
         nox_t = row.get("nox_tonnes", np.nan)
         nox_z = None
         nox_base_mean = None
         nox_base_cv = None
-        if fid in nox_ratios.index and pd.notna(nox_t) and nox_t > 0:
-            n_row = nox_ratios.loc[fid]
-            nox_base_mean = float(n_row["nox_co2_ratio_mean"])
-            nox_base_cv = float(n_row["nox_co2_ratio_cv"])
-            obs_ratio = nox_t / rep_co2
-            sigma_ratio = max(1e-4, nox_base_mean * max(0.08, nox_base_cv))
-            nox_z = (obs_ratio - nox_base_mean) / sigma_ratio
+        nox_key = (fid, year)
+        if nox_key in nox_ratios.index and pd.notna(nox_t) and nox_t > 0:
+            n_row = nox_ratios.loc[nox_key]
+            if isinstance(n_row, pd.DataFrame):
+                n_row = n_row.iloc[0]
+            if pd.notna(n_row.get("nox_co2_ratio_mean")):
+                nox_base_mean = float(n_row["nox_co2_ratio_mean"])
+                nox_base_cv = float(n_row["nox_co2_ratio_cv"])
+                obs_ratio = nox_t / rep_co2
+                sigma_ratio = max(1e-4, nox_base_mean * max(0.08, nox_base_cv))
+                nox_z = (obs_ratio - nox_base_mean) / sigma_ratio
 
         # Satellite
         sat_info = sat_summary.get(fid, {"mean_z": 0.0, "n_valid": 0, "mean_cloud": 0.1})
@@ -194,18 +228,19 @@ def generate_graded_benchmark():
             reporting_year=year,
             actual_technology_route=route,
             declared_production_route=route,
-            nameplate_capacity_mtpa=cap_mtpa,
-            assumed_production_tonnes_central=round(prod_central, 1),
-            assumed_production_tonnes_max=round(prod_max, 1),
+            nameplate_capacity_mtpa=round(cap_mtpa_val, 4) if cap_mtpa_val is not None else None,
+            assumed_production_tonnes_central=round(prod_central, 1) if prod_central is not None else None,
+            assumed_production_tonnes_max=round(prod_max, 1) if prod_max is not None else None,
             original_reported_co2_tonnes=round(rep_co2, 1),
             declared_co2_tonnes=round(rep_co2, 1),
             understatement_delta_pct=0.0,
             benchmark_label=0,
-            stoich_floor_central_tco2=round(floor_central, 1),
-            stoich_floor_max_tco2=round(floor_max, 1),
-            stoich_violation_central=bool(rep_co2 < floor_central),
-            stoich_violation_conservative=bool(rep_co2 < floor_max),
-            stoich_margin_tonnes=round(rep_co2 - floor_central, 1),
+            stoich_available=stoich_available,
+            stoich_floor_central_tco2=round(floor_central, 1) if floor_central is not None else None,
+            stoich_floor_max_tco2=round(floor_max, 1) if floor_max is not None else None,
+            stoich_violation_central=stoich_violation_central,
+            stoich_violation_conservative=stoich_violation_conservative,
+            stoich_margin_tonnes=stoich_margin,
             historical_median_co2_tonnes=round(hist_med, 1),
             historical_log_ratio=round(log_r, 4),
             historical_z_robust=round(z_robust, 2),
@@ -243,28 +278,45 @@ def generate_graded_benchmark():
             route = r_info["verified_technology_route"]
 
             if sector == "Cement":
-                cap_mtpa = float(r_info.get("clinker_capacity_mtpa", 1.2))
+                cap_raw = r_info.get("clinker_capacity_mtpa", np.nan)
+                cap_mtpa = float(cap_raw) if pd.notna(cap_raw) else np.nan
                 if pd.isna(cap_mtpa) or cap_mtpa <= 0:
-                    cap_mtpa = float(r_info.get("cement_capacity_mtpa", 1.5)) * 0.75
+                    cem_raw = r_info.get("cement_capacity_mtpa", np.nan)
+                    cap_mtpa = float(cem_raw) * 0.75 if pd.notna(cem_raw) else np.nan
             else:
-                cap_mtpa = float(r_info.get("crude_steel_capacity_mtpa", 2.0))
-                if pd.isna(cap_mtpa) or cap_mtpa <= 0:
-                    cap_mtpa = 2.0
-
-            prod_central = cap_mtpa * 1e6 * 0.75
-            prod_max = cap_mtpa * 1e6 * 0.95
+                stl_raw = r_info.get("crude_steel_capacity_mtpa", np.nan)
+                cap_mtpa = float(stl_raw) if pd.notna(stl_raw) else np.nan
 
             # Declared suppressed CO2
             decl_co2 = rep_co2 * (1.0 - delta)
 
-            # Stoichiometric floors
-            if sector == "Cement":
-                floor_central = prod_central * CEMENT_CALCINATION_FLOOR
-                floor_max = prod_max * CEMENT_CALCINATION_FLOOR
+            if pd.isna(cap_mtpa) or cap_mtpa <= 0:
+                cap_mtpa_val = None
+                prod_central = None
+                prod_max = None
+                floor_central = None
+                floor_max = None
+                stoich_available = False
+                stoich_violation_central = False
+                stoich_violation_conservative = False
+                stoich_margin = None
             else:
-                unit_floor = BF_BOF_STOICH_FLOOR if "BF" in route else EAF_STOICH_FLOOR
-                floor_central = prod_central * unit_floor
-                floor_max = prod_max * unit_floor
+                cap_mtpa_val = float(cap_mtpa)
+                stoich_available = True
+                prod_central = cap_mtpa_val * 1e6 * 0.75
+                prod_max = cap_mtpa_val * 1e6 * 0.95
+
+                # Stoichiometric floors
+                if sector == "Cement":
+                    floor_central = prod_central * CEMENT_CALCINATION_FLOOR
+                    floor_max = prod_max * CEMENT_CALCINATION_FLOOR
+                else:
+                    unit_floor = BF_BOF_STOICH_FLOOR if "BF" in route else EAF_STOICH_FLOOR
+                    floor_central = prod_central * unit_floor
+                    floor_max = prod_max * unit_floor
+                stoich_violation_central = bool(decl_co2 < floor_central)
+                stoich_violation_conservative = bool(decl_co2 < floor_max)
+                stoich_margin = round(decl_co2 - floor_central, 1)
 
             # Robust historical drift for suppressed emissions
             fac_all = cohort[cohort["FacilityInspireId"] == fid]
@@ -274,17 +326,22 @@ def generate_graded_benchmark():
             z_robust = (log_r - med_lr) / sigma_pooled
 
             # NOx / Declared CO2 ratio anomaly: Reported NOx stays at genuine combustion levels while declared CO2 dropped
+            # M6: leave-one-year-out baseline for reporting year 2023
             nox_t = row.get("nox_tonnes", np.nan)
             nox_z = None
             nox_base_mean = None
             nox_base_cv = None
-            if fid in nox_ratios.index and pd.notna(nox_t) and nox_t > 0:
-                n_row = nox_ratios.loc[fid]
-                nox_base_mean = float(n_row["nox_co2_ratio_mean"])
-                nox_base_cv = float(n_row["nox_co2_ratio_cv"])
-                obs_ratio = nox_t / decl_co2  # artifically high ratio!
-                sigma_ratio = max(1e-4, nox_base_mean * max(0.08, nox_base_cv))
-                nox_z = (obs_ratio - nox_base_mean) / sigma_ratio
+            nox_key = (fid, 2023)
+            if nox_key in nox_ratios.index and pd.notna(nox_t) and nox_t > 0:
+                n_row = nox_ratios.loc[nox_key]
+                if isinstance(n_row, pd.DataFrame):
+                    n_row = n_row.iloc[0]
+                if pd.notna(n_row.get("nox_co2_ratio_mean")):
+                    nox_base_mean = float(n_row["nox_co2_ratio_mean"])
+                    nox_base_cv = float(n_row["nox_co2_ratio_cv"])
+                    obs_ratio = nox_t / decl_co2  # artificially high ratio!
+                    sigma_ratio = max(1e-4, nox_base_mean * max(0.08, nox_base_cv))
+                    nox_z = (obs_ratio - nox_base_mean) / sigma_ratio
 
             sat_info = sat_summary.get(fid, {"mean_z": 0.0, "n_valid": 0, "mean_cloud": 0.1})
 
@@ -297,18 +354,19 @@ def generate_graded_benchmark():
                 reporting_year=2023,
                 actual_technology_route=route,
                 declared_production_route=route,
-                nameplate_capacity_mtpa=cap_mtpa,
-                assumed_production_tonnes_central=round(prod_central, 1),
-                assumed_production_tonnes_max=round(prod_max, 1),
+                nameplate_capacity_mtpa=round(cap_mtpa_val, 4) if cap_mtpa_val is not None else None,
+                assumed_production_tonnes_central=round(prod_central, 1) if prod_central is not None else None,
+                assumed_production_tonnes_max=round(prod_max, 1) if prod_max is not None else None,
                 original_reported_co2_tonnes=round(rep_co2, 1),
                 declared_co2_tonnes=round(decl_co2, 1),
                 understatement_delta_pct=round(delta * 100, 1),
                 benchmark_label=1 if delta >= 0.10 else 0,  # 5% is within normal audit tolerance; >=10% is material
-                stoich_floor_central_tco2=round(floor_central, 1),
-                stoich_floor_max_tco2=round(floor_max, 1),
-                stoich_violation_central=bool(decl_co2 < floor_central),
-                stoich_violation_conservative=bool(decl_co2 < floor_max),
-                stoich_margin_tonnes=round(decl_co2 - floor_central, 1),
+                stoich_available=stoich_available,
+                stoich_floor_central_tco2=round(floor_central, 1) if floor_central is not None else None,
+                stoich_floor_max_tco2=round(floor_max, 1) if floor_max is not None else None,
+                stoich_violation_central=stoich_violation_central,
+                stoich_violation_conservative=stoich_violation_conservative,
+                stoich_margin_tonnes=stoich_margin,
                 historical_median_co2_tonnes=round(hist_med, 1),
                 historical_log_ratio=round(log_r, 4),
                 historical_z_robust=round(z_robust, 2),
@@ -326,8 +384,9 @@ def generate_graded_benchmark():
             ))
             case_idx += 1
 
-    # 3. ROUTE MISMATCH CASES: 11 controlled route mismatches (integrated BF-BOF falsely claiming Scrap-EAF)
-    bf_facilities = reg[reg["verified_technology_route"].str.contains("BF-BOF", na=False)].index[:11]
+    # 3. ROUTE MISMATCH CASES: controlled route mismatches (integrated BF-BOF falsely claiming Scrap-EAF)
+    # M3: Add a guard and skip plants without observed capacity (crude_steel_capacity_mtpa <= 0 or missing)
+    bf_facilities = reg[reg["verified_technology_route"].str.contains("BF-BOF", na=False)].index
     for fid in bf_facilities:
         row_match = c2023[c2023["FacilityInspireId"] == fid]
         if len(row_match) == 0:
@@ -335,7 +394,11 @@ def generate_graded_benchmark():
         row = row_match.iloc[0]
         rep_co2 = float(row["co2_tonnes"])
         r_info = reg.loc[fid]
-        cap_mtpa = float(r_info.get("crude_steel_capacity_mtpa", 2.0))
+        stl_raw = r_info.get("crude_steel_capacity_mtpa", np.nan)
+        cap_mtpa = float(stl_raw) if pd.notna(stl_raw) else np.nan
+        if pd.isna(cap_mtpa) or cap_mtpa <= 0:
+            # Skip plants without observed capacity per M3 guard
+            continue
         prod_central = cap_mtpa * 1e6 * 0.75
         prod_max = cap_mtpa * 1e6 * 0.95
 
@@ -359,13 +422,14 @@ def generate_graded_benchmark():
             reporting_year=2023,
             actual_technology_route=r_info["verified_technology_route"],
             declared_production_route="Scrap-EAF",
-            nameplate_capacity_mtpa=cap_mtpa,
+            nameplate_capacity_mtpa=round(cap_mtpa, 4),
             assumed_production_tonnes_central=round(prod_central, 1),
             assumed_production_tonnes_max=round(prod_max, 1),
             original_reported_co2_tonnes=round(rep_co2, 1),
             declared_co2_tonnes=round(declared_eaf_co2, 1),
             understatement_delta_pct=round(((rep_co2 - declared_eaf_co2) / rep_co2) * 100, 1),
             benchmark_label=1,
+            stoich_available=True,
             stoich_floor_central_tco2=round(prod_central * BF_BOF_STOICH_FLOOR, 1),
             stoich_floor_max_tco2=round(prod_max * BF_BOF_STOICH_FLOOR, 1),
             stoich_violation_central=True,  # 0.15 is below 1.35

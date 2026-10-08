@@ -226,7 +226,7 @@ class ProbabilisticEvidenceFusionEngine:
         self,
         ev: EvidenceInput,
         reported_emissions_tco2: float,
-        physical_min_tco2: float,
+        physical_min_tco2: Optional[float] = None,
         n_mc_samples: int = 500,
     ) -> FusionAuditDecision:
         """Executes the confidence-weighted Bayesian log-odds update with Monte Carlo uncertainty propagation.
@@ -239,7 +239,7 @@ class ProbabilisticEvidenceFusionEngine:
         Args:
             ev (EvidenceInput): Container of multi-source evidence observations.
             reported_emissions_tco2 (float): Reported Scope 1 direct emissions in tonnes CO2.
-            physical_min_tco2 (float): First-principles physical minimum expected emissions in tonnes CO2.
+            physical_min_tco2 (Optional[float]): First-principles physical minimum expected emissions in tonnes CO2 (None if unobserved).
             n_mc_samples (int, optional): Number of Monte Carlo draws for 95% sensitivity interval propagation (default: 500).
 
         Returns:
@@ -248,7 +248,8 @@ class ProbabilisticEvidenceFusionEngine:
         """
         streams = self.build_evidence_streams(ev)
         stoich_violation_flag = bool(ev.stoichiometric_violated)
-        delta_stoich = max(0.0, physical_min_tco2 - reported_emissions_tco2) if stoich_violation_flag else 0.0
+        p_min = physical_min_tco2 if physical_min_tco2 is not None else 0.0
+        delta_stoich = max(0.0, p_min - reported_emissions_tco2) if stoich_violation_flag else 0.0
 
         # 2. Calculate overall observational confidence score
         total_weight = sum(s.weight for s in streams)
@@ -301,10 +302,10 @@ class ProbabilisticEvidenceFusionEngine:
             counterfactual = delta_stoich
         elif posterior_risk >= 0.70:
             verdict = "High Inconsistency Risk"
-            counterfactual = max(0.0, physical_min_tco2 * 1.10 - reported_emissions_tco2)
+            counterfactual = max(0.0, p_min * 1.10 - reported_emissions_tco2)
         elif posterior_risk >= 0.25:
             verdict = "Potential Inconsistency"
-            counterfactual = max(0.0, physical_min_tco2 * 1.05 - reported_emissions_tco2)
+            counterfactual = max(0.0, p_min * 1.05 - reported_emissions_tco2)
         else:
             verdict = "Consistent"
             counterfactual = 0.0

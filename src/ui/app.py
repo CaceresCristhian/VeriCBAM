@@ -1,11 +1,12 @@
 """
 VeriCBAM - Multimodal Decision Support System for CBAM Emissions Auditing
-Master Capstone Interactive Dashboard
+Master Capstone Interactive Dashboard (Tier A Improved)
 University of Europe for Applied Sciences (UE Germany)
 Master of Science in Data Science | Cristhian David Caceres Mateus
 Supervisor: Dr. Humera Noor
 """
 
+import html
 import sys
 from pathlib import Path
 import streamlit as st
@@ -34,16 +35,14 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Stitch Design System Palette Injection
+# Stitch Design System Palette Injection (Offline Font Fallback)
 STITCH_THEME_CSS = """
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
-
     /* Global canvas */
     .stApp {
         background-color: #0f131c;
         color: #f1f5f9;
-        font-family: 'Inter', sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
     /* Sidebar styling */
@@ -96,9 +95,9 @@ STITCH_THEME_CSS = """
     }
 
     .bento-value {
-        font-size: 1.7rem;
+        font-size: 1.6rem;
         font-weight: 700;
-        font-family: 'JetBrains Mono', monospace;
+        font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
         color: #f1f5f9;
         margin-bottom: 4px;
     }
@@ -115,7 +114,7 @@ STITCH_THEME_CSS = """
         border-radius: 20px;
         font-size: 0.85rem;
         font-weight: 700;
-        font-family: 'JetBrains Mono', monospace;
+        font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
         letter-spacing: 0.03em;
     }
 
@@ -149,7 +148,7 @@ STITCH_THEME_CSS = """
         border: 1px dashed #2d3440;
         border-radius: 8px;
         padding: 12px 16px;
-        font-family: 'JetBrains Mono', monospace;
+        font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
         font-size: 0.88rem;
         color: #8ed5ff;
         margin-bottom: 16px;
@@ -158,21 +157,32 @@ STITCH_THEME_CSS = """
 """
 st.markdown(STITCH_THEME_CSS, unsafe_allow_html=True)
 
-# Helper function to create dark Plotly layout
+
+def scope_banner():
+    """Renders the standard scope and screening boundary banner required on all pages."""
+    st.info(
+        "🛡️ **VeriCBAM Verification Scope & Screening Boundary:** "
+        "Plant-level consistency screening evaluated on a controlled empirical benchmark. "
+        "Functions as decision-support for accredited verifiers under Commission Delegated Regulation (EU) 2025/2551. "
+        "Not an autonomous legal compliance certification."
+    )
+
+
 def apply_stitch_plotly_theme(fig, title_text=""):
+    """Helper function to create dark Plotly layout with offline system fonts."""
     fig.update_layout(
         template="plotly_dark",
         paper_bgcolor="#0f131c",
         plot_bgcolor="#0f131c",
-        font=dict(family="Inter, sans-serif", color="#94a3b8"),
-        title=dict(text=title_text, font=dict(color="#f1f5f9", size=16, family="Inter, sans-serif")),
+        font=dict(family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif", color="#94a3b8"),
+        title=dict(text=title_text, font=dict(color="#f1f5f9", size=16)),
         xaxis=dict(gridcolor="#2d3440", zerolinecolor="#2d3440"),
         yaxis=dict(gridcolor="#2d3440", zerolinecolor="#2d3440"),
         margin=dict(l=20, r=20, t=45, b=20),
     )
     return fig
 
-# Load data with spinner
+
 @st.cache_data
 def load_cohort_data():
     mgr = CohortManager()
@@ -183,12 +193,12 @@ def load_cohort_data():
         facilities["longitude"] = facilities["Longitude"]
     return mgr, facilities
 
+
 with st.spinner("Initializing VeriCBAM Decision Support Engine..."):
     mgr, facilities_df = load_cohort_data()
 
-# Sidebar Navigation
-st.sidebar.image("https://img.icons8.com/color/96/shield.png", width=64)
-st.sidebar.title("VeriCBAM Audit Suite")
+# Sidebar Navigation (Local Glyph, Clean Architecture)
+st.sidebar.markdown("### 🛡️ VeriCBAM Audit Suite")
 st.sidebar.caption("EU CBAM Emissions Consistency Verification")
 
 menu = st.sidebar.radio(
@@ -200,38 +210,31 @@ menu = st.sidebar.radio(
         "4. Standalone Supplier Plausibility Pre-Check",
         "5. Copernicus Satellite Engine (Sentinel-5P)",
         "6. Bayesian Evidence Fusion",
-        "7. 5-Model Ablation & Calibration Benchmark",
+        "7. Empirical Benchmark Evaluation & Ablation",
         "8. Capstone Proposal, References & Roadmap",
     ],
-)
-
-st.sidebar.markdown("---")
-st.sidebar.info(
-    "**Student:** Cristhian David Cáceres Mateus\n\n"
-    "**Program:** M.Sc. Data Science\n\n"
-    "**University:** UE Germany (Berlin)\n\n"
-    "**Supervisor:** Dr. Humera Noor"
 )
 
 # -------------------------------------------------------------
 # TAB 1: EXECUTIVE OVERVIEW & COCKPIT
 # -------------------------------------------------------------
 if menu == "1. Executive Overview & Cockpit":
+    scope_banner()
     st.markdown('<div class="stitch-main-title">VeriCBAM: Multimodal Decision Support for CBAM Auditing</div>', unsafe_allow_html=True)
     st.markdown(
-        '<div class="stitch-sub-title">Deterministic-Bayesian Architecture for European Carbon Border Adjustment Mechanism (CBAM) Compliance</div>',
+        '<div class="stitch-sub-title">Deterministic-Bayesian Architecture for European Carbon Border Adjustment Mechanism (CBAM) Consistency Screening</div>',
         unsafe_allow_html=True,
     )
 
-    view_mode = st.radio("Select View Mode:", ["Executive Summary", "Embedded Google Stitch Cockpit"], horizontal=True)
+    view_mode = st.radio("Select View Mode:", ["Executive Summary", "Embedded Regulatory Cockpit"], horizontal=True)
 
-    if view_mode == "Embedded Google Stitch Cockpit":
+    if view_mode == "Embedded Regulatory Cockpit":
         cockpit_html_path = Path(__file__).parent / "stitch_cockpit.html"
         if cockpit_html_path.exists():
             html_content = cockpit_html_path.read_text(encoding="utf-8")
             components.html(html_content, height=1050, scrolling=True)
         else:
-            st.warning("Google Stitch Cockpit HTML template not found.")
+            st.warning("Regulatory Cockpit HTML template not found.")
 
     else:
         col1, col2, col3, col4 = st.columns(4)
@@ -239,9 +242,9 @@ if menu == "1. Executive Overview & Cockpit":
             st.markdown(
                 """
                 <div class="bento-card">
-                    <div class="bento-label">Complex Site Audit Cost</div>
-                    <div class="bento-value">€50k – €150k+</div>
-                    <div class="bento-sub">Per BF-BOF / Cement Site</div>
+                    <div class="bento-label">Benchmark Cohort</div>
+                    <div class="bento-value">30 Sites</div>
+                    <div class="bento-sub">15 Cement • 15 Steel</div>
                 </div>
                 """,
                 unsafe_allow_html=True,
@@ -250,9 +253,9 @@ if menu == "1. Executive Overview & Cockpit":
             st.markdown(
                 """
                 <div class="bento-card">
-                    <div class="bento-label">Verifier Scarcity Deficit</div>
-                    <div class="bento-value">12k vs 403</div>
-                    <div class="bento-sub">Declarants vs AVR Verifiers</div>
+                    <div class="bento-label">Authentic Panel</div>
+                    <div class="bento-value">177 Plant-Yrs</div>
+                    <div class="bento-sub">2018–2023 Real Negatives</div>
                 </div>
                 """,
                 unsafe_allow_html=True,
@@ -261,9 +264,9 @@ if menu == "1. Executive Overview & Cockpit":
             st.markdown(
                 """
                 <div class="bento-card">
-                    <div class="bento-label">Audit Lead Time</div>
-                    <div class="bento-value">3 – 6+ Mos</div>
-                    <div class="bento-sub">Physical On-Site Bottleneck</div>
+                    <div class="bento-label">Graded Benchmark</div>
+                    <div class="bento-value">325 Cases</div>
+                    <div class="bento-sub">177 Real Neg. • 148 Inconsistencies</div>
                 </div>
                 """,
                 unsafe_allow_html=True,
@@ -272,44 +275,37 @@ if menu == "1. Executive Overview & Cockpit":
             st.markdown(
                 """
                 <div class="bento-card">
-                    <div class="bento-label">Default Mark-up Penalty</div>
-                    <div class="bento-value">+10% to +30%</div>
-                    <div class="bento-sub">2026-2028 Punitive Surcharge</div>
+                    <div class="bento-label">Evidence Modalities</div>
+                    <div class="bento-value">5 Streams</div>
+                    <div class="bento-sub">Physics, Sat, Hist, NOx, Reg</div>
                 </div>
                 """,
                 unsafe_allow_html=True,
             )
 
-        st.markdown("### The Empirical Problem: The Verification Bottleneck")
+        st.markdown("### The Regulatory Mandate: Verification Decision Support")
         st.markdown(
             """
             Under **Regulation (EU) 2023/956**, **Commission Implementing Regulation (EU) 2025/2546** (verification rules),
             **Commission Delegated Regulation (EU) 2025/2551** (verifier accreditation), and **Commission Implementing Regulation (EU) 2025/2547**
-            (calculation of embedded emissions), EU importers of heavy industrial commodities (primarily **Cement and Steel**)
-            who report actual embedded emissions must undergo third-party verification, with physical on-site inspections as the regulatory default under Implementing Regulation (EU) 2025/2546.
+            (calculation of embedded emissions), EU importers of heavy industrial commodities (**Cement and Steel**)
+            reporting actual emissions must undergo independent verification by accredited verification bodies.
 
-            This introduces a severe operational and economic bottleneck:
-            1. **Estimated Verification Costs:** Standard facility audits cost **€15,000–€50,000**, escalating to **€50,000–€150,000+** per site for complex integrated metallurgical complexes (BF-BOF) and cement kilns when factoring in international auditor travel to third countries (India, China, Turkey, Brazil), laboratory assays, and MRV infrastructure (industry estimates; GMK Center, 2024; EC SWD(2021) 643).
-            2. **The "Arithmetic of Scarcity":** An estimated **~12,000 EU import entities** are seeking authorized CBAM declarant status, while only **~403 verification bodies globally** currently hold EU ETS accreditation under the EU Accreditation and Verification Regulation (**AVR 2018/2067**; dedicated CBAM verifier accreditations under **Commission Delegated Regulation (EU) 2025/2551** roll out from late 2026).
-            3. **Administrative Deadlocks:** Complete audit cycles require **3 to 6 months**. Importers unable to schedule verifiers are forced to declare default values carrying punitive mark-ups (**+10% in 2026, +20% in 2027, +30% in 2028**), costing importers millions in excess certificate surcharges.
-
-            **VeriCBAM** directly addresses this screening bottleneck by providing automated, multimodal, and explainable decision support,
-            allowing customs authorities and buyers to triage physical audits to high-risk installations while prioritizing declarations for further verification.
+            Physical on-site inspections serve as the regulatory baseline for complex installations. VeriCBAM provides
+            an open, mathematically grounded screening co-pilot that flags declarations violating stoichiometric lower bounds,
+            exhibiting severe historical drops, or contradicting verified technology registries, allowing verifiers to prioritize
+            audit resources objectively.
             """
         )
 
-        with st.expander("📚 View Supporting Regulatory & Academic References"):
+        with st.expander("📚 View Supporting Regulatory & Academic Frameworks"):
             st.markdown(
                 """
-                - **European Commission (2021):** *Impact Assessment Report on CBAM*, SWD(2021) 643 final (Section 6.6 & Annex 6).
                 - **Regulation (EU) 2023/956:** Establishing a carbon border adjustment mechanism (Articles 8 & 9).
-                - **Commission Implementing Regulation (EU) 2025/2546:** Principles and rules for verification of emissions declarations. http://data.europa.eu/eli/reg_impl/2025/2546/oj
-                - **Commission Delegated Regulation (EU) 2025/2551:** Rules for accreditation and oversight of verifiers. http://data.europa.eu/eli/reg_del/2025/2551/oj
-                - **Commission Implementing Regulation (EU) 2025/2547:** Rules for calculation of embedded direct and indirect emissions. http://data.europa.eu/eli/reg_impl/2025/2547/oj
-                - **Commission Implementing Regulation (EU) 2018/2067:** General rules on accreditation and verification (AVR).
-                - **GMK Center (2024):** *CBAM Verification: Requirements, Costs and Industry Bottlenecks in the Steel Sector*.
-                - **European Environment Agency (2026):** *EEA Industrial Reporting Database (E-PRTR / IED v16)* (100% empirical validation cohort).
-                - **OECD (2023):** *Carbon-Related Border Adjustments and Developing Country Exporters*, OECD Trade & Environment Papers.
+                - **Commission Implementing Regulation (EU) 2025/2546:** Rules for verification of CBAM declarations. [ELI Link](http://data.europa.eu/eli/reg_impl/2025/2546/oj)
+                - **Commission Delegated Regulation (EU) 2025/2551:** Rules for accreditation and oversight of verifiers. [ELI Link](http://data.europa.eu/eli/reg_del/2025/2551/oj)
+                - **Commission Implementing Regulation (EU) 2025/2547:** Rules for calculation of embedded direct and indirect emissions. [ELI Link](http://data.europa.eu/eli/reg_impl/2025/2547/oj)
+                - **European Environment Agency (2026):** *EEA Industrial Reporting Database (E-PRTR / IED v16)* (Authentic baseline reference panel).
                 """
             )
 
@@ -317,6 +313,7 @@ if menu == "1. Executive Overview & Cockpit":
 # TAB 2: BENCHMARK COHORT
 # -------------------------------------------------------------
 elif menu == "2. 30-Facility Benchmark Cohort":
+    scope_banner()
     st.markdown('<div class="stitch-main-title">Curated 30-Facility European Benchmark Cohort</div>', unsafe_allow_html=True)
     st.markdown(
         '<div class="stitch-sub-title">Authentic multi-year Scope 1 CO₂ emission records from the European Pollutant Release and Transfer Register (E-PRTR / IED v16)</div>',
@@ -391,9 +388,9 @@ elif menu == "2. 30-Facility Benchmark Cohort":
                 f"""
                 <div class="bento-card">
                     <div class="bento-label">Facility Metadata</div>
-                    <div style="font-size: 1.1rem; font-weight: 700; color: #f1f5f9; margin-bottom: 8px;">{fac_row['facilityName']}</div>
-                    <p style="font-size: 0.85rem; color: #94a3b8; margin: 0;"><strong>Sector:</strong> <code style="color: #8ed5ff;">{fac_row['sector']}</code></p>
-                    <p style="font-size: 0.85rem; color: #94a3b8; margin: 0;"><strong>Location:</strong> {fac_row['city']}, {fac_row['countryName']}</p>
+                    <div style="font-size: 1.1rem; font-weight: 700; color: #f1f5f9; margin-bottom: 8px;">{html.escape(str(fac_row['facilityName']))}</div>
+                    <p style="font-size: 0.85rem; color: #94a3b8; margin: 0;"><strong>Sector:</strong> <code style="color: #8ed5ff;">{html.escape(str(fac_row['sector']))}</code></p>
+                    <p style="font-size: 0.85rem; color: #94a3b8; margin: 0;"><strong>Location:</strong> {html.escape(str(fac_row['city']))}, {html.escape(str(fac_row['countryName']))}</p>
                     <p style="font-size: 0.85rem; color: #94a3b8; margin: 0;"><strong>Coordinates:</strong> ({fac_lat:.4f}, {fac_lon:.4f})</p>
                     <p style="font-size: 0.85rem; color: #94a3b8; margin: 0;"><strong>Mean CO₂:</strong> {fac_row['mean_co2_tonnes']:,.0f} t/yr</p>
                 </div>
@@ -410,7 +407,7 @@ elif menu == "2. 30-Facility Benchmark Cohort":
                     labels={"reportingYear": "Reporting Year", "co2_tonnes": "Verified Scope 1 CO₂ (Tonnes)"},
                     color_discrete_sequence=["#8ed5ff"],
                 )
-                fig_ts = apply_stitch_plotly_theme(fig_ts, f"Historical Emissions Trajectory: {fac_row['facilityName']}")
+                fig_ts = apply_stitch_plotly_theme(fig_ts, f"Historical Emissions Trajectory: {html.escape(str(fac_row['facilityName']))}")
                 fig_ts.update_layout(height=280)
                 st.plotly_chart(fig_ts, use_container_width=True)
 
@@ -418,9 +415,10 @@ elif menu == "2. 30-Facility Benchmark Cohort":
 # TAB 3: STOICHIOMETRIC PHYSICS ENGINE
 # -------------------------------------------------------------
 elif menu == "3. Stoichiometric Physics Engine":
+    scope_banner()
     st.markdown('<div class="stitch-main-title">Deterministic Stoichiometric Physics Engine</div>', unsafe_allow_html=True)
     st.markdown(
-        '<div class="stitch-sub-title">Evaluation of CBAM declarations against fundamental chemical mass balances and thermodynamic lower bounds</div>',
+        '<div class="stitch-sub-title">Evaluation of CBAM declarations against chemical mass balances and route-specific engineering lower bounds</div>',
         unsafe_allow_html=True,
     )
 
@@ -466,9 +464,9 @@ elif menu == "3. Stoichiometric Physics Engine":
         with m1:
             st.markdown(f'<div class="bento-card"><div class="bento-label">Chemical Calcination Floor</div><div class="bento-value">{res_cement.process_emissions_min_tco2:,.0f} t</div><div class="bento-sub">Fixed Mass Balance</div></div>', unsafe_allow_html=True)
         with m2:
-            st.markdown(f'<div class="bento-card"><div class="bento-label">Thermal Combustion Floor</div><div class="bento-value">{res_cement.combustion_emissions_min_tco2:,.0f} t</div><div class="bento-sub">BAT Kiln ({fuel_type})</div></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="bento-card"><div class="bento-label">Thermal Combustion Floor</div><div class="bento-value">{res_cement.combustion_emissions_min_tco2:,.0f} t</div><div class="bento-sub">BAT Kiln ({html.escape(str(fuel_type))})</div></div>', unsafe_allow_html=True)
         with m3:
-            st.markdown(f'<div class="bento-card"><div class="bento-label">Net Physical Floor</div><div class="bento-value">{res_cement.total_physical_minimum_tco2:,.0f} t</div><div class="bento-sub">Absolute Minimum</div></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="bento-card"><div class="bento-label">Net Physical Floor</div><div class="bento-value">{res_cement.total_physical_minimum_tco2:,.0f} t</div><div class="bento-sub">Stoichiometric Minimum</div></div>', unsafe_allow_html=True)
         with m4:
             st.markdown(f'<div class="bento-card"><div class="bento-label">Specific Intensity</div><div class="bento-value">{res_cement.reported_specific_intensity_tco2_per_t_clinker:.3f}</div><div class="bento-sub">Floor: {res_cement.minimum_specific_intensity_tco2_per_t_clinker:.3f} tCO₂/t</div></div>', unsafe_allow_html=True)
 
@@ -507,11 +505,11 @@ elif menu == "3. Stoichiometric Physics Engine":
         with m1:
             st.markdown(f'<div class="bento-card"><div class="bento-label">Reported Intensity</div><div class="bento-value">{res_steel.reported_specific_intensity_tco2_per_t:.3f}</div><div class="bento-sub">Declared Scope 1</div></div>', unsafe_allow_html=True)
         with m2:
-            st.markdown(f'<div class="bento-card"><div class="bento-label">Thermodynamic Floor</div><div class="bento-value">{res_steel.theoretical_floor_intensity_tco2_per_t:.3f}</div><div class="bento-sub">Floor for {claimed_route}</div></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="bento-card"><div class="bento-label">Stoichiometric Floor</div><div class="bento-value">{res_steel.theoretical_floor_intensity_tco2_per_t:.3f}</div><div class="bento-sub">Floor for {html.escape(str(claimed_route))}</div></div>', unsafe_allow_html=True)
         with m3:
             st.markdown(f'<div class="bento-card"><div class="bento-label">Typical Benchmark</div><div class="bento-value">{res_steel.typical_benchmark_intensity_tco2_per_t:.3f}</div><div class="bento-sub">EU BREF Median</div></div>', unsafe_allow_html=True)
         with m4:
-            st.markdown(f'<div class="bento-card"><div class="bento-label">Net Allowable CO₂</div><div class="bento-value">{res_steel.total_physical_minimum_tco2:,.0f} t</div><div class="bento-sub">Physical Floor</div></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="bento-card"><div class="bento-label">Net Allowable CO₂</div><div class="bento-value">{res_steel.total_physical_minimum_tco2:,.0f} t</div><div class="bento-sub">Engineering Bound</div></div>', unsafe_allow_html=True)
 
         if not res_steel.is_physically_feasible:
             st.markdown(f'<div class="status-badge badge-risk">🚨 ROUTE LOWER BOUND VIOLATION</div>', unsafe_allow_html=True)
@@ -527,6 +525,7 @@ elif menu == "3. Stoichiometric Physics Engine":
 # TAB 4: STANDALONE SUPPLIER PLAUSIBILITY PRE-CHECK
 # -------------------------------------------------------------
 elif menu == "4. Standalone Supplier Plausibility Pre-Check":
+    scope_banner()
     st.markdown('<div class="stitch-main-title">Standalone Supplier Plausibility Pre-Check</div>', unsafe_allow_html=True)
     st.markdown(
         '<div class="stitch-sub-title">Rapid pre-audit screening of non-EU supplier declarations without requiring satellite or historical registry records</div>',
@@ -576,7 +575,7 @@ elif menu == "4. Standalone Supplier Plausibility Pre-Check":
 
         pm1, pm2 = st.columns(2)
         with pm1:
-            st.markdown(f'<div class="bento-card"><div class="bento-label">Physical Floor</div><div class="bento-value">{floor:.3f}</div><div class="bento-sub">{benchmark_note}</div></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="bento-card"><div class="bento-label">Physical Lower Bound</div><div class="bento-value">{floor:.3f}</div><div class="bento-sub">{html.escape(benchmark_note)}</div></div>', unsafe_allow_html=True)
         with pm2:
             st.markdown(f'<div class="bento-card"><div class="bento-label">Typical Global Range</div><div class="bento-value">{typical_range[0]:.2f} – {typical_range[1]:.2f}</div><div class="bento-sub">Standard Operations</div></div>', unsafe_allow_html=True)
 
@@ -586,7 +585,7 @@ Commodity: {supp_sector}
 Declared Specific Intensity: {decl_specific_emissions:.3f} t CO2/t product
 Declared Annual Production: {annual_volume_tonnes:,.0f} tonnes
 Total Declared Scope 1: {total_declared_co2:,.0f} t CO2
-Thermodynamic Lower Bound: {floor:.3f} t CO2/t ({total_floor_co2:,.0f} t CO2 total)
+Stoichiometric Lower Bound: {floor:.3f} t CO2/t ({total_floor_co2:,.0f} t CO2 total)
 Physical Feasibility Verdict: {'FEASIBLE' if is_feasible else 'VIOLATION DETECTED'}
 Emissions Deficit: {deficit_co2:,.0f} t CO2
 Audit Recommendation: {'Clear for expedited desk check' if is_feasible else 'HIGH AUDIT PRIORITY - Dispatch Physical Inspection'}
@@ -598,11 +597,14 @@ Generated by VeriCBAM Decision Support Cockpit.
 # TAB 5: COPERNICUS SATELLITE ENGINE
 # -------------------------------------------------------------
 elif menu == "5. Copernicus Satellite Engine (Sentinel-5P)":
+    scope_banner()
     st.markdown('<div class="stitch-main-title">Copernicus Sentinel-5P Earth Observation Engine</div>', unsafe_allow_html=True)
     st.markdown(
-        '<div class="stitch-sub-title">Remote sensing atmospheric plume contrast, cloud-radiance filtering, and operational combustion inference</div>',
+        '<div class="stitch-sub-title">Remote sensing atmospheric plume contrast, cloud-radiance filtering, and auxiliary combustion inference</div>',
         unsafe_allow_html=True,
     )
+
+    st.caption("ℹ️ **Scientific Status (Inconclusive / Underpowered Pilot Evidence):** Multi-year analysis (2019–2023) indicates that Sentinel-5P tropospheric NO₂ column density is not a reliable quantitative proxy for annual plant-level CO₂ (mean within-plant Spearman ρ = -0.100). Orbital remote sensing is strictly designated as an auxiliary operational qualitative indicator.")
 
     sat_client = CopernicusSentinel5PClient()
     sat_analyzer = SatellitePlumeAnalyzer()
@@ -627,9 +629,9 @@ elif menu == "5. Copernicus Satellite Engine (Sentinel-5P)":
     with col_sm2:
         st.markdown(f'<div class="bento-card"><div class="bento-label">Valid Overpasses</div><div class="bento-value">{analysis.valid_clear_sky_overpasses} / {analysis.total_overpasses}</div><div class="bento-sub">Mean Cloud: {analysis.mean_cloud_fraction*100:.1f}%</div></div>', unsafe_allow_html=True)
     with col_sm3:
-        st.markdown(f'<div class="bento-card"><div class="bento-label">Operational State</div><div class="bento-value" style="font-size: 1.2rem;">{analysis.operational_state_inference.split("(")[0].strip()}</div><div class="bento-sub">Inferred State</div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="bento-card"><div class="bento-label">Operational State</div><div class="bento-value" style="font-size: 1.1rem;">{html.escape(analysis.operational_state_inference.split("(")[0].strip())}</div><div class="bento-sub">Inferred State</div></div>', unsafe_allow_html=True)
     with col_sm4:
-        st.markdown(f'<div class="bento-card"><div class="bento-label">Remote Verdict</div><div class="bento-value" style="font-size: 1.2rem;">{analysis.consistency_verdict}</div><div class="bento-sub">Signal Concordance</div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="bento-card"><div class="bento-label">Remote Verdict</div><div class="bento-value" style="font-size: 1.1rem;">{html.escape(analysis.consistency_verdict)}</div><div class="bento-sub">Signal Concordance</div></div>', unsafe_allow_html=True)
 
     if obs_list:
         obs_df = pd.DataFrame([
@@ -654,7 +656,7 @@ elif menu == "5. Copernicus Satellite Engine (Sentinel-5P)":
             name="Regional Background Baseline (15-30 km buffer)",
             line=dict(color="#facc15", width=2, dash="dash"),
         ))
-        fig_obs = apply_stitch_plotly_theme(fig_obs, f"2023 Sentinel-5P TROPOMI NO₂ Plume vs 15-30km Buffer Background: {target_fac_name}")
+        fig_obs = apply_stitch_plotly_theme(fig_obs, f"2023 Sentinel-5P TROPOMI NO₂ Plume vs 15-30km Buffer Background: {html.escape(target_fac_name)}")
         fig_obs.update_layout(height=340)
         st.plotly_chart(fig_obs, use_container_width=True)
 
@@ -662,6 +664,7 @@ elif menu == "5. Copernicus Satellite Engine (Sentinel-5P)":
 # TAB 6: BAYESIAN EVIDENCE FUSION
 # -------------------------------------------------------------
 elif menu == "6. Bayesian Evidence Fusion":
+    scope_banner()
     st.markdown('<div class="stitch-main-title">Multimodal Probabilistic Evidence Fusion Simulator</div>', unsafe_allow_html=True)
     st.markdown(
         '<div class="stitch-sub-title">Synthesis of observational satellite signals, multi-year temporal trends, and physical margins into calibrated risk posteriors</div>',
@@ -685,7 +688,7 @@ elif menu == "6. Bayesian Evidence Fusion":
         stoich_margin_sigma = st.slider("Stoichiometric Safety Margin (Sigma above lower bound)", 0.0, 5.0, 1.2, 0.1)
         stoich_violated = st.checkbox("Simulate Stoichiometric Physical Floor Violation", False)
 
-        has_satellite = st.checkbox("Include Copernicus Sentinel-5P Satellite Data", True)
+        has_satellite = st.checkbox("Include Copernicus Sentinel-5P Satellite Data (Auxiliary)", True)
         if has_satellite:
             sat_zscore = st.slider("Satellite Plume Anomaly Z-Score (vs Regional Background)", -2.0, 4.0, 1.8, 0.1)
             sat_cloud = st.slider("Satellite Cloud Obscuration Fraction", 0.0, 1.0, 0.25, 0.05)
@@ -693,9 +696,9 @@ elif menu == "6. Bayesian Evidence Fusion":
             sat_zscore = None
             sat_cloud = 1.0
 
-        has_temporal = st.checkbox("Include 5-Year Historical Time Series Baseline", True)
+        has_temporal = st.checkbox("Include Historical Time Series Baseline", True)
         if has_temporal:
-            temp_zscore = st.slider("Sudden Emission Drop Anomaly (Z-Score)", 0.0, 4.0, 0.8, 0.1)
+            temp_zscore = st.slider("Sudden Emission Drop Anomaly max(0, -z)", 0.0, 4.0, 0.8, 0.1)
             years_hist = st.slider("Available Historical Reference Years", 1, 6, 5)
         else:
             temp_zscore = None
@@ -718,14 +721,13 @@ elif menu == "6. Bayesian Evidence Fusion":
 
     with col_e2:
         st.markdown("#### Probabilistic Decision Synthesis")
-        
         verdict_badge_class = "badge-consistent" if decision.audit_verdict == "Consistent" else ("badge-potential" if decision.audit_verdict == "Potential Inconsistency" else ("badge-risk" if decision.audit_verdict == "High Inconsistency Risk" else "badge-insufficient"))
-        st.markdown(f'<div class="status-badge {verdict_badge_class}">{decision.audit_verdict.upper()}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="status-badge {verdict_badge_class}">{html.escape(decision.audit_verdict.upper())}</div>', unsafe_allow_html=True)
         st.write("")
 
         m_r, m_c = st.columns(2)
         with m_r:
-            st.markdown(f'<div class="bento-card"><div class="bento-label">Inconsistency Risk P(H|E)</div><div class="bento-value" style="color: #8ed5ff;">{decision.posterior_inconsistency_risk*100:.1f}%</div><div class="bento-sub">Signal Strength</div></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="bento-card"><div class="bento-label">Inconsistency Risk P(H|E)</div><div class="bento-value" style="color: #8ed5ff;">{decision.posterior_inconsistency_risk*100:.1f}%</div><div class="bento-sub">Posterior Probability</div></div>', unsafe_allow_html=True)
         with m_c:
             st.markdown(f'<div class="bento-card"><div class="bento-label">Evidence Confidence</div><div class="bento-value" style="color: #4edea3;">{decision.evidence_confidence_score*100:.1f}%</div><div class="bento-sub">Observational Quality</div></div>', unsafe_allow_html=True)
 
@@ -759,62 +761,165 @@ elif menu == "6. Bayesian Evidence Fusion":
             st.table(df_sens)
 
 # -------------------------------------------------------------
-# TAB 7: 5-MODEL ABLATION & CALIBRATION BENCHMARK
+# TAB 7: EMPIRICAL BENCHMARK EVALUATION & ABLATION
 # -------------------------------------------------------------
-elif menu == "7. 5-Model Ablation & Calibration Benchmark":
-    st.markdown('<div class="stitch-main-title">Controlled Empirical Evaluation: 5-Model Ablation & Calibration</div>', unsafe_allow_html=True)
+elif menu == "7. Empirical Benchmark Evaluation & Ablation":
+    scope_banner()
+    st.markdown('<div class="stitch-main-title">Empirical Benchmark Evaluation: Primary 325-Case Graded Suite</div>', unsafe_allow_html=True)
     st.markdown(
-        '<div class="stitch-sub-title">Rigorous Comparative Benchmarking across Controlled Evaluation Cases</div>',
+        '<div class="stitch-sub-title">Rigorous Evaluation of Single-Stream and Multimodal Decision Models across 325 Graded Scenarios</div>',
         unsafe_allow_html=True,
     )
 
     results_dir = Path(__file__).parents[2] / "experiments" / "results"
-    summary_csv = results_dir / "ablation_study_summary.csv"
-    calib_csv = results_dir / "calibration_comparison.csv"
-    preds_parquet = results_dir / "calibrated_predictions_101.parquet"
+    graded_summary_csv = results_dir / "graded_model_comparison_summary.csv"
+    graded_sens_csv = results_dir / "graded_label_sensitivity.csv"
+    m5_ablation_csv = results_dir / "m5_historical_score_ablation.csv"
+    triage_csv = results_dir / "triage_auditor_simulation.csv"
+    attr_csv = results_dir / "attribution_study.csv"
 
-    if summary_csv.exists():
-        df_abl = pd.read_csv(summary_csv)
-        fused_row = df_abl[df_abl["model_name"].str.contains("Fused")].iloc[0]
-        base_row = df_abl[df_abl["model_name"].str.contains("Baseline")].iloc[0]
+    # Legacy files
+    legacy_abl_csv = results_dir / "ablation_study_summary.csv"
+    legacy_calib_csv = results_dir / "calibration_comparison.csv"
+
+    if graded_summary_csv.exists():
+        df_summary = pd.read_csv(graded_summary_csv)
+        row_e1 = df_summary[df_summary["model_name"].str.contains("Bayesian")].iloc[0]
+        row_e2 = df_summary[df_summary["model_name"].str.contains("Logistic")].iloc[0]
+        row_d = df_summary[df_summary["model_name"].str.contains("Historical Alone")].iloc[0]
 
         c1, c2, c3, c4 = st.columns(4)
         with c1:
-            st.markdown(f'<div class="bento-card"><div class="bento-label">Model E F1-Score</div><div class="bento-value" style="color: #4edea3;">{fused_row["f1_score"]*100:.1f}%</div><div class="bento-sub">+{(fused_row["f1_score"] - base_row["f1_score"])*100:.1f}% vs Baseline</div></div>', unsafe_allow_html=True)
+            st.markdown(
+                f'<div class="bento-card"><div class="bento-label">Model E1 Bayesian AUC</div>'
+                f'<div class="bento-value" style="color: #8ed5ff;">{row_e1["roc_auc"]:.4f}</div>'
+                f'<div class="bento-sub">95% CI [{row_e1["roc_auc_ci_low"]:.3f}, {row_e1["roc_auc_ci_high"]:.3f}]</div></div>',
+                unsafe_allow_html=True,
+            )
         with c2:
-            st.markdown(f'<div class="bento-card"><div class="bento-label">Model E FPR</div><div class="bento-value">{fused_row["fpr"]*100:.2f}%</div><div class="bento-sub">Zero False Positives</div></div>', unsafe_allow_html=True)
+            st.markdown(
+                f'<div class="bento-card"><div class="bento-label">Model E2 Logistic AUC</div>'
+                f'<div class="bento-value" style="color: #4edea3;">{row_e2["roc_auc"]:.4f}</div>'
+                f'<div class="bento-sub">95% CI [{row_e2["roc_auc_ci_low"]:.3f}, {row_e2["roc_auc_ci_high"]:.3f}]</div></div>',
+                unsafe_allow_html=True,
+            )
         with c3:
-            st.markdown(f'<div class="bento-card"><div class="bento-label">Model E ROC-AUC</div><div class="bento-value" style="color: #8ed5ff;">{fused_row["roc_auc"]:.4f}</div><div class="bento-sub">Discrimination</div></div>', unsafe_allow_html=True)
+            st.markdown(
+                f'<div class="bento-card"><div class="bento-label">Model D Historical AUC</div>'
+                f'<div class="bento-value">{row_d["roc_auc"]:.4f}</div>'
+                f'<div class="bento-sub">Dominant Single Modality</div></div>',
+                unsafe_allow_html=True,
+            )
         with c4:
-            st.markdown(f'<div class="bento-card"><div class="bento-label">Model E Brier Score</div><div class="bento-value">{fused_row["brier_score"]:.4f}</div><div class="bento-sub">Lowest Error</div></div>', unsafe_allow_html=True)
+            st.markdown(
+                f'<div class="bento-card"><div class="bento-label">Evaluated Benchmark</div>'
+                f'<div class="bento-value">325 Cases</div>'
+                f'<div class="bento-sub">177 Negatives • 148 Inconsistencies</div></div>',
+                unsafe_allow_html=True,
+            )
 
-        st.markdown("### 1. 5-Model Quantitative Performance Comparison")
+        st.markdown("### 1. Primary Model Comparison on Graded Benchmark (325 Cases)")
+        st.caption("Evaluated across 177 authentic real-year negatives, 140 graded understatements, and 8 route mismatches. 95% CIs derived from 1,000 facility-level bootstrap resamples.")
+
+        display_df = df_summary[["model_name", "roc_auc", "pr_auc", "brier_score", "ece", "fpr_authentic"]].copy()
+        display_df.columns = ["Model Architecture", "ROC-AUC", "PR-AUC", "Brier Score", "ECE", "Authentic FPR"]
         st.dataframe(
-            df_abl[["model_name", "precision", "recall", "f1_score", "fpr", "roc_auc", "pr_auc", "brier_score", "ece"]].style.format({
-                "precision": "{:.3f}",
-                "recall": "{:.3f}",
-                "f1_score": "{:.3f}",
-                "fpr": "{:.3f}",
-                "roc_auc": "{:.4f}",
-                "pr_auc": "{:.4f}",
-                "brier_score": "{:.4f}",
-                "ece": "{:.4f}",
+            display_df.style.format({
+                "ROC-AUC": "{:.4f}",
+                "PR-AUC": "{:.4f}",
+                "Brier Score": "{:.4f}",
+                "ECE": "{:.4f}",
+                "Authentic FPR": "{:.2%}",
             }),
             use_container_width=True,
         )
 
         fig_bars = go.Figure()
-        fig_bars.add_trace(go.Bar(name="F1-Score", x=df_abl["model_name"], y=df_abl["f1_score"], marker_color="#8ed5ff"))
-        fig_bars.add_trace(go.Bar(name="ROC-AUC", x=df_abl["model_name"], y=df_abl["roc_auc"], marker_color="#4edea3"))
-        fig_bars.add_trace(go.Bar(name="Brier Score", x=df_abl["model_name"], y=df_abl["brier_score"], marker_color="#facc15"))
-        fig_bars = apply_stitch_plotly_theme(fig_bars, "Performance Metrics Across Single-Modality vs. Multimodal Fusion")
-        fig_bars.update_layout(barmode="group", height=360)
+        fig_bars.add_trace(go.Bar(name="ROC-AUC", x=df_summary["model_name"], y=df_summary["roc_auc"], marker_color="#8ed5ff"))
+        fig_bars.add_trace(go.Bar(name="PR-AUC", x=df_summary["model_name"], y=df_summary["pr_auc"], marker_color="#4edea3"))
+        fig_bars.add_trace(go.Bar(name="Brier Score", x=df_summary["model_name"], y=df_summary["brier_score"], marker_color="#facc15"))
+        fig_bars = apply_stitch_plotly_theme(fig_bars, "Discrimination & Error Across Evaluated Architectures")
+        fig_bars.update_layout(barmode="group", height=350)
         st.plotly_chart(fig_bars, use_container_width=True)
+
+        col_t1, col_t2 = st.columns(2)
+        with col_t1:
+            if m5_ablation_csv.exists():
+                st.markdown("### 2. M5 Historical Score Sign Ablation")
+                st.caption("Methodological comparison: one-sided max(0, -z) avoids penalizing legitimate production growth.")
+                df_m5 = pd.read_csv(m5_ablation_csv)
+                st.dataframe(
+                    df_m5.style.format({
+                        "roc_auc": "{:.4f}",
+                        "pr_auc": "{:.4f}",
+                        "brier_score": "{:.4f}",
+                        "ece": "{:.4f}",
+                        "fpr_authentic": "{:.2%}",
+                    }),
+                    use_container_width=True,
+                )
+
+        with col_t2:
+            if graded_sens_csv.exists():
+                st.markdown("### 3. M1 Screening Threshold Sensitivity")
+                st.caption("Primary (delta >= 10%) vs Sensitivity (delta >= 5%) screening rules.")
+                df_sens = pd.read_csv(graded_sens_csv)
+                st.dataframe(
+                    df_sens[["threshold", "model", "prevalence", "roc_auc", "pr_auc"]].style.format({
+                        "prevalence": "{:.1%}",
+                        "roc_auc": "{:.4f}",
+                        "pr_auc": "{:.4f}",
+                    }),
+                    use_container_width=True,
+                )
+
+        if triage_csv.exists():
+            st.markdown("### 4. Auditor Triage Efficiency (Resource Constraint Simulation)")
+            st.caption("Simulating customs capacity constraint: audit top k% highest-risk declarations.")
+            df_triage = pd.read_csv(triage_csv)
+            st.dataframe(
+                df_triage[[
+                    "k_pct", "k_cases",
+                    "e1_bayes_caught", "e1_bayes_precision", "e1_bayes_recall",
+                    "e2_logistic_caught", "e2_logistic_precision", "e2_logistic_recall"
+                ]].style.format({
+                    "k_pct": "Top {}%",
+                    "e1_bayes_precision": "{:.1%}",
+                    "e1_bayes_recall": "{:.1%}",
+                    "e2_logistic_precision": "{:.1%}",
+                    "e2_logistic_recall": "{:.1%}",
+                }),
+                use_container_width=True,
+            )
+
+        if attr_csv.exists():
+            st.markdown("### 5. Step-by-Step Methodological Attribution")
+            df_attr = pd.read_csv(attr_csv)
+            st.dataframe(
+                df_attr.style.format({
+                    "roc_auc": "{:.4f}",
+                    "pr_auc": "{:.4f}",
+                    "brier": "{:.4f}",
+                    "ece": "{:.4f}",
+                }),
+                use_container_width=True,
+            )
+
+        # Legacy Expander
+        with st.expander("📁 Legacy 101-Case Controlled Benchmark (Regression & Calibration Testing Only)"):
+            st.warning("Notice: The 101-case benchmark is retained exclusively for regression tracking. The 325-case graded benchmark above represents the primary scientific finding.")
+            if legacy_abl_csv.exists():
+                df_leg = pd.read_csv(legacy_abl_csv)
+                st.dataframe(df_leg, use_container_width=True)
+            if legacy_calib_csv.exists():
+                df_cal = pd.read_csv(legacy_calib_csv)
+                st.dataframe(df_cal, use_container_width=True)
 
 # -------------------------------------------------------------
 # TAB 8: PROPOSAL, REFERENCES & ROADMAP
 # -------------------------------------------------------------
 elif menu == "8. Capstone Proposal, References & Roadmap":
+    scope_banner()
     st.markdown('<div class="stitch-main-title">Master Capstone Proposal & Academic Roadmap</div>', unsafe_allow_html=True)
     st.markdown(
         '<div class="stitch-sub-title">University of Europe for Applied Sciences (UE Germany) | Master of Science in Data Science</div>',
@@ -823,21 +928,35 @@ elif menu == "8. Capstone Proposal, References & Roadmap":
 
     col_p1, col_p2 = st.columns(2)
     with col_p1:
-        st.markdown("### Proposal Metadata")
+        st.markdown("### Author & Project Metadata")
         st.markdown(
             """
-            - **Candidate:** Cristhian David Cáceres Mateus
-            - **Study Program:** M.Sc. Data Science
-            - **Academic Supervisor:** Dr. Humera Noor
+            - **Author:** Cristhian David Cáceres Mateus
+            - **Study Program:** Master of Science in Data Science
+            - **Institution:** University of Europe for Applied Sciences (UE Germany), Berlin Campus
+            - **Supervisor:** Dr. Humera Noor
             - **Working Title:** *VeriCBAM: Multimodal Evidence Fusion & Decision Support for CBAM Emissions Consistency Assessment*
+            - **Official Application:** Form filled & approved under Commission Delegated Regulation (EU) 2025/2551.
             """
         )
     with col_p2:
-        st.markdown("### Key Thermodynamic & Bayesian Equations")
+        st.markdown("### Key Scientific & Mathematical Formulations")
         st.markdown(
             """
-            - **Calcination Floor:** $\\text{CaCO}_3 \\rightarrow \\text{CaO} + \\text{CO}_2$ ($0.510\\text{--}0.525\\text{ t CO}_2/\\text{t clinker}$)
+            - **Stoichiometric Calcination Floor:** $\\text{CaCO}_3 \\rightarrow \\text{CaO} + \\text{CO}_2$ ($0.495\\text{--}0.525\\text{ t CO}_2/\\text{t clinker}$)
             - **Blast Furnace Reduction Floor:** $\\text{Fe}_2\\text{O}_3 + 3\\text{C} \\rightarrow 2\\text{Fe} + 3\\text{CO}$ ($1.350\\text{ t CO}_2/\\text{t crude steel}$)
             - **Bayesian Log-Odds Fusion:** $\\text{logit } P(H|E) = \\text{logit } P(H) + \\sum w_i C_i \\ln(LR_i)$
+            - **Robust Historical Scale:** Pooled MAD $\\sigma_{\\text{pooled}} = 0.0911$ over 177 plant-years.
             """
         )
+
+    st.markdown("---")
+    st.markdown("### Regulatory Framework & ELI Links")
+    st.markdown(
+        """
+        - **Regulation (EU) 2023/956:** Establishing the CBAM mechanism.
+        - **Commission Implementing Regulation (EU) 2025/2546:** Verification principles and rules. [ELI Link](http://data.europa.eu/eli/reg_impl/2025/2546/oj)
+        - **Commission Delegated Regulation (EU) 2025/2551:** Verifier accreditation requirements. [ELI Link](http://data.europa.eu/eli/reg_del/2025/2551/oj)
+        - **Commission Implementing Regulation (EU) 2025/2547:** Rules for calculation of embedded emissions. [ELI Link](http://data.europa.eu/eli/reg_impl/2025/2547/oj)
+        """
+    )

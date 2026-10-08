@@ -42,7 +42,8 @@ VeriCBAM operates a strict dual-layer empirical architecture:
   - Completeness filter: Installations with multi-year reporting history across the 2018–2023 observation window.
   - Final cohort: Exactly 30 premier European production facilities (15 Cement, 15 Steel).
 - **Transformations:**
-  - `co2_tonnes = totalPollutantQuantityKg / 1000.0`
+  - `co2_tonnes = totalPollutantQuantityKg / 1000.0` (from EEA Pollutant 'Carbon dioxide (CO2)')
+  - *CO2 Variable Specification (N3):* Currently uses total direct Scope 1 $\text{CO}_2$ (`co2_tonnes`, EEA code 'Carbon dioxide (CO2)'). In parallel, the multi-pollutant cohort extracts 'Carbon dioxide (CO2) excluding biomass' (`co2_excl_biomass_tonnes`) for pending project evaluation.
   - Longitudinal baseline metrics: Mean $\mu_{\text{facility}}$ and standard deviation $\sigma_{\text{facility}}$ computed across available reference years.
   - Multi-pollutant ratios: $\text{NO}_x/\text{CO}_2$ ($\text{kg}/\text{t}$) and $\text{SO}_x/\text{CO}_2$ ($\text{kg}/\text{t}$) calculated across 177 plant-years.
 - **Missing Data Handling (177 vs. 180 Observations):**

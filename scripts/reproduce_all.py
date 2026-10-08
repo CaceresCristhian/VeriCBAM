@@ -60,13 +60,14 @@ def main():
         ("1. Rebuild Multi-Pollutant Cohort from Raw EEA Tables", [sys.executable, "src/data_loaders/build_cohort.py"]),
         ("2. Rebuild Verified Technology Registry", [sys.executable, "src/data_loaders/technology_registry.py"]),
         ("3. Generate Controlled Evaluation Benchmark (Legacy 101 cases)", [sys.executable, "src/benchmark/perturbation_generator.py"]),
-        ("4. Generate Graded Multi-Source Benchmark (326 real & graded cases)", [sys.executable, "src/benchmark/graded_benchmark_generator.py"]),
+        ("4. Generate Graded Multi-Source Benchmark (325 real & graded cases)", [sys.executable, "src/benchmark/graded_benchmark_generator.py"]),
         ("5. Execute 5-Model Ablation Study", [sys.executable, "experiments/run_ablation_study.py"]),
         ("6. Execute Probability Calibration", [sys.executable, "experiments/calibrate_probabilities.py"]),
         ("7. Execute Facility-Grouped Cross-Validation", [sys.executable, "experiments/run_grouped_validation.py"]),
         ("8. Execute Graded Benchmark Evaluation & ML Baseline Comparison", [sys.executable, "experiments/run_graded_evaluation.py"]),
         ("9. Execute Likelihood Ratio & Prior Sensitivity", [sys.executable, "experiments/run_lr_sensitivity.py"]),
-        ("10. Run Automated Pytest Test Suite", [sys.executable, "-m", "pytest", "-v"]),
+        ("10. Render Empirical Results Tables into Documentation", [sys.executable, "scripts/render_results_tables.py"]),
+        ("11. Run Automated Pytest Test Suite", [sys.executable, "-m", "pytest", "-v"]),
     ]
 
     all_passed = True
@@ -78,7 +79,7 @@ def main():
 
     print("\n" + "=" * 80)
     if all_passed:
-        print("ALL 7 PIPELINE STEPS COMPLETED SUCCESSFULLY!")
+        print("ALL 11 PIPELINE STEPS COMPLETED SUCCESSFULLY!")
         print("100% Deterministic Reproducibility Confirmed.")
         print("=" * 80)
     else:

@@ -29,32 +29,40 @@ $$\operatorname{logit} P(H \mid E) = \operatorname{logit} P(H) + \sum_{i=1}^M w_
 ---
 
 ## 3. Empirical Evaluation on Graded Benchmark
-Evaluated across 177 authentic real-year negatives, 140 graded understatements ($\delta \in \{5\%, 10\%, 20\%, 30\%, 50\%\}$), and route misclassifications across 30 European installations.
+Evaluated across 177 authentic real-year negatives, 140 graded understatements ($\delta \in \{5\%, 10\%, 20\%, 30\%, 50\%\}$), and 8 route misclassifications across 30 European installations (95% confidence intervals from 1,000 facility-level bootstrap resamples).
 
 *Methodological Qualification:* The learned model is trained on labels defined by the synthetic perturbation generator; it demonstrates learnable structure in the benchmark, not real-world fraud detection or legal non-compliance. The effective independent sample size is 30 installations.
 
-| Model Architecture | ROC-AUC | PR-AUC | Brier Score | ECE (10 Bins) | False Positive Rate (Real Years) |
+| Model Architecture | ROC-AUC (95% CI) | PR-AUC (95% CI) | Brier Score | ECE (10 Bins) | False Positive Rate (Real Years) |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| **Model B (Stoichiometry Alone)** | 0.6897 | 0.5248 | 0.2865 | 0.2647 | 0.00% |
-| **Model C (Satellite Alone)** | 0.5221 | 0.3859 | 0.3719 | 0.3461 | 0.00% |
-| **Model D (Historical Alone)** | 0.9659 | 0.9479 | 0.2352 | 0.3390 | 0.00% |
-| **Model E1 (Expert Bayesian Fusion)** | 0.7693 | 0.5625 | 0.2716 | 0.1108 | 25.42% |
-| **Model E2 (Learned Logistic Regression - GroupKFold)** | **0.9654** | **0.9502** | **0.0754** | **0.0469** | **5.65%** |
+| **Model B (Stoichiometry Alone)** | 0.7081 [0.647, 0.791] | 0.5325 [0.463, 0.636] | 0.2673 | 0.2337 | 32.20% |
+| **Model C (Satellite Alone)** | 0.5183 [0.499, 0.544] | 0.3781 [0.359, 0.396] | 0.3731 | 0.3474 | 96.61% |
+| **Model D (Historical Alone)** | 0.9657 [0.960, 0.973] | 0.9470 [0.938, 0.959] | 0.2359 | 0.3400 | 51.98% |
+| **Model E1 (Expert Bayesian Fusion)** | 0.7761 [0.703, 0.853] | 0.5740 [0.493, 0.695] | 0.2525 | 0.1159 | 22.60% |
+| **Model E2 (Learned Logistic Regression - GroupKFold)** | 0.9615 [0.953, 0.971] | 0.9450 [0.934, 0.958] | 0.0818 | 0.0654 | 7.34% |
 
-### Detection Recall by Understatement Magnitude ($\delta$):
-- $\delta = 5\%$: Bayesian 28.6% | Logistic Regression 35.7% (Within normal operational variance)
-- $\delta = 10\%$: Bayesian 28.6% | Logistic Regression 50.0% (Project-defined screening threshold)
-- $\delta = 20\%$: Bayesian 46.4% | Logistic Regression 96.4%
-- $\delta \ge 30\%$: Bayesian $\ge 57.1\%$ | Logistic Regression **100.0%**
+### M5 Historical Score Ablation Study (Methodological Sign Convention)
+| Variant | ROC-AUC | PR-AUC | Brier Score | ECE | Authentic FPR |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| E1 Bayesian: Primary One-Sided max(0, -z) | 0.7761 | 0.5740 | 0.2525 | 0.1159 | 22.60% |
+| E1 Bayesian: Secondary Two-Sided |z| | 0.7697 | 0.5697 | 0.2538 | 0.1126 | 22.60% |
+| E2 Logistic: Primary One-Sided max(0, -z) | 0.9615 | 0.9450 | 0.0818 | 0.0654 | 7.34% |
+| E2 Logistic: Secondary Two-Sided |z| | 0.9295 | 0.8960 | 0.0943 | 0.0518 | 6.78% |
 
-*Note on Materiality:* Commission Implementing Regulation (EU) 2025/2546 (Article 5) defines materiality thresholds at the level of goods (product-level specific embedded emissions); the benchmark evaluates plant-level E-PRTR Scope 1 emissions, so thresholds are project-defined screening rules.
+### M1 Label Sensitivity Evaluation (Screening Thresholds)
+| Screening Threshold & Model | Class Balance | ROC-AUC | PR-AUC | Brier Score | ECE |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Primary Rule: delta >= 10%** — Model E1 (Bayesian) | 120/325 (36.9%) | 0.7761 | 0.5740 | 0.2525 | 0.1159 |
+| **Primary Rule: delta >= 10%** — Model E2 (Logistic) | 120/325 (36.9%) | 0.9615 | 0.9450 | 0.0818 | 0.0654 |
+| **Sensitivity: delta >= 5%** — Model E1 (Bayesian) | 148/325 (45.5%) | 0.7586 | 0.6409 | 0.2841 | 0.1743 |
+| **Sensitivity: delta >= 5%** — Model E2 (Logistic) | 148/325 (45.5%) | 0.9458 | 0.9442 | 0.0969 | 0.0422 |
 
-### Triage Audit Priority Efficiency (Auditor Capacity Simulation):
-- **Top 10% Audit Capacity:** Captures **22.3%** of all material inconsistencies (2.2× random baseline).
-- **Top 20% Audit Capacity:** Captures **40.5%** of all material inconsistencies (2.0× random baseline).
-- **Top 30% Audit Capacity:** Captures **50.4%** of all material inconsistencies (1.7× random baseline).
-
----
+### Triage Audit Priority Efficiency (Auditor Capacity Simulation)
+| Audit Capacity | Bayesian (E1) Caught | Bayesian Precision@k | Bayesian Recall@k | Logistic (E2) Caught | Logistic Precision@k | Logistic Recall@k |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Top 10% (32 cases)** | 27 | 84.4% | 22.5% | 32 | 100.0% | 26.7% |
+| **Top 20% (65 cases)** | 46 | 70.8% | 38.3% | 65 | 100.0% | 54.2% |
+| **Top 30% (97 cases)** | 60 | 61.9% | 50.0% | 89 | 91.8% | 74.2% |
 
 ## 4. Key Scientific Caveats & Inconclusive Pilot Findings
 1. **Satellite Remote Sensing Limitation (Inconclusive / Underpowered Pilot Evidence):**

@@ -1,6 +1,6 @@
-model_name,roc_auc,pr_auc,brier_score,ece
-Model B (Stoichiometry Alone),0.6897,0.5248,0.2865,0.2647
-Model C (Satellite Alone),0.5221,0.3859,0.3719,0.3461
-Model D (Historical Alone),0.9659,0.9479,0.2352,0.339
-Model E1 (Expert Bayesian Fusion),0.7693,0.5625,0.2716,0.1108
-Model E2 (Learned Logistic Regression - GroupKFold),0.9654,0.9502,0.0754,0.0469
+model_name,roc_auc,roc_auc_ci_low,roc_auc_ci_high,pr_auc,pr_auc_ci_low,pr_auc_ci_high,brier_score,brier_ci_low,brier_ci_high,ece,ece_ci_low,ece_ci_high,fpr_authentic,fpr_ci_low,fpr_ci_high
+Model B (Stoichiometry Alone),0.7081,0.6475,0.7908,0.5325,0.4628,0.6363,0.2673,0.2071,0.3319,0.2337,0.1643,0.3188,0.322,0.1724,0.4803
+Model C (Satellite Alone),0.5183,0.4993,0.5438,0.3781,0.3592,0.3956,0.3731,0.3334,0.4136,0.3474,0.2923,0.4012,0.9661,0.8971,1.0
+Model D (Historical Alone),0.9657,0.9603,0.9734,0.947,0.9375,0.9588,0.2359,0.2201,0.2546,0.34,0.3237,0.3597,0.5198,0.4971,0.5486
+Model E1 (Expert Bayesian Fusion),0.7761,0.7032,0.8526,0.574,0.4931,0.6954,0.2525,0.1906,0.3248,0.1159,0.0837,0.1528,0.226,0.095,0.3786
+Model E2 (Learned Logistic Regression - GroupKFold),0.9615,0.9534,0.9707,0.945,0.9338,0.9578,0.0818,0.0703,0.0941,0.0654,0.0481,0.099,0.0734,0.0398,0.1074

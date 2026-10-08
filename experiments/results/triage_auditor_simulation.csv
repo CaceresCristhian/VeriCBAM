@@ -1,0 +1,4 @@
+k_pct,k_cases,total_positives,e1_bayes_caught,e1_bayes_precision,e1_bayes_recall,e2_logistic_caught,e2_logistic_precision,e2_logistic_recall
+10,32,120,27,0.8438,0.225,32,1.0,0.2667
+20,65,120,46,0.7077,0.3833,65,1.0,0.5417
+30,97,120,60,0.6186,0.5,89,0.9175,0.7417
