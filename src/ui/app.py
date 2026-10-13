@@ -480,7 +480,12 @@ if menu == "1. Executive Overview & Cockpit":
         unsafe_allow_html=True,
     )
 
-    view_mode = st.radio("Select View Mode:", ["Executive Summary", "Embedded Regulatory Cockpit"], horizontal=True)
+    view_mode = st.radio(
+        "Select View Mode:",
+        ["Executive Summary", "Embedded Regulatory Cockpit"],
+        horizontal=True,
+        help="Switch between high-level executive cards or the full interactive Google Stitch decision cockpit view.",
+    )
 
     if view_mode == "Embedded Regulatory Cockpit":
         cockpit_html_path = Path(__file__).parent / "stitch_cockpit.html"
@@ -495,7 +500,7 @@ if menu == "1. Executive Overview & Cockpit":
         with col1:
             st.markdown(
                 """
-                <div class="bento-card">
+                <div class="bento-card" title="Curated European industrial installations from EEA E-PRTR database">
                     <div class="bento-label">Benchmark Cohort</div>
                     <div class="bento-value">30 Sites</div>
                     <div class="bento-sub">15 Cement • 15 Steel</div>
@@ -506,7 +511,7 @@ if menu == "1. Executive Overview & Cockpit":
         with col2:
             st.markdown(
                 """
-                <div class="bento-card">
+                <div class="bento-card" title="Authentic annual facility reporting records spanning 2018 through 2023">
                     <div class="bento-label">Authentic Panel</div>
                     <div class="bento-value">177 Plant-Yrs</div>
                     <div class="bento-sub">2018–2023 Real Negatives</div>
@@ -517,7 +522,7 @@ if menu == "1. Executive Overview & Cockpit":
         with col3:
             st.markdown(
                 """
-                <div class="bento-card">
+                <div class="bento-card" title="Rigorous evaluation benchmark with authentic cases and graded understatement perturbations">
                     <div class="bento-label">Graded Benchmark</div>
                     <div class="bento-value">325 Cases</div>
                     <div class="bento-sub">177 Real Neg. • 148 Inconsistencies</div>
@@ -528,7 +533,7 @@ if menu == "1. Executive Overview & Cockpit":
         with col4:
             st.markdown(
                 """
-                <div class="bento-card">
+                <div class="bento-card" title="Multi-modal evidence streams fused by the decision support engine">
                     <div class="bento-label">Evidence Modalities</div>
                     <div class="bento-value">5 Streams</div>
                     <div class="bento-sub">Physics, Sat, Hist, NOx, Reg</div>
@@ -563,6 +568,19 @@ if menu == "1. Executive Overview & Cockpit":
                 """
             )
 
+    st.markdown("---")
+    with st.expander("📋 Decision Matrix: Summary of VeriCBAM Screening Outcomes & Actions", expanded=True):
+        st.markdown(
+            r"""
+            | Screening Verdict | System Status Badge | Triggering Condition | Meaning for Non-Technical Stakeholders | Recommended Regulatory Action |
+            | :--- | :---: | :--- | :--- | :--- |
+            | **Consistent** | `CONSISTENT` | Posterior Risk $P(H \mid E) < 25\%$ | Declared emissions are fully aligned with chemical stoichiometry, verified capacity, and historical trajectories. | **Clear for Expedited Desk Verification.** No physical on-site inspection required. |
+            | **Potential Inconsistency** | `POTENTIAL INCONSISTENCY` | $25\% \le P(H \mid E) \le 70\%$ | The declaration exhibits unusual energy efficiency or minor deviations from historical plant patterns. | **Technical Clarification Request.** Ask importer to supply raw fuel purchase invoices and clinker-to-cement ratios. |
+            | **High Inconsistency Risk** | `HIGH RISK (VIOLATION)` | $P(H \mid E) > 70\%$ or Chemical Violation | The declaration claims physically impossible emission levels or exhibits massive uncharacteristic drop anomalies ($>3.5\sigma$). | **Mandatory On-Site Physical Inspection.** Flag declaration to customs authorities; freeze CBAM certificate clearance. |
+            | **Insufficient Evidence** | `INSUFFICIENT EVIDENCE` | Overall Confidence $C_{\text{overall}} < 50\%$ | Observational data is compromised (heavy cloud cover, missing historical records). System refuses to guess. | **Defer Remote Conclusion.** Do not penalize supplier; request accredited third-party on-site verification records. |
+            """
+        )
+
 # -------------------------------------------------------------
 # TAB 2: BENCHMARK COHORT
 # -------------------------------------------------------------
@@ -574,11 +592,19 @@ elif menu == "2. 30-Facility Benchmark Cohort":
         unsafe_allow_html=True,
     )
 
-    c_filter, s_filter = st.columns([1, 3])
+    c_filter, s_filter, f_filter = st.columns([1, 1, 2])
     with c_filter:
-        sector_choice = st.selectbox("Select Sector", ["All Sectors", "Cement", "Steel"])
+        sector_choice = st.selectbox(
+            "Filter Sector:",
+            ["All Sectors", "Cement", "Steel"],
+            help="Filter the industrial cohort by manufacturing sector (Cement or Steel).",
+        )
     with s_filter:
-        country_choice = st.selectbox("Select Country Filter", ["All Countries"] + sorted(facilities_df["countryName"].unique().tolist()))
+        country_choice = st.selectbox(
+            "Filter Country:",
+            ["All Countries"] + sorted(facilities_df["countryName"].unique().tolist()),
+            help="Filter facilities geographically by host European country.",
+        )
 
     filtered_facilities = facilities_df.copy()
     if sector_choice != "All Sectors":
@@ -586,11 +612,55 @@ elif menu == "2. 30-Facility Benchmark Cohort":
     if country_choice != "All Countries":
         filtered_facilities = filtered_facilities[filtered_facilities["countryName"] == country_choice]
 
+    with f_filter:
+        facility_options = filtered_facilities["facilityName"].tolist()
+        if not facility_options:
+            facility_options = facilities_df["facilityName"].tolist()
+            filtered_facilities = facilities_df.copy()
+        selected_facility_name = st.selectbox(
+            "Select Target Facility to Inspect & Highlight on Map:",
+            facility_options,
+            help="Choose an industrial plant to center and highlight on the map and display its multi-year emissions timeline.",
+        )
+
     if "latitude" not in filtered_facilities.columns and "Latitude" in filtered_facilities.columns:
         filtered_facilities["latitude"] = filtered_facilities["Latitude"]
     if "longitude" not in filtered_facilities.columns and "Longitude" in filtered_facilities.columns:
         filtered_facilities["longitude"] = filtered_facilities["Longitude"]
 
+    fac_row = filtered_facilities[filtered_facilities["facilityName"] == selected_facility_name].iloc[0]
+    fac_id = fac_row["FacilityInspireId"]
+    fac_lat = float(fac_row.get("latitude", fac_row.get("Latitude", 51.1657)))
+    fac_lon = float(fac_row.get("longitude", fac_row.get("Longitude", 10.4515)))
+    ts_df = mgr.get_facility_time_series(fac_id)
+
+    # Calculate Legal Permit Limit / Capacity Ceiling
+    sector = str(fac_row.get("sector", "Cement"))
+    if sector == "Cement":
+        cap_mtpa = float(fac_row.get("clinker_capacity_mtpa", 0.0) or 0.0)
+        if cap_mtpa <= 0.0:
+            cap_mtpa = float(fac_row.get("cement_capacity_mtpa", 1.5) or 1.5)
+        legal_limit_tco2 = cap_mtpa * 1e6 * 0.950
+        legal_basis = f"Licensed Clinker Capacity ({cap_mtpa:.2f} Mt/yr) × 0.950 t CO₂/t BAT Upper Limit"
+    else:
+        cap_mtpa = float(fac_row.get("crude_steel_capacity_mtpa", 0.0) or 0.0)
+        if cap_mtpa <= 0.0:
+            cap_mtpa = float(fac_row.get("primary_iron_capacity_mtpa", 0.0) or 0.0)
+        if cap_mtpa <= 0.0:
+            cap_mtpa = 2.5
+        route_desc = str(fac_row.get("verified_technology_route", ""))
+        if "Scrap" in route_desc or "EAF" in route_desc:
+            legal_limit_tco2 = cap_mtpa * 1e6 * 0.350
+            legal_basis = f"Licensed EAF Steel Capacity ({cap_mtpa:.2f} Mt/yr) × 0.350 t CO₂/t Scrap-EAF Envelope"
+        else:
+            legal_limit_tco2 = cap_mtpa * 1e6 * 2.200
+            legal_basis = f"Licensed BF-BOF Capacity ({cap_mtpa:.2f} Mt/yr) × 2.200 t CO₂/t Integrated Ceiling"
+
+    if legal_limit_tco2 <= 0.0 or np.isnan(legal_limit_tco2):
+        legal_limit_tco2 = float(fac_row.get("max_co2_tonnes", 1000000.0)) * 1.15
+        legal_basis = "115% Historical Peak Environmental Baseline"
+
+    # Map with highlighted selected facility pin
     try:
         fig_map = px.scatter_map(
             filtered_facilities,
@@ -601,9 +671,9 @@ elif menu == "2. 30-Facility Benchmark Cohort":
             color="sector",
             size="mean_co2_tonnes",
             color_discrete_map={"Cement": "#facc15", "Steel": "#8ed5ff"},
-            size_max=32,
-            zoom=3.8,
-            center={"lat": 51.1657, "lon": 10.4515},
+            size_max=30,
+            zoom=4.0,
+            center={"lat": fac_lat, "lon": fac_lon},
             title="Geospatial Distribution of Benchmark Industrial Cohort",
         )
     except Exception:
@@ -616,54 +686,125 @@ elif menu == "2. 30-Facility Benchmark Cohort":
             color="sector",
             size="mean_co2_tonnes",
             color_discrete_map={"Cement": "#facc15", "Steel": "#8ed5ff"},
-            size_max=32,
-            zoom=3.8,
-            center={"lat": 51.1657, "lon": 10.4515},
+            size_max=30,
+            zoom=4.0,
+            center={"lat": fac_lat, "lon": fac_lon},
             mapbox_style="carto-darkmatter",
             title="Geospatial Distribution of Benchmark Industrial Cohort",
         )
-    fig_map = apply_stitch_plotly_theme(fig_map, "Geospatial Distribution of Benchmark Industrial Cohort")
+
+    # Highlight overlay trace for selected facility
+    try:
+        fig_map.add_trace(go.Scattermap(
+            lat=[fac_lat],
+            lon=[fac_lon],
+            mode="markers+text",
+            marker=dict(size=26, color="#ef4444", opacity=0.95),
+            text=[f"📍 {selected_facility_name}"],
+            textposition="top center",
+            name=f"Selected: {selected_facility_name}",
+            hovertext=f"<b>📍 Selected: {selected_facility_name}</b><br>Sector: {fac_row['sector']}<br>City: {fac_row['city']}<br>Permit Limit: {legal_limit_tco2:,.0f} t CO₂/yr",
+            hoverinfo="text",
+        ))
+    except Exception:
+        fig_map.add_trace(go.Scattermapbox(
+            lat=[fac_lat],
+            lon=[fac_lon],
+            mode="markers+text",
+            marker=dict(size=26, color="#ef4444", opacity=0.95),
+            text=[f"📍 {selected_facility_name}"],
+            textposition="top center",
+            name=f"Selected: {selected_facility_name}",
+            hovertext=f"<b>📍 Selected: {selected_facility_name}</b><br>Sector: {fac_row['sector']}<br>City: {fac_row['city']}<br>Permit Limit: {legal_limit_tco2:,.0f} t CO₂/yr",
+            hoverinfo="text",
+        ))
+
+    fig_map = apply_stitch_plotly_theme(fig_map, f"Geospatial Cohort (Highlighting: {html.escape(selected_facility_name)})")
     fig_map.update_layout(height=480, margin=dict(l=0, r=0, t=40, b=0))
     st.plotly_chart(fig_map, use_container_width=True)
 
-    st.markdown("### Facility Inspection & Multi-Year Emission Time Series")
-    selected_facility_name = st.selectbox("Select Facility to Inspect Historical Emissions:", filtered_facilities["facilityName"].tolist())
-
-    if selected_facility_name:
-        fac_row = filtered_facilities[filtered_facilities["facilityName"] == selected_facility_name].iloc[0]
-        fac_id = fac_row["FacilityInspireId"]
-        ts_df = mgr.get_facility_time_series(fac_id)
-        fac_lat = float(fac_row.get("latitude", fac_row.get("Latitude", 0.0)))
-        fac_lon = float(fac_row.get("longitude", fac_row.get("Longitude", 0.0)))
-
-        col_left, col_right = st.columns([1, 2])
-        with col_left:
-            st.markdown(
-                f"""
-                <div class="bento-card">
-                    <div class="bento-label">Facility Metadata</div>
-                    <div style="font-size: 1.1rem; font-weight: 700; color: #f1f5f9; margin-bottom: 8px;">{html.escape(str(fac_row['facilityName']))}</div>
-                    <p style="font-size: 0.85rem; color: #94a3b8; margin: 0;"><strong>Sector:</strong> <code style="color: #8ed5ff;">{html.escape(str(fac_row['sector']))}</code></p>
-                    <p style="font-size: 0.85rem; color: #94a3b8; margin: 0;"><strong>Location:</strong> {html.escape(str(fac_row['city']))}, {html.escape(str(fac_row['countryName']))}</p>
-                    <p style="font-size: 0.85rem; color: #94a3b8; margin: 0;"><strong>Coordinates:</strong> ({fac_lat:.4f}, {fac_lon:.4f})</p>
-                    <p style="font-size: 0.85rem; color: #94a3b8; margin: 0;"><strong>Mean CO₂:</strong> {fac_row['mean_co2_tonnes']:,.0f} t/yr</p>
+    col_left, col_right = st.columns([1, 2])
+    with col_left:
+        st.markdown(
+            f"""
+            <div class="bento-card">
+                <div class="bento-label">Facility Metadata & Licensed Permit</div>
+                <div style="font-size: 1.1rem; font-weight: 700; color: #f1f5f9; margin-bottom: 8px;">{html.escape(str(fac_row['facilityName']))}</div>
+                <p style="font-size: 0.85rem; color: #cbd5e1; margin: 0 0 4px 0;"><strong>Sector:</strong> <code style="color: #8ed5ff;">{html.escape(str(fac_row['sector']))}</code></p>
+                <p style="font-size: 0.85rem; color: #cbd5e1; margin: 0 0 4px 0;"><strong>Location:</strong> {html.escape(str(fac_row['city']))}, {html.escape(str(fac_row['countryName']))}</p>
+                <p style="font-size: 0.85rem; color: #cbd5e1; margin: 0 0 4px 0;"><strong>Coordinates:</strong> ({fac_lat:.4f}, {fac_lon:.4f})</p>
+                <p style="font-size: 0.85rem; color: #cbd5e1; margin: 0 0 4px 0;"><strong>Verified Route:</strong> {html.escape(str(fac_row.get('verified_technology_route', 'N/A')))}</p>
+                <p style="font-size: 0.85rem; color: #cbd5e1; margin: 0 0 4px 0;"><strong>Historical Mean CO₂:</strong> {fac_row['mean_co2_tonnes']:,.0f} t/yr</p>
+                <div style="margin-top: 10px; padding: 8px 10px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 6px;">
+                    <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: #ffb4ab;">Legal Permit Emissions Limit:</span>
+                    <div style="font-size: 1.15rem; font-weight: 700; color: #ef4444; font-family: monospace;">{legal_limit_tco2:,.0f} t CO₂/yr</div>
+                    <div style="font-size: 0.72rem; color: #cbd5e1;">Basis: {html.escape(legal_basis)}</div>
                 </div>
-                """,
-                unsafe_allow_html=True,
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with col_right:
+        if not ts_df.empty:
+            ts_sorted = ts_df.sort_values("reportingYear").copy()
+            fig_ts = go.Figure()
+
+            # Timeline of verified emissions
+            fig_ts.add_trace(go.Scatter(
+                x=ts_sorted["reportingYear"],
+                y=ts_sorted["co2_tonnes"],
+                mode="lines+markers",
+                name="Verified Scope 1 CO₂ (E-PRTR)",
+                line=dict(color="#8ed5ff", width=3),
+                marker=dict(size=10, color="#8ed5ff", symbol="circle", line=dict(color="#ffffff", width=1.5)),
+                hovertemplate="<b>Year %{x}</b><br>Reported: %{y:,.0f} t CO₂<extra></extra>",
+            ))
+
+            # Red dashed legal limit line
+            fig_ts.add_trace(go.Scatter(
+                x=[ts_sorted["reportingYear"].min(), ts_sorted["reportingYear"].max()],
+                y=[legal_limit_tco2, legal_limit_tco2],
+                mode="lines",
+                name=f"Legal Permit Limit ({legal_limit_tco2:,.0f} t/yr)",
+                line=dict(color="#ef4444", width=2.5, dash="dash"),
+                hovertemplate=f"<b>Legal Permit Limit</b>: {legal_limit_tco2:,.0f} t CO₂/yr<extra></extra>",
+            ))
+
+            fig_ts.add_annotation(
+                x=ts_sorted["reportingYear"].median(),
+                y=legal_limit_tco2,
+                text=f"Legal Permit Limit: {legal_limit_tco2:,.0f} t CO₂/yr",
+                showarrow=False,
+                yshift=14,
+                font=dict(color="#ef4444", size=11, family="monospace"),
+                bgcolor="rgba(15, 19, 28, 0.9)",
+                bordercolor="#ef4444",
+                borderwidth=1,
             )
 
-        with col_right:
-            if not ts_df.empty:
-                fig_ts = px.bar(
-                    ts_df,
-                    x="reportingYear",
-                    y="co2_tonnes",
-                    labels={"reportingYear": "Reporting Year", "co2_tonnes": "Verified Scope 1 CO₂ (Tonnes)"},
-                    color_discrete_sequence=["#8ed5ff"],
-                )
-                fig_ts = apply_stitch_plotly_theme(fig_ts, f"Historical Emissions Trajectory: {html.escape(str(fac_row['facilityName']))}")
-                fig_ts.update_layout(height=280)
-                st.plotly_chart(fig_ts, use_container_width=True)
+            fig_ts = apply_stitch_plotly_theme(fig_ts, f"Multi-Year Emissions Timeline vs Legal Permit Limit: {html.escape(str(fac_row['facilityName']))}")
+            fig_ts.update_layout(
+                height=320,
+                xaxis=dict(title="Reporting Calendar Year", dtick=1, gridcolor="#2d3440"),
+                yaxis=dict(title="Verified Scope 1 CO₂ (Tonnes)", gridcolor="#2d3440"),
+                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            )
+            st.plotly_chart(fig_ts, use_container_width=True)
+
+    # Tab 2 Decision Matrix
+    st.markdown("---")
+    with st.expander("📋 Decision Matrix: Summary of Cohort Historical Trajectory Diagnoses", expanded=True):
+        st.markdown(
+            r"""
+            | Trajectory Status | Indicator | Quantitative Condition | Operational Interpretation | Audit Recommendation |
+            | :--- | :---: | :--- | :--- | :--- |
+            | **Normal Historical Operation** | 🟢 Concordant | Within $\pm 1.5\sigma$ of 6-year mean | Plant emissions fluctuate within normal European industrial operational variance. | Use historical mean as reliable prior baseline for upcoming CBAM reporting. |
+            | **Noticeable Emission Drop** | 🟡 Moderate Drift | Drop between $1.5\sigma$ and $3.0\sigma$ | Facility emitted noticeably less than past years; could reflect reduced production, kiln overhaul, or under-reporting. | Compare claimed production volume against national grid/clinker trade flows. |
+            | **Severe Historical Drop Anomaly** | 🔴 High Anomaly | Drop $> 3.5\sigma$ ($\max(0, -z) > 3.5$) | Statistically improbable emissions drop while declaring sustained or growing production volume. | Priority candidate for production verification; verify whether operations were partially shut down or diverted. |
+            | **Permit Cap Breach** | 🚨 Over-Capacity | Reported $\text{CO}_2 > \text{Legal Permit Cap}$ | Declared emissions exceed licensed environmental permit ceiling under EU Industrial Emissions Directive (IED). | Flag potential illegal capacity expansion or permit compliance violation to national environmental regulator. |
+            """
+        )
 
 # -------------------------------------------------------------
 # TAB 3: STOICHIOMETRIC PHYSICS ENGINE
@@ -686,19 +827,63 @@ elif menu == "3. Stoichiometric Physics Engine":
         unsafe_allow_html=True,
     )
 
-    sector_mode = st.radio("Select Production Sector for Audit Simulation:", ["Cement Clinker", "Crude Steel"], horizontal=True)
+    sector_mode = st.radio(
+        "Select Production Sector for Audit Simulation:",
+        ["Cement Clinker", "Crude Steel"],
+        horizontal=True,
+        help="Select the industrial commodity sector to simulate first-principles stoichiometric verification against chemical mass balances.",
+    )
 
     if sector_mode == "Cement Clinker":
         col_c1, col_c2, col_c3 = st.columns(3)
         with col_c1:
-            clinker_tonnes = st.number_input("Clinker Produced (Metric Tonnes)", min_value=10000.0, max_value=5000000.0, value=1000000.0, step=50000.0)
-            cement_tonnes = st.number_input("Total Cement Produced (Tonnes)", min_value=10000.0, max_value=6000000.0, value=1150000.0, step=50000.0)
+            clinker_tonnes = st.number_input(
+                "Clinker Produced (Metric Tonnes)",
+                min_value=10000.0,
+                max_value=5000000.0,
+                value=1000000.0,
+                step=50000.0,
+                help="Annual mass of clinker produced in metric tonnes (calcined limestone kiln output). Forms the primary chemical basis for calcination CO₂.",
+            )
+            cement_tonnes = st.number_input(
+                "Total Cement Produced (Tonnes)",
+                min_value=10000.0,
+                max_value=6000000.0,
+                value=1150000.0,
+                step=50000.0,
+                help="Annual mass of finished cement ground and dispatched (clinker plus gypsum, slag, and fly ash additives).",
+            )
         with col_c2:
-            clinker_ratio = st.slider("Clinker-to-Cement Ratio", min_value=0.40, max_value=1.0, value=0.87, step=0.01)
-            fuel_type = st.selectbox("Primary Kiln Fuel", ["coal", "petcoke", "natural_gas", "waste_derived_fuel_50pct_bio"])
+            clinker_ratio = st.slider(
+                "Clinker-to-Cement Ratio",
+                min_value=0.40,
+                max_value=1.0,
+                value=0.87,
+                step=0.01,
+                help="Proportion of clinker in finished cement (e.g., 0.87 for CEM I / CEM II blend). Higher clinker ratio mathematically increases emissions.",
+            )
+            fuel_type = st.selectbox(
+                "Primary Kiln Fuel",
+                ["coal", "petcoke", "natural_gas", "waste_derived_fuel_50pct_bio"],
+                help="Primary thermal fuel fired into the rotary kiln. Waste-derived fuels with 50% biomass credit lower fossil combustion emissions.",
+            )
         with col_c3:
-            reported_co2 = st.number_input("Reported Direct Scope 1 CO₂ (Tonnes)", min_value=0.0, max_value=5000000.0, value=810000.0, step=25000.0)
-            ccus_tco2 = st.number_input("Verified CCUS Captured CO₂ (Tonnes)", min_value=0.0, max_value=1000000.0, value=0.0, step=10000.0)
+            reported_co2 = st.number_input(
+                "Reported Direct Scope 1 CO₂ (Tonnes)",
+                min_value=0.0,
+                max_value=5000000.0,
+                value=810000.0,
+                step=25000.0,
+                help="Total gross direct Scope 1 carbon dioxide emissions declared by the facility for the calendar reporting year.",
+            )
+            ccus_tco2 = st.number_input(
+                "Verified CCUS Captured CO₂ (Tonnes)",
+                min_value=0.0,
+                max_value=1000000.0,
+                value=0.0,
+                step=10000.0,
+                help="Permanently captured and geologically stored CO₂ tonnage supported by ISO 14064-3 verified custody transfer records.",
+            )
 
         decl_cement = CementDeclarationInput(
             facility_name="Audit Candidate Kiln",
@@ -734,13 +919,45 @@ elif menu == "3. Stoichiometric Physics Engine":
     else:
         col_s1, col_s2, col_s3 = st.columns(3)
         with col_s1:
-            steel_tonnes = st.number_input("Crude Steel Produced (Tonnes)", min_value=10000.0, max_value=10000000.0, value=2000000.0, step=50000.0)
-            claimed_route = st.selectbox("Claimed Production Route", ["BF-BOF", "DRI-NG-EAF", "DRI-H2-EAF", "Scrap-EAF"])
+            steel_tonnes = st.number_input(
+                "Crude Steel Produced (Tonnes)",
+                min_value=10000.0,
+                max_value=10000000.0,
+                value=2000000.0,
+                step=50000.0,
+                help="Total annual metric tonnes of liquid crude steel produced across blast furnaces or electric arc furnaces.",
+            )
+            claimed_route = st.selectbox(
+                "Claimed Production Route",
+                ["BF-BOF", "DRI-NG-EAF", "DRI-H2-EAF", "Scrap-EAF"],
+                help="Industrial manufacturing method claimed in declaration (e.g., carbon-intensive integrated BF-BOF vs low-carbon Scrap-EAF recycling).",
+            )
         with col_s2:
-            scrap_ratio = st.slider("Scrap Ratio (Dilution)", min_value=0.05, max_value=1.0, value=0.18, step=0.01)
-            reported_steel_co2 = st.number_input("Reported Scope 1 CO₂ (Tonnes)", min_value=0.0, max_value=10000000.0, value=3600000.0, step=50000.0)
+            scrap_ratio = st.slider(
+                "Scrap Ratio (Dilution)",
+                min_value=0.05,
+                max_value=1.0,
+                value=0.18,
+                step=0.01,
+                help="Fraction of recycled scrap steel charged into the furnace to dilute hot metal carbon intensity.",
+            )
+            reported_steel_co2 = st.number_input(
+                "Reported Scope 1 CO₂ (Tonnes)",
+                min_value=0.0,
+                max_value=10000000.0,
+                value=3600000.0,
+                step=50000.0,
+                help="Total direct Scope 1 carbon dioxide emissions declared by the steelworks for the calendar reporting year.",
+            )
         with col_s3:
-            steel_ccus = st.number_input("Verified CCUS Captured CO₂ (Tonnes)", min_value=0.0, max_value=2000000.0, value=0.0, step=10000.0)
+            steel_ccus = st.number_input(
+                "Verified CCUS Captured CO₂ (Tonnes)",
+                min_value=0.0,
+                max_value=2000000.0,
+                value=0.0,
+                step=10000.0,
+                help="Verified captured CO₂ tonnage permanently sequestered via compliant carbon capture infrastructure.",
+            )
 
         decl_steel = SteelDeclarationInput(
             facility_name="Audit Candidate Steelwork",
@@ -775,6 +992,19 @@ elif menu == "3. Stoichiometric Physics Engine":
             st.markdown(f'<div class="status-badge badge-consistent">✅ CONCORDANT WITH ROUTE BOUNDS</div>', unsafe_allow_html=True)
             st.success(res_steel.violation_reason)
 
+    st.markdown("---")
+    with st.expander("📋 Decision Matrix: Summary of Stoichiometric Physical Diagnoses & Actions", expanded=True):
+        st.markdown(
+            r"""
+            | Physical Feasibility Verdict | Status Badge | Physical & Chemical Condition | Non-Technical Operational Meaning | Recommended Regulatory Action |
+            | :--- | :---: | :--- | :--- | :--- |
+            | **Physically Feasible / Concordant** | `✅ PHYSICALLY FEASIBLE` | Declared Scope 1 $\ge$ Net Stoichiometric Floor | Declared emissions exceed the absolute chemical minimum required by law of conservation of mass (calcination + BAT combustion). | **Accepted for Standard Desk Verification.** Proceed to historical trajectory and registry checks. |
+            | **Route Misclassification Detected** | `⚠️ ROUTE MISCLASSIFICATION DETECTED` | Intensity matches low-carbon route (Scrap-EAF) but is impossible for claimed route (BF-BOF) | Plant claims to use one production method but reports emissions typical of a much lower-carbon alternative. | **Technical Route Audit.** Request production logbooks, electricity bills, and scrap purchasing invoices to verify physical technology. |
+            | **Physical Stoichiometric Violation** | `🚨 PHYSICAL FEASIBILITY VIOLATION` | Declared Scope 1 $<$ Net Stoichiometric Floor | The declaration claims emissions lower than what chemical reactions physically emit even with 100% thermodynamic efficiency. | **Immediate Rejection / Mandatory Audit.** Declaration cannot be true under the laws of chemistry. Freeze CBAM clearance and dispatch verifiers. |
+            | **Unsubstantiated Carbon Capture (CCUS)** | `⚠️ HIGH DEFICIT RISK` | Net emissions feasible only with massive CCUS deduction | Reported gross emissions violate floor unless credited with large unverified CCUS volumes. | **Audit CCUS Transfer Receipts.** Demand accredited ISO 14064-3 geological storage custody transfer certificates. |
+            """
+        )
+
 # -------------------------------------------------------------
 # TAB 4: STANDALONE SUPPLIER PLAUSIBILITY PRE-CHECK
 # -------------------------------------------------------------
@@ -789,10 +1019,32 @@ elif menu == "4. Standalone Supplier Plausibility Pre-Check":
     col_pc1, col_pc2 = st.columns(2)
     with col_pc1:
         st.markdown("#### Supplier Declaration Inputs")
-        supplier_name = st.text_input("Supplier / Installation Name:", "Overseas Heavy Industries Ltd.")
-        supp_sector = st.selectbox("Commodity Sector:", ["Cement Clinker", "Finished Cement (CEM II)", "Crude Steel (BF-BOF)", "Crude Steel (Scrap-EAF)"])
-        decl_specific_emissions = st.number_input("Declared Specific Scope 1 Intensity (t CO₂ / t product):", min_value=0.0, max_value=5.0, value=0.62, step=0.01)
-        annual_volume_tonnes = st.number_input("Annual Production Volume (Metric Tonnes):", min_value=1000.0, max_value=20000000.0, value=1200000.0, step=50000.0)
+        supplier_name = st.text_input(
+            "Supplier / Installation Name:",
+            "Overseas Heavy Industries Ltd.",
+            help="Legal corporate identity or installation trading name of the non-EU industrial supplier.",
+        )
+        supp_sector = st.selectbox(
+            "Commodity Sector:",
+            ["Cement Clinker", "Finished Cement (CEM II)", "Crude Steel (BF-BOF)", "Crude Steel (Scrap-EAF)"],
+            help="Standardized industrial commodity category covered under EU CBAM Annex I.",
+        )
+        decl_specific_emissions = st.number_input(
+            "Declared Specific Scope 1 Intensity (t CO₂ / t product):",
+            min_value=0.0,
+            max_value=5.0,
+            value=0.62,
+            step=0.01,
+            help="Declared direct emissions intensity per metric tonne of product (Scope 1 t CO₂ / t). Evaluated against chemical reaction baselines.",
+        )
+        annual_volume_tonnes = st.number_input(
+            "Annual Production Volume (Metric Tonnes):",
+            min_value=1000.0,
+            max_value=20000000.0,
+            value=1200000.0,
+            step=50000.0,
+            help="Total declared volume of goods imported into the European Union during the calendar year.",
+        )
 
     if "Cement Clinker" in supp_sector:
         floor = 0.770
@@ -847,6 +1099,18 @@ Generated by VeriCBAM Decision Support Cockpit.
 """
         st.download_button("📥 Download Supplier Screening Dossier (Markdown)", dossier_text, file_name=f"vericbam_dossier_{supplier_name.lower().replace(' ', '_')}.md")
 
+    st.markdown("---")
+    with st.expander("📋 Decision Matrix: Summary of Supplier Plausibility Pre-Check Diagnoses", expanded=True):
+        st.markdown(
+            r"""
+            | Pre-Check Verdict | Status Badge | Quantitative Intensity Range | Non-Technical Operational Meaning | Commercial & Customs Action |
+            | :--- | :---: | :--- | :--- | :--- |
+            | **Consistent with Physical Floor** | `CONSISTENT WITH PHYSICAL FLOOR` | Specific Intensity $\ge$ Typical Benchmark Lower Bound | Declared intensity aligns with modern European and global Best Available Techniques (BAT). | **Clear for Import Filing.** Standard CBAM declaration clearance approved. |
+            | **Potential Inconsistency (Low Intensity)** | `POTENTIAL INCONSISTENCY (LOW INTENSITY)` | Physical Floor $\le$ Intensity $<$ Typical Benchmark | Plant claims world-class energy efficiency surpassing 90% of global industrial installations. Plausible only with advanced tech. | **Request Production Details.** Ask importer for clinker-to-cement ratio or electric arc furnace power receipts. |
+            | **High Inconsistency Risk (Physical Violation)** | `HIGH INCONSISTENCY RISK (VIOLATION)` | Specific Intensity $<$ Physical Lower Bound Floor | Declared carbon intensity violates fundamental laws of physics and chemical reactions. | **Reject CBAM Filing.** Importer must revise declaration or pay default EU benchmark penalty rates. |
+            """
+        )
+
 # -------------------------------------------------------------
 # TAB 5: COPERNICUS SATELLITE ENGINE
 # -------------------------------------------------------------
@@ -865,9 +1129,20 @@ elif menu == "5. Copernicus Satellite Engine (Sentinel-5P)":
 
     c_sel, p_sel = st.columns([2, 1])
     with c_sel:
-        target_fac_name = st.selectbox("Select Target Facility for Satellite Plume Analysis:", facilities_df["facilityName"].tolist())
+        target_fac_name = st.selectbox(
+            "Select Target Facility for Satellite Plume Analysis:",
+            facilities_df["facilityName"].tolist(),
+            help="Select an industrial facility from the 30-plant European cohort to analyze Copernicus Sentinel-5P TROPOMI orbital atmospheric plumes.",
+        )
     with p_sel:
-        prod_claimed = st.number_input("Declared Production (Tonnes)", min_value=10000.0, max_value=10000000.0, value=1000000.0, step=50000.0)
+        prod_claimed = st.number_input(
+            "Declared Production (Tonnes)",
+            min_value=10000.0,
+            max_value=10000000.0,
+            value=1000000.0,
+            step=50000.0,
+            help="Declared annual production volume (metric tonnes) to cross-check whether observed atmospheric plume density corroborates reported activity.",
+        )
 
     target_row = facilities_df[facilities_df["facilityName"] == target_fac_name].iloc[0]
     fac_id = target_row["FacilityInspireId"]
@@ -914,6 +1189,19 @@ elif menu == "5. Copernicus Satellite Engine (Sentinel-5P)":
         fig_obs.update_layout(height=340)
         st.plotly_chart(fig_obs, use_container_width=True)
 
+    st.markdown("---")
+    with st.expander("📋 Decision Matrix: Summary of Satellite Remote Sensing Diagnoses", expanded=True):
+        st.markdown(
+            r"""
+            | Satellite Plume Verdict | Plume Contrast ($\sigma$) | Cloud Fraction | Non-Technical Operational Meaning | Verifier Recommendation |
+            | :--- | :---: | :---: | :--- | :--- |
+            | **Plume Concordant (Active Combustion)** | $z \ge +1.0\sigma$ | $\le 40\%$ | Clear tropospheric $\text{NO}_2$ plume detected above regional background; confirms continuous thermal combustion. | Corroborates declared high-volume production; indicates active plant firing. |
+            | **Anomalously Weak Plume (Potential Ghost / Idling)** | $z < 0.0\sigma$ | $\le 40\%$ | No measurable combustion plume detected above background despite claiming large production volumes. | Investigate whether facility was idled, in cold shutdown, or declaring 'ghost production' from another site. |
+            | **Elevated Plume Contrast (High Flare / Heavy Run)** | $z > +2.5\sigma$ | $\le 40\%$ | Strong atmospheric plume detected; suggests heavy continuous firing or potential flaring. | Cross-check declared output; ensures emissions were not under-reported relative to atmospheric footprint. |
+            | **Inconclusive (Compromised Observation)** | Any | $> 50\%$ | Persistent cloud obscuration, snow cover, or missing satellite overpasses degrade sensor confidence. | **Do Not Penalize.** Remote sensing is inconclusive; rely on physical mass balance and ground audit records. |
+            """
+        )
+
 # -------------------------------------------------------------
 # TAB 6: BAYESIAN EVIDENCE FUSION
 # -------------------------------------------------------------
@@ -939,27 +1227,88 @@ elif menu == "6. Bayesian Evidence Fusion":
     col_e1, col_e2 = st.columns(2)
     with col_e1:
         st.markdown("#### Input Evidence Streams")
-        stoich_margin_sigma = st.slider("Stoichiometric Safety Margin (Sigma above lower bound)", 0.0, 5.0, 1.2, 0.1)
-        stoich_violated = st.checkbox("Simulate Stoichiometric Physical Floor Violation", False)
+        stoich_margin_sigma = st.slider(
+            "Stoichiometric Safety Margin (Sigma above lower bound)",
+            0.0,
+            5.0,
+            1.2,
+            0.1,
+            help="Safety margin in standard deviations above the chemical calcination/reduction floor. Values < 1.0σ approach physical limits.",
+        )
+        stoich_violated = st.checkbox(
+            "Simulate Stoichiometric Physical Floor Violation",
+            False,
+            help="Toggle to simulate an explicit chemical mass-balance breach (reporting less than stoichiometric minimum). Triggers immediate hard veto.",
+        )
 
-        has_satellite = st.checkbox("Include Copernicus Sentinel-5P Satellite Data (Auxiliary)", True)
+        has_satellite = st.checkbox(
+            "Include Copernicus Sentinel-5P Satellite Data (Auxiliary)",
+            True,
+            help="Toggle auxiliary Earth observation evidence from the Copernicus Sentinel-5P satellite.",
+        )
         if has_satellite:
-            sat_zscore = st.slider("Satellite Plume Anomaly Z-Score (vs Regional Background)", -2.0, 4.0, 1.8, 0.1)
-            sat_cloud = st.slider("Satellite Cloud Obscuration Fraction", 0.0, 1.0, 0.25, 0.05)
+            sat_zscore = st.slider(
+                "Satellite Plume Anomaly Z-Score (vs Regional Background)",
+                -2.0,
+                4.0,
+                1.8,
+                0.1,
+                help="Normalized tropospheric NO₂ plume column density relative to clean 15–30 km regional background.",
+            )
+            sat_cloud = st.slider(
+                "Satellite Cloud Obscuration Fraction",
+                0.0,
+                1.0,
+                0.25,
+                0.05,
+                help="Fraction of cloudy days or cloudy pixels degrading satellite sensor confidence (high cloud reduces evidence weight).",
+            )
         else:
             sat_zscore = None
             sat_cloud = 1.0
 
-        has_temporal = st.checkbox("Include Historical Time Series Baseline", True)
+        has_temporal = st.checkbox(
+            "Include Historical Time Series Baseline",
+            True,
+            help="Toggle historical multi-year emissions registry baseline evidence (E-PRTR / IED).",
+        )
         if has_temporal:
-            temp_zscore = st.slider("Sudden Emission Drop Anomaly max(0, -z)", 0.0, 4.0, 0.8, 0.1)
-            years_hist = st.slider("Available Historical Reference Years", 1, 6, 5)
+            temp_zscore = st.slider(
+                "Sudden Emission Drop Anomaly max(0, -z)",
+                0.0,
+                4.0,
+                0.8,
+                0.1,
+                help="One-sided sudden drop anomaly score max(0, -z). High values indicate abnormal decreases compared to past years.",
+            )
+            years_hist = st.slider(
+                "Available Historical Reference Years",
+                1,
+                6,
+                5,
+                help="Number of continuous historical reporting years available in public environmental registers (more years = higher confidence).",
+            )
         else:
             temp_zscore = None
             years_hist = 0
 
-        has_registry = st.checkbox("Include Registry Capacity Check", False)
-        reg_ratio = st.slider("Claimed Production vs GEM Registry Capacity Ratio", 0.5, 1.5, 1.0, 0.05) if has_registry else 1.0
+        has_registry = st.checkbox(
+            "Include Registry Capacity Check",
+            False,
+            help="Toggle independent plant capacity registry verification (e.g., Global Energy Monitor database).",
+        )
+        reg_ratio = (
+            st.slider(
+                "Claimed Production vs GEM Registry Capacity Ratio",
+                0.5,
+                1.5,
+                1.0,
+                0.05,
+                help="Ratio of declared production to licensed nameplate plant capacity. Values > 1.2 suggest unverified over-capacity.",
+            )
+            if has_registry
+            else 1.0
+        )
 
     ev = EvidenceInput(
         stoichiometric_discrepancy_sigma=stoich_margin_sigma,
@@ -1014,6 +1363,19 @@ elif menu == "6. Bayesian Evidence Fusion":
             ])
             st.table(df_sens)
 
+    st.markdown("---")
+    with st.expander("📋 Decision Matrix: Summary of Multimodal Bayesian Posterior Risk Classifications", expanded=True):
+        st.markdown(
+            r"""
+            | Multimodal Verdict | Status Badge | Posterior Risk $P(H \mid E)$ | Evidence Confidence $C_{\text{overall}}$ | Meaning for Non-Technical Users | Regulatory Workflow Action |
+            | :--- | :---: | :---: | :---: | :--- | :--- |
+            | **Consistent** | `CONSISTENT` | $< 25\%$ | $\ge 50\%$ | All available evidence streams (physics, history, satellite, registry) agree with the declaration. | **Clear for Expedited Verification.** No in-person audit required. |
+            | **Potential Inconsistency** | `POTENTIAL INCONSISTENCY` | $25\% \le P \le 70\%$ | $\ge 50\%$ | Mild deviations detected in historical drop or satellite plume. Declaration is technically feasible but warrants scrutiny. | **Technical Clarification Request.** Importer must provide fuel invoices, CEMS logs, and clinker ratios. |
+            | **High Inconsistency Risk** | `HIGH INCONSISTENCY RISK` | $> 70\%$ or Veto | $\ge 50\%$ | Physical floor breach or combined multi-stream anomalies indicate high probability of under-reporting. | **Mandatory On-Site Physical Inspection.** Flag declaration to customs; freeze clearance of CBAM certificates. |
+            | **Insufficient Evidence** | `INSUFFICIENT EVIDENCE` | Any | $< 50\%$ | Data streams are missing or degraded (heavy clouds, no historical records). System refuses to guess. | **Defer Automated Decision.** Conduct standard independent third-party physical verifier audit without remote bias. |
+            """
+        )
+
 # -------------------------------------------------------------
 # TAB 7: EMPIRICAL BENCHMARK EVALUATION & ABLATION
 # -------------------------------------------------------------
@@ -1023,6 +1385,13 @@ elif menu == "7. Empirical Benchmark Evaluation & Ablation":
     st.markdown(
         '<div class="stitch-sub-title">Rigorous Evaluation of Single-Stream and Multimodal Decision Models across 325 Graded Scenarios</div>',
         unsafe_allow_html=True,
+    )
+
+    st.info(
+        "📖 **Detailed Scientific Evaluation Guide Available:** "
+        "For an exhaustive technical breakdown of metric formulations (ROC-AUC with 95% bootstrap CIs, PR-AUC, Brier score, ECE, Authentic FPR), "
+        "model architectures (Models A through E2), theoretical optimal values vs achievable bounds, and the dual-stage operational recommendation, "
+        "consult the project guide: `docs/TAB_7_EMPIRICAL_BENCHMARK_GUIDE.md`."
     )
 
     results_dir = Path(__file__).parents[2] / "experiments" / "results"
@@ -1168,6 +1537,21 @@ elif menu == "7. Empirical Benchmark Evaluation & Ablation":
             if legacy_calib_csv.exists():
                 df_cal = pd.read_csv(legacy_calib_csv)
                 st.dataframe(df_cal, use_container_width=True)
+
+    st.markdown("---")
+    with st.expander("📋 Decision Matrix: Summary of Evaluated Model Architectures & Deployment Roles", expanded=True):
+        st.markdown(
+            r"""
+            | Model Architecture | Statistical Paradigm | ROC-AUC | PR-AUC | Authentic FPR | Primary Strength | Known Limitation | Recommended Deployment Role |
+            | :--- | :--- | :---: | :---: | :---: | :--- | :--- | :--- |
+            | **Model A: Naive Prior** | Constant Baseline ($P=0.05$) | 0.5000 | 0.3692 | 0.00% | Theoretical null control | Zero predictive capability | Null benchmark baseline |
+            | **Model B: Stoichiometry Alone** | First-Principles Deterministic Veto | 0.7081 | 0.5325 | 32.20% | 100% precision on physical breaches; court-proof | Misses subtle understatements above the chemical floor | Hard physical veto gate across all pipelines |
+            | **Model C: Satellite Alone** | Tropospheric $\text{NO}_2$ Column Plume | 0.5183 | 0.3781 | 96.61% | Independent orbital verification | High cloud noise; poor annual $\text{CO}_2$ proxy ($\rho = -0.100$) | Strictly auxiliary qualitative check ($w \le 1.0$) |
+            | **Model D: Historical Alone** | Robust Longitudinal Drop $\max(0, -z)$ | 0.9657 | 0.9470 | 51.98% | High statistical anomaly detection | High false alarms (52% FPR) on normal downtime | Primary historical anomaly detector |
+            | **Model E1: Expert Bayesian Fusion** | Probabilistic Log-Odds + Confidence Gating | 0.7761 | 0.5740 | 22.60% | 100% explainable; confidence gating; legally defensible | More conservative discrimination | **Stage 2: Accredited Verifier Audit Dossier** |
+            | **Model E2: Learned Logistic Regression** | Supervised Feature Fusion (GroupKFold) | **0.9615** | **0.9450** | **7.34%** | Maximum separation; 100% precision at top 20% triage | Learned weights reflect synthetic benchmark suite | **Stage 1: High-Throughput Customs Port Triage** |
+            """
+        )
 
 # -------------------------------------------------------------
 # TAB 8: PROPOSAL, REFERENCES & ROADMAP
