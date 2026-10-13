@@ -398,8 +398,11 @@ def load_cohort_data():
 with st.spinner("Initializing VeriCBAM Decision Support Engine..."):
     mgr, facilities_df = load_cohort_data()
 
-# Sidebar Navigation (Local Glyph, Clean Architecture)
-st.sidebar.markdown("### 🛡️ VeriCBAM Audit Suite")
+# Sidebar Navigation (Brand Identity & Clean Architecture)
+shield_icon_path = Path(__file__).parent / "shield.png"
+if shield_icon_path.exists():
+    st.sidebar.image(str(shield_icon_path), width=56)
+st.sidebar.markdown("### VeriCBAM Audit Suite")
 st.sidebar.caption("EU CBAM Emissions Consistency Verification")
 
 menu = st.sidebar.radio(
