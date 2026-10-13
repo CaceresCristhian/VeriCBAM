@@ -38,7 +38,15 @@ st.set_page_config(
 # Stitch Design System Palette Injection (High-Contrast WCAG-Compliant Offline Theme)
 STITCH_THEME_CSS = """
 <style>
-    /* Global canvas & typography */
+    /* ========================================================
+       GLOBAL CANVAS & ROOT TOKENS
+       ======================================================== */
+    :root {
+        --text-color: #f1f5f9 !important;
+        --background-color: #0f131c !important;
+        --secondary-background-color: #161922 !important;
+    }
+
     .stApp {
         background-color: #0f131c !important;
         color: #f1f5f9 !important;
@@ -46,108 +54,137 @@ STITCH_THEME_CSS = """
     }
 
     .stMarkdown, .stMarkdown p, .stMarkdown span, .stMarkdown li {
-        color: #f1f5f9;
+        color: #f1f5f9 !important;
     }
 
-    /* Sidebar container */
-    section[data-testid="stSidebar"], [data-testid="stSidebar"] {
+    /* ========================================================
+       SIDEBAR UNIVERSAL HIGH-CONTRAST OVERRIDES
+       ======================================================== */
+    [data-testid="stSidebar"],
+    [data-testid="stSidebar"] * {
+        color: #f1f5f9 !important;
+    }
+
+    section[data-testid="stSidebar"],
+    [data-testid="stSidebar"],
+    [data-testid="stSidebarUserContent"] {
         background-color: #161922 !important;
         border-right: 1px solid #2d3440 !important;
     }
-    section[data-testid="stSidebar"] > div {
-        background-color: #161922 !important;
-    }
 
-    /* Sidebar Header & Brand typography */
+    /* Sidebar Headings */
+    [data-testid="stSidebar"] h1,
+    [data-testid="stSidebar"] h2,
+    [data-testid="stSidebar"] h3,
+    [data-testid="stSidebar"] h4,
     section[data-testid="stSidebar"] h1,
     section[data-testid="stSidebar"] h2,
     section[data-testid="stSidebar"] h3,
     section[data-testid="stSidebar"] h4 {
         color: #ffffff !important;
-        font-weight: 700 !important;
+        font-weight: 800 !important;
         letter-spacing: -0.01em !important;
     }
 
-    section[data-testid="stSidebar"] [data-testid="stCaptionContainer"] p,
-    section[data-testid="stSidebar"] caption {
+    /* Sidebar Captions and Secondary Text */
+    [data-testid="stSidebar"] [data-testid="stCaptionContainer"] *,
+    [data-testid="stSidebar"] caption,
+    [data-testid="stSidebar"] small,
+    section[data-testid="stSidebar"] [data-testid="stCaptionContainer"] * {
         color: #cbd5e1 !important;
         font-size: 0.85rem !important;
         font-weight: 500 !important;
     }
 
-    /* Sidebar Radio Navigation */
-    section[data-testid="stSidebar"] [data-testid="stRadio"] > label,
-    section[data-testid="stSidebar"] [data-testid="stRadio"] label[data-testid="stWidgetLabel"] p {
+    /* Sidebar Navigation Header */
+    [data-testid="stSidebar"] [data-testid="stWidgetLabel"] *,
+    [data-testid="stSidebar"] [data-testid="stRadio"] > label *,
+    section[data-testid="stSidebar"] [data-testid="stWidgetLabel"] * {
         color: #8ed5ff !important;
         font-weight: 700 !important;
-        font-size: 0.82rem !important;
+        font-size: 0.85rem !important;
         text-transform: uppercase !important;
         letter-spacing: 0.08em !important;
-        margin-bottom: 8px !important;
     }
 
-    section[data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] {
-        gap: 4px !important;
-    }
-
+    /* Sidebar Radio Item Cards */
+    [data-testid="stSidebar"] div[role="radiogroup"] > label,
+    [data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] label,
     section[data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] label {
-        background-color: rgba(28, 32, 40, 0.7) !important;
-        border: 1px solid rgba(45, 52, 64, 0.8) !important;
+        background-color: #1e2533 !important;
+        border: 1px solid #334155 !important;
         border-radius: 8px !important;
-        padding: 8px 12px !important;
-        margin-bottom: 4px !important;
+        padding: 9px 12px !important;
+        margin-bottom: 5px !important;
         transition: all 0.2s ease-in-out !important;
         cursor: pointer !important;
     }
 
-    section[data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] label p,
-    section[data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] label span,
-    section[data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] label div {
-        color: #f1f5f9 !important;
-        font-size: 0.88rem !important;
+    [data-testid="stSidebar"] div[role="radiogroup"] > label *,
+    [data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] label * {
+        color: #ffffff !important;
+        font-size: 0.90rem !important;
         font-weight: 500 !important;
         line-height: 1.35 !important;
     }
 
     /* Sidebar Radio Hover */
+    [data-testid="stSidebar"] div[role="radiogroup"] > label:hover,
     section[data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] label:hover {
-        background-color: rgba(142, 213, 255, 0.12) !important;
-        border-color: rgba(142, 213, 255, 0.45) !important;
+        background-color: #253347 !important;
+        border-color: #8ed5ff !important;
     }
-    section[data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] label:hover p {
+
+    [data-testid="stSidebar"] div[role="radiogroup"] > label:hover * {
         color: #8ed5ff !important;
     }
 
-    /* Sidebar Radio Selected / Active */
-    section[data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked),
-    section[data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] label[aria-checked="true"] {
-        background-color: rgba(142, 213, 255, 0.18) !important;
+    /* Sidebar Radio Selected */
+    [data-testid="stSidebar"] div[role="radiogroup"] > label:has(input:checked),
+    [data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked),
+    section[data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) {
+        background-color: #1c3552 !important;
         border: 1px solid #8ed5ff !important;
-        border-left: 4px solid #8ed5ff !important;
+        border-left: 5px solid #8ed5ff !important;
     }
-    section[data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) p,
-    section[data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] label[aria-checked="true"] p {
+
+    [data-testid="stSidebar"] div[role="radiogroup"] > label:has(input:checked) *,
+    section[data-testid="stSidebar"] [data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) * {
         color: #ffffff !important;
         font-weight: 700 !important;
     }
 
-    /* Sidebar Student / Metadata Card */
+    /* Sidebar Metadata Card */
     .sidebar-student-box {
-        background: rgba(28, 32, 40, 0.95);
-        border: 1px solid rgba(142, 213, 255, 0.35);
-        border-radius: 8px;
-        padding: 12px 14px;
-        margin-top: 20px;
-        font-size: 0.82rem;
-        line-height: 1.6;
+        background: #1a2230 !important;
+        border: 1px solid #3b82f6 !important;
+        border-radius: 8px !important;
+        padding: 12px 14px !important;
+        margin-top: 20px !important;
+        font-size: 0.82rem !important;
+        line-height: 1.6 !important;
     }
     .sidebar-student-box .box-label {
         color: #8ed5ff !important;
-        font-weight: 600;
+        font-weight: 700 !important;
     }
     .sidebar-student-box .box-val {
         color: #ffffff !important;
-        font-weight: 500;
+        font-weight: 500 !important;
+    }
+
+    /* Sidebar Alerts / Info */
+    [data-testid="stSidebar"] [data-testid="stAlert"],
+    section[data-testid="stSidebar"] [data-testid="stAlert"] {
+        background: #1a2230 !important;
+        border: 1px solid #3b82f6 !important;
+        border-radius: 8px !important;
+    }
+    [data-testid="stSidebar"] [data-testid="stAlert"] * {
+        color: #f8fafc !important;
+    }
+    [data-testid="stSidebar"] [data-testid="stAlert"] strong {
+        color: #8ed5ff !important;
     }
 
     /* Main canvas widget labels (Select View Mode, dropdowns, sliders) */
@@ -357,6 +394,7 @@ STITCH_THEME_CSS = """
 </style>
 """
 st.markdown(STITCH_THEME_CSS, unsafe_allow_html=True)
+st.sidebar.markdown(STITCH_THEME_CSS, unsafe_allow_html=True)
 
 
 def scope_banner():
