@@ -7,7 +7,7 @@ All notable changes to the **VeriCBAM** decision-support system are documented i
 ## [2.1.0] - 2026-10-08 — Phase 1 through Phase 5 Comprehensive Alignment
 
 ### Summary
-This release executes the full scientific, regulatory, and methodological improvements defined in the project improvement specification (`VeriCBAM_Improvement_Prompt_Final.md`), achieving complete internal consistency, honest reporting, and deterministic offline reproducibility across all 11 pipeline stages.
+This release executes the full scientific, regulatory, and methodological improvements across all components, achieving complete internal consistency, honest reporting, and deterministic offline reproducibility across all 11 pipeline stages.
 
 ---
 

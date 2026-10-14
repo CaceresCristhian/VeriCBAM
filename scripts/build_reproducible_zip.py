@@ -31,6 +31,8 @@ EXCLUDE_FILES = {
     ".env.local",
     "credentials.json",
     "secrets.json",
+    "calibration_and_roc_curves.html",
+    "VeriCBAM_Fix_and_Cleanup_Plan.md",
 }
 
 EXCLUDE_EXTENSIONS = {
