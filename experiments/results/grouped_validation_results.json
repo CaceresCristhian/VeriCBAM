@@ -38,8 +38,8 @@
     {
       "calibration_method": "Raw Posterior (No Calibration)",
       "brier_score": 0.0423,
-      "ece": 0.0758,
-      "log_loss": 0.1279,
+      "ece": 0.076,
+      "log_loss": 0.1281,
       "f1_score": 0.9635,
       "precision": 1.0,
       "recall": 0.9296,
@@ -49,7 +49,7 @@
     {
       "calibration_method": "Platt Scaling (GroupKFold)",
       "brier_score": 0.0168,
-      "ece": 0.0312,
+      "ece": 0.0313,
       "log_loss": 0.0596,
       "f1_score": 0.9859,
       "precision": 0.9859,

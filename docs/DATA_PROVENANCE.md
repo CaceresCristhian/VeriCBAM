@@ -15,7 +15,7 @@ VeriCBAM operates a strict dual-layer empirical architecture:
   - Multi-year Sentinel-5P TROPOMI cache (2019–2023, `s5p_no2_annual_stats_2019_2023.csv`) covering 25 facility-years via CDSE / Planetary Computer STAC.
 - **Layer B (Controlled & Graded Evaluation Suites):**
   - **101-Case Controlled Ablation Suite:** Initial benchmark testing 30 unperturbed, 30 physical violations, 30 historical drops, and 11 route mismatches.
-  - **326-Case Graded Evaluation Benchmark (`graded_evaluation_benchmark.parquet`):** Advanced benchmark testing 177 authentic real-year negatives with natural operational variance (pooled MAD $\sigma = 0.0911$), 140 graded understatements across 5 perturbation magnitudes ($\delta \in \{5\%, 10\%, 20\%, 30\%, 50\%\}$), and 9 route mismatches under conservative capacity utilization $\eta \in [0.50, 0.95]$.
+  - **325-Case Graded Evaluation Benchmark (`graded_evaluation_benchmark.parquet`):** Advanced benchmark testing 177 authentic real-year negatives with natural operational variance (pooled MAD $\sigma = 0.0911$), 140 graded understatements across 5 perturbation magnitudes ($\delta \in \{5\%, 10\%, 20\%, 30\%, 50\%\}$), and 8 route mismatches under conservative capacity utilization $\eta \in [0.50, 0.95]$.
 
 ---
 
@@ -43,7 +43,7 @@ VeriCBAM operates a strict dual-layer empirical architecture:
   - Final cohort: Exactly 30 premier European production facilities (15 Cement, 15 Steel).
 - **Transformations:**
   - `co2_tonnes = totalPollutantQuantityKg / 1000.0` (from EEA Pollutant 'Carbon dioxide (CO2)')
-  - *CO2 Variable Specification (N3):* Currently uses total direct Scope 1 $\text{CO}_2$ (`co2_tonnes`, EEA code 'Carbon dioxide (CO2)'). In parallel, the multi-pollutant cohort extracts 'Carbon dioxide (CO2) excluding biomass' (`co2_excl_biomass_tonnes`) for pending project evaluation.
+  - *CO2 Variable Specification (N3):* Total direct Scope 1 $\text{CO}_2$ (`co2_tonnes`, EEA pollutant 'Carbon dioxide (CO2)') is used as the primary reporting variable. Inspection of the EEA E-PRTR multi-pollutant database reveals that 'Carbon dioxide (CO2) excluding biomass' (`co2_excl_biomass_tonnes`) is missing (`NaN`) for 163 out of 177 rows (92.1% missingness) across European installations. Total direct CO2 is therefore the only complete, verified pan-European time series available.
   - Longitudinal baseline metrics: Mean $\mu_{\text{facility}}$ and standard deviation $\sigma_{\text{facility}}$ computed across available reference years.
   - Multi-pollutant ratios: $\text{NO}_x/\text{CO}_2$ ($\text{kg}/\text{t}$) and $\text{SO}_x/\text{CO}_2$ ($\text{kg}/\text{t}$) calculated across 177 plant-years.
 - **Missing Data Handling (177 vs. 180 Observations):**
@@ -90,6 +90,13 @@ VeriCBAM operates a strict dual-layer empirical architecture:
 
 ---
 
+### 3.1 Steel Installation Boundary & Transferred Process Gases
+In integrated blast furnace-basic oxygen furnace (BF-BOF) steel manufacturing, high-calorific off-gases (blast furnace gas, coke oven gas) contain substantial chemical carbon. In several premier European steelworks (ArcelorMittal Bremen, ArcelorMittal Eisenhüttenstadt, Acciaierie d'Italia Taranto, HKM Duisburg, Tata Steel IJmuiden), these off-gases are exported across legal fence lines to adjacent utility power stations operating under distinct E-PRTR Facility IDs. 
+
+Consequently, direct Scope 1 emissions reported at the steelmaking permit boundary capture only internal combustion and flares, falling below the theoretical stoichiometric reduction floor for crude steel production unless cross-boundary energy transfers are reconciled. VeriCBAM diagnoses this boundary mismatch by setting `stoich_applicable = False` for transferred-gas plants and evaluating stoichiometric floors against a conservative utilization bound ($50\%$), completely eliminating authentic negative floor breaches (0 breaches across 177 real facility-years).
+
+---
+
 ## 4. Dataset 3: Copernicus Sentinel-5P TROPOMI Satellite Observations
 - **Dataset Name:** Sentinel-5 Precursor TROPOMI Tropospheric Nitrogen Dioxide Level-2 Product
 - **Satellite Platform:** Sentinel-5 Precursor (S5P), Copernicus Program
@@ -114,7 +121,7 @@ VeriCBAM operates a strict dual-layer empirical architecture:
 - **Observation Statistics:**
   - 301 clear-sky Level-2 overpasses cached across the European cohort.
   - Multi-year pipeline: 2019–2023 annual mean NO2 composites extracted across 25 industrial facility-years via CDSE.
-  - Benchmark coverage: 326 cases evaluated across 177 authentic real-year negatives, 140 graded understatements, and 9 route mismatches.
+  - Benchmark coverage: 325 cases evaluated across 177 authentic real-year negatives, 140 graded understatements, and 8 route mismatches.
 
 ---
 

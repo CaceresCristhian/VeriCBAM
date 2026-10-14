@@ -69,7 +69,7 @@ Inconsistency Risk P(H|E)                     Evidence Confidence C_overall
 | **Multi-Pollutant Panel** | 177 facility-years | Authentic $\text{NO}_x/\text{CO}_2$ and $\text{SO}_x/\text{CO}_2$ combustion co-emission ratios across 30 European installations. | **Multi-Pollutant** |
 | **Technology Registry** | 30 facilities | Global Energy Monitor (GEM) Global Steel & Cement Trackers + Corporate Permits. Conservative utilization factors $\eta \in [0.50, 0.95]$. | **Verified Real Data** |
 | **Sentinel-5P Earth Observation** | 301 overpasses + 2019–2023 panel | ESA Copernicus Sentinel-5P Level-2 OFFL product via Planetary Computer STAC & CDSE OAuth2. Zero synthetic fallback. | **Real Remote Sensing** |
-| **Layer B: Graded Evaluation Benchmark** | **326 cases** | 177 authentic real-year negatives (pooled MAD $\sigma = 0.0911$), 140 graded understatements ($\delta \in \{5\%, 10\%, 20\%, 30\%, 50\%\}$), and 9 route mismatches. | **Graded Benchmark** |
+| **Layer B: Graded Evaluation Benchmark** | **325 cases** | 177 authentic real-year negatives (pooled MAD $\sigma = 0.0911$), 140 graded understatements ($\delta \in \{5\%, 10\%, 20\%, 30\%, 50\%\}$), and 8 route mismatches. | **Graded Benchmark** |
 
 ---
 
@@ -101,6 +101,7 @@ VeriCBAM/
 ├── docs/
 │   ├── DATA_PROVENANCE.md            # Detailed scientific data lineage & metadata
 │   ├── MODEL_CARD.md                 # Formal model card & empirical benchmark specifications
+│   ├── TAB_7_EMPIRICAL_BENCHMARK_GUIDE.md # Scientific guide to Tab 7 metrics and models
 │   ├── STITCH_DESIGN.md              # Google Stitch UI design system tokens & specification
 │   └── VeriCBAM_Project_Plan.md      # Sprint execution roadmap & academic plan
 ├── scripts/
@@ -112,7 +113,7 @@ VeriCBAM/
 │   │   ├── benchmark_cohort.parquet              # 177 authentic facility-year observations
 │   │   ├── facility_technology_registry.csv      # Verified plant capacities, routes, and utilization
 │   │   ├── facility_nox_co2_ratios.csv           # Multi-pollutant NOx/CO2 combustion ratios
-│   │   ├── graded_evaluation_benchmark.parquet   # 326-case graded evaluation benchmark
+│   │   ├── graded_evaluation_benchmark.parquet   # 325-case graded evaluation benchmark
 │   │   └── controlled_perturbation_benchmark.parquet # 101-case ablation suite
 │   └── 03_satellite_cache/
 │       ├── s5p_no2_annual_stats_2019_2023.csv    # Multi-year Copernicus Sentinel-5P cache
@@ -126,7 +127,7 @@ VeriCBAM/
 │   │   ├── copernicus_multiyear_client.py # Multi-year CDSE OAuth2 client
 │   │   └── plume_analyzer.py         # Plume contrast Z-score & operational state analyzer
 │   ├── benchmark/
-│   │   ├── graded_benchmark_generator.py # 326-case graded benchmark generator
+│   │   ├── graded_benchmark_generator.py # 325-case graded benchmark generator
 │   │   └── perturbation_generator.py # 101-case perturbation suite generator
 │   ├── data_loaders/
 │   │   ├── cohort_manager.py         # 30-facility cohort data access
@@ -162,28 +163,31 @@ Evaluated across 177 authentic real-year negatives (pooled MAD $\sigma = 0.0911$
 
 | Model Architecture | ROC-AUC (95% CI) | PR-AUC (95% CI) | Brier Score | ECE (10 Bins) | False Positive Rate (Real Years) |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| **Model B (Stoichiometry Alone)** | 0.7081 [0.647, 0.791] | 0.5325 [0.463, 0.636] | 0.2673 | 0.2337 | 32.20% |
+| **Model B (Stoichiometry Alone)** | 0.7909 [0.719, 0.891] | 0.7326 [0.641, 0.845] | 0.1884 | 0.1571 | 1.55% |
 | **Model C (Satellite Alone)** | 0.5183 [0.499, 0.544] | 0.3781 [0.359, 0.396] | 0.3731 | 0.3474 | 96.61% |
-| **Model D (Historical Alone)** | 0.9657 [0.960, 0.973] | 0.9470 [0.938, 0.959] | 0.2359 | 0.3400 | 51.98% |
-| **Model E1 (Expert Bayesian Fusion)** | 0.7761 [0.703, 0.853] | 0.5740 [0.493, 0.695] | 0.2525 | 0.1159 | 22.60% |
-| **Model E2 (Learned Logistic Regression - GroupKFold)** | 0.9615 [0.953, 0.971] | 0.9450 [0.934, 0.958] | 0.0818 | 0.0654 | 7.34% |
+| **Model D (Historical Alone)** | 0.9631 [0.957, 0.972] | 0.9428 [0.931, 0.957] | 0.0826 | 0.0632 | 6.78% |
+| **Model E1 (Expert Bayesian Fusion)** | 0.8935 [0.865, 0.924] | 0.8684 [0.832, 0.901] | 0.1530 | 0.1652 | 0.56% |
+| **Model E2 (Learned Logistic Regression - GroupKFold)** | 0.9643 [0.956, 0.973] | 0.9484 [0.938, 0.961] | 0.0787 | 0.0630 | 6.78% |
 
 #### Attribution Study across Methodological Fixes
 | Step | Model Architecture | ROC-AUC | PR-AUC | Brier Score | ECE | Cases |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
-| 1. Baseline (Phase 0) | Model B (Stoich) | 0.6897 | 0.5248 | 0.2865 | 0.2647 | 326 |
-| 1. Baseline (Phase 0) | Model D (Historical) | 0.9659 | 0.9479 | 0.2352 | 0.3390 | 326 |
-| 1. Baseline (Phase 0) | Model E1 (Bayesian) | 0.7693 | 0.5625 | 0.2716 | 0.1108 | 326 |
-| 1. Baseline (Phase 0) | Model E2 (Logistic) | 0.9654 | 0.9502 | 0.0754 | 0.0469 | 326 |
-| 2. +M3 (No Cap Fallback) | Model B (Stoich) | 0.7081 | 0.5325 | 0.2673 | 0.2337 | 325 |
-| 2. +M3 (No Cap Fallback) | Model E1 (Bayesian) | 0.7697 | 0.5697 | 0.2538 | 0.1126 | 325 |
-| 2. +M3 (No Cap Fallback) | Model E2 (Logistic) | 0.9295 | 0.8960 | 0.0943 | 0.0518 | 325 |
-| 3. +M6 (Leave-One-Out NOx) | Model E1 (Bayesian) | 0.7697 | 0.5697 | 0.2538 | 0.1126 | 325 |
-| 3. +M6 (Leave-One-Out NOx) | Model E2 (Logistic) | 0.9295 | 0.8960 | 0.0943 | 0.0518 | 325 |
-| 4. +M5 Primary (max(0, -z)) | Model E1 (Bayesian) | 0.7761 | 0.5740 | 0.2525 | 0.1159 | 325 |
-| 4. +M5 Primary (max(0, -z)) | Model E2 (Logistic) | 0.9615 | 0.9450 | 0.0818 | 0.0654 | 325 |
-| 5. Sensitivity (delta >= 5%) | Model E1 (Bayesian) | 0.7586 | 0.6409 | 0.2841 | 0.1743 | 325 |
-| 5. Sensitivity (delta >= 5%) | Model E2 (Logistic) | 0.9458 | 0.9442 | 0.0969 | 0.0422 | 325 |
+| 1. Baseline (Phase 0) | Model B (Stoich) | 0.6931 | 0.5481 | 0.2380 | 0.1916 | 326 |
+| 1. Baseline (Phase 0) | Model D (Historical) | 0.9507 | 0.9029 | 0.0882 | 0.0689 | 326 |
+| 1. Baseline (Phase 0) | Model E1 (Bayesian) | 0.8404 | 0.7516 | 0.2007 | 0.1882 | 326 |
+| 1. Baseline (Phase 0) | Model E2 (Logistic) | 0.9531 | 0.9114 | 0.0773 | 0.0457 | 326 |
+| 2. +M3 (No Cap Fallback) | Model B (Stoich) | 0.7275 | 0.5793 | 0.2173 | 0.1645 | 325 |
+| 2. +M3 (No Cap Fallback) | Model E1 (Bayesian) | 0.8432 | 0.7596 | 0.1849 | 0.1747 | 325 |
+| 2. +M3 (No Cap Fallback) | Model E2 (Logistic) | 0.9335 | 0.9059 | 0.0848 | 0.0592 | 325 |
+| 3. +M6 (Leave-One-Out NOx) | Model B (Stoich) | 0.7275 | 0.5793 | 0.2173 | 0.1645 | 325 |
+| 3. +M6 (Leave-One-Out NOx) | Model E1 (Bayesian) | 0.8382 | 0.7567 | 0.1845 | 0.1764 | 325 |
+| 3. +M6 (Leave-One-Out NOx) | Model E2 (Logistic) | 0.9333 | 0.8996 | 0.0913 | 0.0464 | 325 |
+| 4. +M5 & Boundary Fix (Primary) | Model B (Stoich) | 0.7909 | 0.7326 | 0.1884 | 0.1571 | 325 |
+| 4. +M5 & Boundary Fix (Primary) | Model D (Historical) | 0.9631 | 0.9428 | 0.0826 | 0.0632 | 325 |
+| 4. +M5 & Boundary Fix (Primary) | Model E1 (Bayesian) | 0.8935 | 0.8684 | 0.1530 | 0.1652 | 325 |
+| 4. +M5 & Boundary Fix (Primary) | Model E2 (Logistic) | 0.9643 | 0.9484 | 0.0787 | 0.0630 | 325 |
+| 5. Sensitivity (delta >= 5%) | Model E1 (Bayesian) | 0.8679 | 0.8709 | 0.2189 | 0.2389 | 325 |
+| 5. Sensitivity (delta >= 5%) | Model E2 (Logistic) | 0.9509 | 0.9482 | 0.0925 | 0.0483 | 325 |
 
 ### 6.2 5-Model Ablation Study Results (Layer B: 101 Controlled Cases)
 Evaluated across 30 Baseline Concordant, 30 Physical Bound Violations, 30 Historical Drop Anomalies, and 11 controlled route-mismatch cases constructed from facilities with independently documented production routes:
@@ -207,7 +211,10 @@ Evaluated across 30 Baseline Concordant, 30 Physical Bound Violations, 30 Histor
 | **Platt Scaling (GroupKFold, groups=`facility_id`)** | **0.0168** | 0.0312 | **0.9859** | 0.9977 | 0.9991 |
 | **Isotonic Regression (GroupKFold, groups=`facility_id`)** | 0.0186 | **0.0192** | **0.9859** | 0.9927 | 0.9958 |
 
-*Key Result:* Facility-grouped cross-validation confirms that calibration generalizes cleanly to unseen industrial installations without facility data leakage.
+*Methodological Finding on Calibration & Evaluation Scope:*
+- The evaluation benchmark positive prevalence is 36.9% (120 positives under primary delta >= 10% rule out of 325 cases). Real-world customs prevalence is typically lower.
+- The sample comprises 30 premier European industrial facilities (15 cement, 15 steel) observed over 2015–2022. While GroupKFold cross-validation ensures no facility overlap across folds, performance is indicative of European heavy industrial installations.
+- At matched false alarms (FPR <= 10%), Model D (Historical Alone) achieves Recall@5% = 83.3% and Recall@10% = 90.8%, comparable to Model E2 (85.0% and 91.7%). Multimodal Bayesian fusion (Model E1) provides physical explainability, confidence gating, and a near-zero authentic false positive rate (0.56%).
 
 ---
 
@@ -225,7 +232,7 @@ pip install -r requirements.txt
 ```powershell
 pytest -v
 ```
-*Expected: 24/24 tests pass.*
+*Expected: 28/28 tests pass.*
 
 ### 3. Run Master Deterministic Reproduction Pipeline
 ```powershell

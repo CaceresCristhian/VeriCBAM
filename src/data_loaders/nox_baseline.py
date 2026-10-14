@@ -72,3 +72,54 @@ def compute_leave_one_year_out_nox_ratios(
                 })
 
     return pd.DataFrame(results)
+
+
+def compute_all_years_nox_ratios(
+    cohort_df: pd.DataFrame, min_years: int = 3
+) -> pd.DataFrame:
+    """Computes facility all-years NOx/CO2 combustion ratio baselines (legacy mode for attribution study).
+
+    Includes all available years for each facility without leave-one-out exclusion.
+    """
+    results = []
+    valid_data = cohort_df[
+        (cohort_df["co2_tonnes"] > 0)
+        & (cohort_df["nox_tonnes"] > 0)
+        & cohort_df["co2_tonnes"].notna()
+        & cohort_df["nox_tonnes"].notna()
+    ].copy()
+
+    facilities = cohort_df["FacilityInspireId"].dropna().unique()
+
+    for fid in facilities:
+        fac_rows = valid_data[valid_data["FacilityInspireId"] == fid]
+        n_obs = len(fac_rows)
+        all_years = cohort_df[cohort_df["FacilityInspireId"] == fid]["reportingYear"].dropna().unique()
+
+        if n_obs >= min_years:
+            ratios = fac_rows["nox_tonnes"] / fac_rows["co2_tonnes"]
+            mean_ratio = float(ratios.mean())
+            std_ratio = float(ratios.std(ddof=1)) if n_obs > 1 else 0.0
+            cv_ratio = float(std_ratio / mean_ratio) if mean_ratio > 0 else 0.0
+            for yr in all_years:
+                results.append({
+                    "facility_inspire_id": fid,
+                    "reporting_year": int(yr),
+                    "nox_co2_ratio_mean": mean_ratio,
+                    "nox_co2_ratio_std": std_ratio,
+                    "nox_co2_ratio_cv": cv_ratio,
+                    "n_ratio_obs": n_obs,
+                })
+        else:
+            for yr in all_years:
+                results.append({
+                    "facility_inspire_id": fid,
+                    "reporting_year": int(yr),
+                    "nox_co2_ratio_mean": np.nan,
+                    "nox_co2_ratio_std": np.nan,
+                    "nox_co2_ratio_cv": np.nan,
+                    "n_ratio_obs": n_obs,
+                })
+
+    return pd.DataFrame(results)
+

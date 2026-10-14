@@ -35,34 +35,34 @@ Evaluated across 177 authentic real-year negatives, 140 graded understatements (
 
 | Model Architecture | ROC-AUC (95% CI) | PR-AUC (95% CI) | Brier Score | ECE (10 Bins) | False Positive Rate (Real Years) |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| **Model B (Stoichiometry Alone)** | 0.7081 [0.647, 0.791] | 0.5325 [0.463, 0.636] | 0.2673 | 0.2337 | 32.20% |
+| **Model B (Stoichiometry Alone)** | 0.7909 [0.719, 0.891] | 0.7326 [0.641, 0.845] | 0.1884 | 0.1571 | 1.55% |
 | **Model C (Satellite Alone)** | 0.5183 [0.499, 0.544] | 0.3781 [0.359, 0.396] | 0.3731 | 0.3474 | 96.61% |
-| **Model D (Historical Alone)** | 0.9657 [0.960, 0.973] | 0.9470 [0.938, 0.959] | 0.2359 | 0.3400 | 51.98% |
-| **Model E1 (Expert Bayesian Fusion)** | 0.7761 [0.703, 0.853] | 0.5740 [0.493, 0.695] | 0.2525 | 0.1159 | 22.60% |
-| **Model E2 (Learned Logistic Regression - GroupKFold)** | 0.9615 [0.953, 0.971] | 0.9450 [0.934, 0.958] | 0.0818 | 0.0654 | 7.34% |
+| **Model D (Historical Alone)** | 0.9631 [0.957, 0.972] | 0.9428 [0.931, 0.957] | 0.0826 | 0.0632 | 6.78% |
+| **Model E1 (Expert Bayesian Fusion)** | 0.8935 [0.865, 0.924] | 0.8684 [0.832, 0.901] | 0.1530 | 0.1652 | 0.56% |
+| **Model E2 (Learned Logistic Regression - GroupKFold)** | 0.9643 [0.956, 0.973] | 0.9484 [0.938, 0.961] | 0.0787 | 0.0630 | 6.78% |
 
 ### M5 Historical Score Ablation Study (Methodological Sign Convention)
 | Variant | ROC-AUC | PR-AUC | Brier Score | ECE | Authentic FPR |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| E1 Bayesian: Primary One-Sided max(0, -z) | 0.7761 | 0.5740 | 0.2525 | 0.1159 | 22.60% |
-| E1 Bayesian: Secondary Two-Sided |z| | 0.7697 | 0.5697 | 0.2538 | 0.1126 | 22.60% |
-| E2 Logistic: Primary One-Sided max(0, -z) | 0.9615 | 0.9450 | 0.0818 | 0.0654 | 7.34% |
-| E2 Logistic: Secondary Two-Sided |z| | 0.9295 | 0.8960 | 0.0943 | 0.0518 | 6.78% |
+| E1 Bayesian: Primary One-Sided max(0, -z) | 0.8935 | 0.8684 | 0.1530 | 0.1652 | 0.56% |
+| E1 Bayesian: Secondary Two-Sided |z| | 0.8782 | 0.8503 | 0.1560 | 0.1598 | 1.13% |
+| E2 Logistic: Primary One-Sided max(0, -z) | 0.9643 | 0.9484 | 0.0787 | 0.0630 | 6.78% |
+| E2 Logistic: Secondary Two-Sided |z| | 0.9333 | 0.9003 | 0.0910 | 0.0537 | 6.78% |
 
 ### M1 Label Sensitivity Evaluation (Screening Thresholds)
 | Screening Threshold & Model | Class Balance | ROC-AUC | PR-AUC | Brier Score | ECE |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| **Primary Rule: delta >= 10%** — Model E1 (Bayesian) | 120/325 (36.9%) | 0.7761 | 0.5740 | 0.2525 | 0.1159 |
-| **Primary Rule: delta >= 10%** — Model E2 (Logistic) | 120/325 (36.9%) | 0.9615 | 0.9450 | 0.0818 | 0.0654 |
-| **Sensitivity: delta >= 5%** — Model E1 (Bayesian) | 148/325 (45.5%) | 0.7586 | 0.6409 | 0.2841 | 0.1743 |
-| **Sensitivity: delta >= 5%** — Model E2 (Logistic) | 148/325 (45.5%) | 0.9458 | 0.9442 | 0.0969 | 0.0422 |
+| **Primary Rule: delta >= 10%** — Model E1 (Bayesian) | 120/325 (36.9%) | 0.8935 | 0.8684 | 0.1530 | 0.1652 |
+| **Primary Rule: delta >= 10%** — Model E2 (Logistic) | 120/325 (36.9%) | 0.9643 | 0.9484 | 0.0787 | 0.0630 |
+| **Sensitivity: delta >= 5%** — Model E1 (Bayesian) | 148/325 (45.5%) | 0.8679 | 0.8709 | 0.2189 | 0.2389 |
+| **Sensitivity: delta >= 5%** — Model E2 (Logistic) | 148/325 (45.5%) | 0.9509 | 0.9482 | 0.0925 | 0.0483 |
 
 ### Triage Audit Priority Efficiency (Auditor Capacity Simulation)
 | Audit Capacity | Bayesian (E1) Caught | Bayesian Precision@k | Bayesian Recall@k | Logistic (E2) Caught | Logistic Precision@k | Logistic Recall@k |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Top 10% (32 cases)** | 27 | 84.4% | 22.5% | 32 | 100.0% | 26.7% |
-| **Top 20% (65 cases)** | 46 | 70.8% | 38.3% | 65 | 100.0% | 54.2% |
-| **Top 30% (97 cases)** | 60 | 61.9% | 50.0% | 89 | 91.8% | 74.2% |
+| **Top 10% (32 cases)** | 32 | 100.0% | 26.7% | 32 | 100.0% | 26.7% |
+| **Top 20% (65 cases)** | 64 | 98.5% | 53.3% | 65 | 100.0% | 54.2% |
+| **Top 30% (97 cases)** | 83 | 85.6% | 69.2% | 90 | 92.8% | 75.0% |
 
 ## 4. Key Scientific Caveats & Inconclusive Pilot Findings
 1. **Satellite Remote Sensing Limitation (Inconclusive / Underpowered Pilot Evidence):**
@@ -71,3 +71,5 @@ Evaluated across 177 authentic real-year negatives, 140 graded understatements (
    - **Physical Rationale:** TROPOMI pixel footprint ($5.5 \times 3.5\text{ km}$), regional background advection, meteorological variability, and variable stack combustion $\mathrm{NO}_x/\mathrm{CO}_2$ ratios preclude using orbital $\mathrm{NO}_2$ as an annual quantitative $\mathrm{CO}_2$ proxy at individual plant scale. In VeriCBAM, satellite remote sensing is strictly designated as an auxiliary operational activity indicator and assigned conservative weight ($w_{\text{sat}} \le 1.0$).
 2. **Proxy vs. CBAM Embedded Emissions:** Historical baseline data reflects E-PRTR direct facility Scope 1 emissions, which serve as an independent regulatory proxy rather than product-level CBAM embedded intensities (EU Regulation 2025/2547).
 3. **Geographic Coverage:** Current validated benchmarks cover European heavy industrial sites; performance on non-EU installations remains uncalibrated due to the absence of public third-country industrial registries.
+4. **Steel Installation Boundary & Transferred Process Gases:**
+   In integrated blast furnace steelworks (e.g. ArcelorMittal Bremen, Eisenhüttenstadt, Taranto, HKM, Tata Steel IJmuiden), process off-gases (blast furnace gas) are routinely exported across the installation perimeter to third-party power plants with separate E-PRTR reporting IDs. Direct Scope 1 emissions at the steelworks fence line therefore omit off-gas combustion emissions. VeriCBAM explicitly flags boundary-mismatched plants (`stoich_applicable = False`) and evaluates floors against conservative minimum plausible capacity ($50\%$), preventing false-positive physical breach flags.

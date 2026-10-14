@@ -1,0 +1,121 @@
+﻿================================================================================
+VeriCBAM Master Reproduction Pipeline
+Academic Capstone - M.Sc. Data Science, University of Europe for Applied Sciences
+Student: Cristhian David Cßceres Mateus | Supervisor: Dr. Humera Noor
+================================================================================
+
+[17:56:42] >>> STEP: 1. Rebuild Multi-Pollutant Cohort from Raw EEA Tables
+Command: C:\Users\crist\AppData\Local\Programs\Python\Python312\python.exe src/data_loaders/build_cohort.py
+[17:56:44] OK (1.67s)
+   Output preview:
+     Building authentic multi-pollutant cohort from raw EEA tables...
+     Targeting 30 verified facilities from technology registry.
+     Extracted 649 matching raw air pollutant records.
+        ...
+     Facility-years with SOx: 113
+     Calculated leave-one-year-out NOx/CO2 baselines (165 valid facility-year fingerprints across 177 pairs).
+
+[17:56:44] >>> STEP: 2. Rebuild Verified Technology Registry
+Command: C:\Users\crist\AppData\Local\Programs\Python\Python312\python.exe src/data_loaders/technology_registry.py
+[17:56:45] OK (0.65s)
+     Created real technology registry: C:\Users\crist\Projects\UEprojects\Capstone\data\02_processed\facility_technology_registry.csv (30 facilities)
+
+[17:56:45] >>> STEP: 3. Generate Controlled Evaluation Benchmark (Legacy 101 cases)
+Command: C:\Users\crist\AppData\Local\Programs\Python\Python312\python.exe src/benchmark/perturbation_generator.py
+[17:56:46] OK (1.14s)
+   Output preview:
+     Generated 101 unified controlled evaluation cases:
+     perturbation_type
+     BASELINE_CONCORDANT         30
+        ...
+     
+     Saved to: C:\Users\crist\Projects\UEprojects\Capstone\data\02_processed\controlled_perturbation_benchmark.parquet
+
+[17:56:46] >>> STEP: 4. Generate Graded Multi-Source Benchmark (325 real & graded cases)
+Command: C:\Users\crist\AppData\Local\Programs\Python\Python312\python.exe src/benchmark/graded_benchmark_generator.py
+[17:56:47] OK (0.96s)
+   Output preview:
+     Generating authentic graded evaluation benchmark...
+       Configuration: missing_cap_fallback=False, nox_mode=leave_one_year_out, stoich_filter=True
+     Computed robust pooled historical scale: sigma_pooled = 0.0911 (MAD across 177 facility-years)
+        ...
+     1    120
+     Name: count, dtype: int64
+
+[17:56:47] >>> STEP: 5. Execute 5-Model Ablation Study
+Command: C:\Users\crist\AppData\Local\Programs\Python\Python312\python.exe experiments/run_ablation_study.py
+[17:56:49] OK (2.43s)
+   Output preview:
+     ================================================================================
+     VeriCBAM 5-Model Ablation Experiment - Layer B Controlled Benchmark
+     Cohort Size: 101 cases | Inconsistent: 71 | Concordant: 30
+        ...
+       - Summary CSV:   C:\Users\crist\Projects\UEprojects\Capstone\experiments\results\ablation_study_summary.csv
+       - Predictions:   C:\Users\crist\Projects\UEprojects\Capstone\experiments\results\ablation_predictions_101.parquet
+
+[17:56:49] >>> STEP: 6. Execute Probability Calibration
+Command: C:\Users\crist\AppData\Local\Programs\Python\Python312\python.exe experiments/calibrate_probabilities.py
+[17:56:52] OK (2.65s)
+   Output preview:
+     ================================================================================
+     VeriCBAM Probability Calibration Results (Stratified 5-Fold Cross-Validation)
+     ================================================================================
+        ...
+       - Plotly HTML:     C:\Users\crist\Projects\UEprojects\Capstone\experiments\results\calibration_and_roc_curves.html
+       - Predictions:     C:\Users\crist\Projects\UEprojects\Capstone\experiments\results\calibrated_predictions_101.parquet
+
+[17:56:52] >>> STEP: 7. Execute Facility-Grouped Cross-Validation
+Command: C:\Users\crist\AppData\Local\Programs\Python\Python312\python.exe experiments/run_grouped_validation.py
+[17:56:54] OK (2.08s)
+   Output preview:
+     ================================================================================
+     VeriCBAM Facility-Grouped Validation Results (GroupKFold, groups=facility_id)
+     Facilities: 30 | Total Cases: 101 | Splits: 5
+        ...
+     
+     Saved artifacts to experiments/results/
+
+[17:56:54] >>> STEP: 8. Execute Graded Benchmark Evaluation & ML Baseline Comparison
+Command: C:\Users\crist\AppData\Local\Programs\Python\Python312\python.exe experiments/run_graded_evaluation.py
+[17:58:33] OK (99.14s)
+   Output preview:
+     ================================================================================
+     VeriCBAM Empirical Evaluation on Graded Multi-Source Benchmark
+     ================================================================================
+        ...
+     
+     Graded evaluation completed successfully.
+
+[17:58:33] >>> STEP: 9. Execute Likelihood Ratio & Prior Sensitivity
+Command: C:\Users\crist\AppData\Local\Programs\Python\Python312\python.exe experiments/run_lr_sensitivity.py
+[17:58:35] OK (2.29s)
+   Output preview:
+     ================================================================================
+     VeriCBAM Experiment 7: Prior Probability Sensitivity Analysis (P(H) in [0.02 - 0.15])
+     ================================================================================
+        ...
+     
+     Saved artifacts to experiments/results/
+
+[17:58:35] >>> STEP: 10. Render Empirical Results Tables into Documentation
+Command: C:\Users\crist\AppData\Local\Programs\Python\Python312\python.exe scripts/render_results_tables.py
+[17:58:36] OK (0.61s)
+     Loading empirical result CSVs...
+     Updated README.md Section 6.1 with empirical tables.
+     Updated docs/MODEL_CARD.md Section 3 with empirical tables.
+
+[17:58:36] >>> STEP: 11. Run Automated Pytest Test Suite
+Command: C:\Users\crist\AppData\Local\Programs\Python\Python312\python.exe -m pytest -v
+[17:58:39] OK (3.64s)
+   Output preview:
+     ============================= test session starts =============================
+     platform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\crist\AppData\Local\Programs\Python\Python312\python.exe
+     cachedir: .pytest_cache
+        ...
+     
+     ============================= 28 passed in 2.86s ==============================
+
+================================================================================
+ALL 11 PIPELINE STEPS COMPLETED SUCCESSFULLY!
+100% Deterministic Reproducibility Confirmed.
+================================================================================

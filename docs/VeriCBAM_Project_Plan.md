@@ -161,7 +161,7 @@ $$\text{System Outcome} \in \begin{cases}
   * Primary reduction of hematite ore via carbon:
     $$Fe_2O_3 + 3C \rightarrow 2Fe + 3CO \rightarrow 3CO_2$$
   * Stoichiometric reduction minimum: $1.182\text{ t }CO_2/\text{t crude iron}$.
-  * Constrained by thermodynamic enthalpy balance, blast furnace coke consumption ($300-360\text{ }kg/t$), and hot metal carbon saturation.
+  * Constrained by chemical stoichiometry, blast furnace coke consumption ($300-360\text{ }kg/t$), and hot metal carbon saturation.
   * Baseline lower bound: $\approx 1.35 - 1.70\text{ }tCO_2 / t_{\text{crude steel}}$ (conditioned on scrap fraction and pig iron ratio).
 * **Route B: Direct Reduced Iron - Electric Arc Furnace (DRI-EAF):**
   * Methane/Syngas-based reduction: lower stoichiometric minimum bound ($\approx 0.55 - 0.95\text{ }tCO_2 / t$), strongly dependent on local electrical grid emissions factor.
@@ -322,7 +322,7 @@ Aligned with Dr. Humera Noor’s Course Milestones:
 * **Milestone 2 (Oct 26):** Submission of Capstone Proposal Document, System Diagram, Sprint Gantt Chart, LinkedIn Post #1, and Conversation with AI log.
 
 ### Sprint 1: Chemical Bound Engine Validation & Document Parser (Weeks 4–5: Oct 27 – Nov 09)
-* Comprehensive unit tests and thermodynamic boundary checks for cement and steel stoichiometry.
+* Comprehensive unit tests and stoichiometric boundary checks for cement and steel stoichiometry.
 * Build Pydantic schema-enforced parser for official DG TAXUD CBAM Excel/XML declaration templates.
 * **Milestone 3 (Nov 09):** Progress Report 1 + Individual LinkedIn Post #2.
 

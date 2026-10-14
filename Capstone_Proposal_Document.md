@@ -258,7 +258,7 @@ gantt
 
 ### 7.1 Core Deliverables
 1. **VeriCBAM Python Core Engine (`vericbam`):**  
-   Modular open-source package containing thermodynamic mass-balance algorithms, Copernicus API interfaces, multi-pollutant ratio extractors, and weighted Bayesian evidence-fusion logic.
+   Modular open-source package containing stoichiometric mass-balance algorithms, Copernicus API interfaces, multi-pollutant ratio extractors, and weighted Bayesian evidence-fusion logic.
 2. **Interactive Streamlit Decision Support Cockpit:**  
    Production-ready web application providing four operational modules:
    * **Tab 1: Declaration Ingestion & Multimodal Risk Assessment:** Upload CBAM declarations, calculate posterior risk probabilities, inspect stream-by-stream log-likelihood contributions, and download audit reports.
@@ -296,7 +296,7 @@ In 2026, the European Union's Carbon Border Adjustment Mechanism (CBAM) entered 
 Can independent physical and empirical data streams help compliance officers prioritize audits objectively?
 
 VeriCBAM fuses three independent pillars:
-1️⃣ Chemical Engineering Stoichiometry: Thermodynamic mass-balance lower bounds for industrial process routes (clinker calcination floors, BF-BOF vs DRI-EAF steel limits).
+1️⃣ Chemical Engineering Stoichiometry: Stoichiometric mass-balance lower bounds for industrial process routes (clinker calcination floors, BF-BOF vs DRI-EAF steel limits).
 2️⃣ Copernicus Earth Observation: Analyzing atmospheric trace gases (Sentinel-5P NO2 plume contrast over facility coordinates) while rigorously acknowledging atmospheric dispersion limits.
 3️⃣ Longitudinal Facility Fingerprints & Co-Pollutants: Multi-year emissions baselines and NOx/CO2 combustion ratios from verified industrial registries (E-PRTR).
 

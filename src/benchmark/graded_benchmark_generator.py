@@ -15,7 +15,10 @@ from typing import List, Dict, Any, Optional, Tuple
 import pandas as pd
 import numpy as np
 
+import sys
 WORKSPACE_ROOT = Path(__file__).parents[2]
+if str(WORKSPACE_ROOT) not in sys.path:
+    sys.path.insert(0, str(WORKSPACE_ROOT))
 PROCESSED_DIR = WORKSPACE_ROOT / "data" / "02_processed"
 SATELLITE_DIR = WORKSPACE_ROOT / "data" / "03_satellite_cache"
 
@@ -42,12 +45,13 @@ class GradedBenchmarkCase:
     understatement_delta_pct: float
     benchmark_label: int  # 0 = Concordant/Neg, 1 = Material Inconsistency
 
-    # Modality 1: Stoichiometric Bounding (M3: None when capacity is unobserved or missing)
+    # Modality 1: Stoichiometric Bounding (M3: None when capacity is unobserved or missing; S2: boundary-mismatched plants abstain)
+    stoich_applicable: bool
     stoich_available: bool
     stoich_floor_central_tco2: Optional[float]
     stoich_floor_max_tco2: Optional[float]
     stoich_violation_central: bool
-    stoich_violation_conservative: bool  # True only if violated even at max capacity
+    stoich_violation_conservative: bool  # True only if violated even at minimum plausible capacity (50% utilization)
     stoich_margin_tonnes: Optional[float]
 
     # Modality 2: Longitudinal Robust Historical Drift (E6)
@@ -73,8 +77,25 @@ class GradedBenchmarkCase:
     evaluation_split: str  # "Negative_Authentic", "Graded_Understatement", "Route_Mismatch"
 
 
-def generate_graded_benchmark():
+# Steel installations that export blast furnace gas (BFG) / coke oven gas (COG) to off-site power plants
+# with distinct E-PRTR permit IDs (boundary mismatch in E-PRTR reporting).
+TRANSFERRED_GAS_STEEL_PLANTS = [
+    "https://registry.gdi-de.org/id/de.hb/de.hb.pf.bube-eureg.06-04-11/2005382/5/0",  # ArcelorMittal Bremen
+    "https://registry.gdi-de.org/id/de.bb.inspire.pf.eureg/23024102",  # ArcelorMittal Eisenhüttenstadt
+    "IT.CAED/741231004.FACILITY",  # Acciaierie d'Italia (Taranto)
+    "https://registry.gdi-de.org/id/de.nw.inspire.pf.bube-eureg/arb-2017-112000-100-0077961",  # Hüttenwerke Krupp Mannesmann (HKM)
+    "NL.RIVM/000023301.FACILITY",  # Tata Steel IJmuiden
+]
+
+
+def generate_graded_benchmark(
+    use_missing_capacity_fallback: bool = False,
+    nox_baseline_mode: str = "leave_one_year_out",
+    stoich_applicability_filter: bool = True,
+    save_files: bool = True,
+) -> pd.DataFrame:
     print("Generating authentic graded evaluation benchmark...")
+    print(f"  Configuration: missing_cap_fallback={use_missing_capacity_fallback}, nox_mode={nox_baseline_mode}, stoich_filter={stoich_applicability_filter}")
     cohort_path = PROCESSED_DIR / "benchmark_cohort_multipollutant.parquet"
     if not cohort_path.exists():
         # Fall back to standard cohort if multipollutant not yet built
@@ -83,21 +104,32 @@ def generate_graded_benchmark():
     cohort = pd.read_parquet(cohort_path)
     reg = pd.read_csv(PROCESSED_DIR / "facility_technology_registry.csv").set_index("FacilityInspireId")
 
-    # Load leave-one-year-out NOx/CO2 baseline fingerprints (M6)
-    nox_ratio_path = PROCESSED_DIR / "facility_nox_co2_ratios.csv"
-    if nox_ratio_path.exists():
-        nox_df = pd.read_csv(nox_ratio_path)
-        if "reporting_year" in nox_df.columns:
-            nox_ratios = nox_df.set_index(["facility_inspire_id", "reporting_year"])
-        else:
-            nox_ratios = nox_df.set_index("facility_inspire_id")
-    else:
-        try:
-            from src.data_loaders.nox_baseline import compute_leave_one_year_out_nox_ratios
-        except ImportError:
-            from nox_baseline import compute_leave_one_year_out_nox_ratios
-        nox_df = compute_leave_one_year_out_nox_ratios(cohort, min_years=3)
+    # Load NOx/CO2 baseline fingerprints (M6 leave-one-out vs legacy all-years)
+    try:
+        from src.data_loaders.nox_baseline import (
+            compute_leave_one_year_out_nox_ratios,
+            compute_all_years_nox_ratios,
+        )
+    except ImportError:
+        from nox_baseline import (
+            compute_leave_one_year_out_nox_ratios,
+            compute_all_years_nox_ratios,
+        )
+
+    if nox_baseline_mode == "all_years":
+        nox_df = compute_all_years_nox_ratios(cohort, min_years=3)
         nox_ratios = nox_df.set_index(["facility_inspire_id", "reporting_year"])
+    else:
+        nox_ratio_path = PROCESSED_DIR / "facility_nox_co2_ratios.csv"
+        if nox_ratio_path.exists() and nox_baseline_mode == "leave_one_year_out":
+            nox_df = pd.read_csv(nox_ratio_path)
+            if "reporting_year" in nox_df.columns:
+                nox_ratios = nox_df.set_index(["facility_inspire_id", "reporting_year"])
+            else:
+                nox_ratios = nox_df.set_index("facility_inspire_id")
+        else:
+            nox_df = compute_leave_one_year_out_nox_ratios(cohort, min_years=3)
+            nox_ratios = nox_df.set_index(["facility_inspire_id", "reporting_year"])
 
     # Load satellite 2023 cache
     sat_path = SATELLITE_DIR / "s5p_no2_overpasses_2023.parquet"
@@ -152,7 +184,12 @@ def generate_graded_benchmark():
         country = r_info["country"]
         route = r_info["verified_technology_route"]
 
-        # Capacity & production range [0.50, 0.95] (M3: strictly no fallback)
+        # Boundary applicability filter for integrated steelworks with externalized process gases
+        stoich_app = True
+        if stoich_applicability_filter and fid in TRANSFERRED_GAS_STEEL_PLANTS:
+            stoich_app = False
+
+        # Capacity & production range [0.50, 0.95]
         if sector == "Cement":
             cap_raw = r_info.get("clinker_capacity_mtpa", np.nan)
             cap_mtpa = float(cap_raw) if pd.notna(cap_raw) else np.nan
@@ -163,8 +200,12 @@ def generate_graded_benchmark():
             stl_raw = r_info.get("crude_steel_capacity_mtpa", np.nan)
             cap_mtpa = float(stl_raw) if pd.notna(stl_raw) else np.nan
 
-        if pd.isna(cap_mtpa) or cap_mtpa <= 0:
-            cap_mtpa_val = None
+        if (pd.isna(cap_mtpa) or cap_mtpa <= 0) and use_missing_capacity_fallback:
+            cap_mtpa = 2.0  # Legacy fallback for attribution baseline
+
+        if not stoich_app or pd.isna(cap_mtpa) or cap_mtpa <= 0:
+            cap_mtpa_val = float(cap_mtpa) if (pd.notna(cap_mtpa) and cap_mtpa > 0) else None
+            prod_min = None
             prod_central = None
             prod_max = None
             floor_central = None
@@ -176,19 +217,23 @@ def generate_graded_benchmark():
         else:
             cap_mtpa_val = float(cap_mtpa)
             stoich_available = True
+            prod_min = cap_mtpa_val * 1e6 * 0.50
             prod_central = cap_mtpa_val * 1e6 * 0.75
             prod_max = cap_mtpa_val * 1e6 * 0.95
 
             # Stoichiometric floors
             if sector == "Cement":
+                floor_min = prod_min * CEMENT_CALCINATION_FLOOR
                 floor_central = prod_central * CEMENT_CALCINATION_FLOOR
                 floor_max = prod_max * CEMENT_CALCINATION_FLOOR
             else:
                 unit_floor = BF_BOF_STOICH_FLOOR if "BF" in route else EAF_STOICH_FLOOR
+                floor_min = prod_min * unit_floor
                 floor_central = prod_central * unit_floor
                 floor_max = prod_max * unit_floor
             stoich_violation_central = bool(rep_co2 < floor_central)
-            stoich_violation_conservative = bool(rep_co2 < floor_max)
+            # Conservative violation tests against minimum plausible utilization (50%), not 95%
+            stoich_violation_conservative = bool(rep_co2 < floor_min)
             stoich_margin = round(rep_co2 - floor_central, 1)
 
         # Robust leave-one-year-out historical drift
@@ -198,7 +243,7 @@ def generate_graded_benchmark():
         log_r = np.log(rep_co2 / hist_med) if hist_med > 0 else 0.0
         z_robust = (log_r - med_lr) / sigma_pooled
 
-        # Multi-pollutant NOx/CO2 anomaly (M6: leave-one-year-out key: (fid, year))
+        # Multi-pollutant NOx/CO2 anomaly
         nox_t = row.get("nox_tonnes", np.nan)
         nox_z = None
         nox_base_mean = None
@@ -235,6 +280,7 @@ def generate_graded_benchmark():
             declared_co2_tonnes=round(rep_co2, 1),
             understatement_delta_pct=0.0,
             benchmark_label=0,
+            stoich_applicable=stoich_app,
             stoich_available=stoich_available,
             stoich_floor_central_tco2=round(floor_central, 1) if floor_central is not None else None,
             stoich_floor_max_tco2=round(floor_max, 1) if floor_max is not None else None,
@@ -277,6 +323,11 @@ def generate_graded_benchmark():
             country = r_info["country"]
             route = r_info["verified_technology_route"]
 
+            # Boundary applicability filter
+            stoich_app = True
+            if stoich_applicability_filter and fid in TRANSFERRED_GAS_STEEL_PLANTS:
+                stoich_app = False
+
             if sector == "Cement":
                 cap_raw = r_info.get("clinker_capacity_mtpa", np.nan)
                 cap_mtpa = float(cap_raw) if pd.notna(cap_raw) else np.nan
@@ -287,11 +338,15 @@ def generate_graded_benchmark():
                 stl_raw = r_info.get("crude_steel_capacity_mtpa", np.nan)
                 cap_mtpa = float(stl_raw) if pd.notna(stl_raw) else np.nan
 
+            if (pd.isna(cap_mtpa) or cap_mtpa <= 0) and use_missing_capacity_fallback:
+                cap_mtpa = 2.0  # Legacy fallback
+
             # Declared suppressed CO2
             decl_co2 = rep_co2 * (1.0 - delta)
 
-            if pd.isna(cap_mtpa) or cap_mtpa <= 0:
-                cap_mtpa_val = None
+            if not stoich_app or pd.isna(cap_mtpa) or cap_mtpa <= 0:
+                cap_mtpa_val = float(cap_mtpa) if (pd.notna(cap_mtpa) and cap_mtpa > 0) else None
+                prod_min = None
                 prod_central = None
                 prod_max = None
                 floor_central = None
@@ -303,19 +358,22 @@ def generate_graded_benchmark():
             else:
                 cap_mtpa_val = float(cap_mtpa)
                 stoich_available = True
+                prod_min = cap_mtpa_val * 1e6 * 0.50
                 prod_central = cap_mtpa_val * 1e6 * 0.75
                 prod_max = cap_mtpa_val * 1e6 * 0.95
 
                 # Stoichiometric floors
                 if sector == "Cement":
+                    floor_min = prod_min * CEMENT_CALCINATION_FLOOR
                     floor_central = prod_central * CEMENT_CALCINATION_FLOOR
                     floor_max = prod_max * CEMENT_CALCINATION_FLOOR
                 else:
                     unit_floor = BF_BOF_STOICH_FLOOR if "BF" in route else EAF_STOICH_FLOOR
+                    floor_min = prod_min * unit_floor
                     floor_central = prod_central * unit_floor
                     floor_max = prod_max * unit_floor
                 stoich_violation_central = bool(decl_co2 < floor_central)
-                stoich_violation_conservative = bool(decl_co2 < floor_max)
+                stoich_violation_conservative = bool(decl_co2 < floor_min)
                 stoich_margin = round(decl_co2 - floor_central, 1)
 
             # Robust historical drift for suppressed emissions
@@ -325,8 +383,7 @@ def generate_graded_benchmark():
             log_r = np.log(decl_co2 / hist_med) if hist_med > 0 else 0.0
             z_robust = (log_r - med_lr) / sigma_pooled
 
-            # NOx / Declared CO2 ratio anomaly: Reported NOx stays at genuine combustion levels while declared CO2 dropped
-            # M6: leave-one-year-out baseline for reporting year 2023
+            # NOx / Declared CO2 ratio anomaly
             nox_t = row.get("nox_tonnes", np.nan)
             nox_z = None
             nox_base_mean = None
@@ -339,7 +396,7 @@ def generate_graded_benchmark():
                 if pd.notna(n_row.get("nox_co2_ratio_mean")):
                     nox_base_mean = float(n_row["nox_co2_ratio_mean"])
                     nox_base_cv = float(n_row["nox_co2_ratio_cv"])
-                    obs_ratio = nox_t / decl_co2  # artificially high ratio!
+                    obs_ratio = nox_t / decl_co2
                     sigma_ratio = max(1e-4, nox_base_mean * max(0.08, nox_base_cv))
                     nox_z = (obs_ratio - nox_base_mean) / sigma_ratio
 
@@ -361,6 +418,7 @@ def generate_graded_benchmark():
                 declared_co2_tonnes=round(decl_co2, 1),
                 understatement_delta_pct=round(delta * 100, 1),
                 benchmark_label=1 if delta >= 0.10 else 0,  # 5% is within normal audit tolerance; >=10% is material
+                stoich_applicable=stoich_app,
                 stoich_available=stoich_available,
                 stoich_floor_central_tco2=round(floor_central, 1) if floor_central is not None else None,
                 stoich_floor_max_tco2=round(floor_max, 1) if floor_max is not None else None,
@@ -385,7 +443,7 @@ def generate_graded_benchmark():
             case_idx += 1
 
     # 3. ROUTE MISMATCH CASES: controlled route mismatches (integrated BF-BOF falsely claiming Scrap-EAF)
-    # M3: Add a guard and skip plants without observed capacity (crude_steel_capacity_mtpa <= 0 or missing)
+    # Skip plants without observed capacity (crude_steel_capacity_mtpa <= 0 or missing)
     bf_facilities = reg[reg["verified_technology_route"].str.contains("BF-BOF", na=False)].index
     for fid in bf_facilities:
         row_match = c2023[c2023["FacilityInspireId"] == fid]
@@ -396,9 +454,19 @@ def generate_graded_benchmark():
         r_info = reg.loc[fid]
         stl_raw = r_info.get("crude_steel_capacity_mtpa", np.nan)
         cap_mtpa = float(stl_raw) if pd.notna(stl_raw) else np.nan
+
+        if (pd.isna(cap_mtpa) or cap_mtpa <= 0) and use_missing_capacity_fallback:
+            cap_mtpa = 2.0
+
         if pd.isna(cap_mtpa) or cap_mtpa <= 0:
-            # Skip plants without observed capacity per M3 guard
             continue
+
+        # Boundary applicability filter
+        stoich_app = True
+        if stoich_applicability_filter and fid in TRANSFERRED_GAS_STEEL_PLANTS:
+            stoich_app = False
+
+        prod_min = cap_mtpa * 1e6 * 0.50
         prod_central = cap_mtpa * 1e6 * 0.75
         prod_max = cap_mtpa * 1e6 * 0.95
 
@@ -412,6 +480,21 @@ def generate_graded_benchmark():
         z_robust = (log_r - med_lr) / sigma_pooled
 
         sat_info = sat_summary.get(fid, {"mean_z": 0.0, "n_valid": 0, "mean_cloud": 0.1})
+
+        if not stoich_app:
+            stoich_avail = False
+            f_cent = None
+            f_max = None
+            v_cent = False
+            v_cons = False
+            margin = None
+        else:
+            stoich_avail = True
+            f_cent = round(prod_central * BF_BOF_STOICH_FLOOR, 1)
+            f_max = round(prod_max * BF_BOF_STOICH_FLOOR, 1)
+            v_cent = bool(declared_eaf_co2 < prod_central * BF_BOF_STOICH_FLOOR)
+            v_cons = bool(declared_eaf_co2 < prod_min * BF_BOF_STOICH_FLOOR)
+            margin = round(declared_eaf_co2 - prod_central * BF_BOF_STOICH_FLOOR, 1)
 
         cases.append(GradedBenchmarkCase(
             case_id=f"CASE_{case_idx:04d}_ROUTE_MISMATCH",
@@ -429,12 +512,13 @@ def generate_graded_benchmark():
             declared_co2_tonnes=round(declared_eaf_co2, 1),
             understatement_delta_pct=round(((rep_co2 - declared_eaf_co2) / rep_co2) * 100, 1),
             benchmark_label=1,
-            stoich_available=True,
-            stoich_floor_central_tco2=round(prod_central * BF_BOF_STOICH_FLOOR, 1),
-            stoich_floor_max_tco2=round(prod_max * BF_BOF_STOICH_FLOOR, 1),
-            stoich_violation_central=True,  # 0.15 is below 1.35
-            stoich_violation_conservative=True,
-            stoich_margin_tonnes=round(declared_eaf_co2 - prod_central * BF_BOF_STOICH_FLOOR, 1),
+            stoich_applicable=stoich_app,
+            stoich_available=stoich_avail,
+            stoich_floor_central_tco2=f_cent,
+            stoich_floor_max_tco2=f_max,
+            stoich_violation_central=v_cent,
+            stoich_violation_conservative=v_cons,
+            stoich_margin_tonnes=margin,
             historical_median_co2_tonnes=round(hist_med, 1),
             historical_log_ratio=round(log_r, 4),
             historical_z_robust=round(z_robust, 2),
@@ -453,20 +537,24 @@ def generate_graded_benchmark():
         case_idx += 1
 
     df_cases = pd.DataFrame([asdict(c) for c in cases])
-    out_parquet = PROCESSED_DIR / "graded_evaluation_benchmark.parquet"
-    out_csv = PROCESSED_DIR / "graded_evaluation_benchmark.csv"
-    df_cases.to_parquet(out_parquet, index=False)
-    df_cases.to_csv(out_csv, index=False)
+    if save_files:
+        out_parquet = PROCESSED_DIR / "graded_evaluation_benchmark.parquet"
+        out_csv = PROCESSED_DIR / "graded_evaluation_benchmark.csv"
+        df_cases.to_parquet(out_parquet, index=False)
+        df_cases.to_csv(out_csv, index=False)
 
-    print(f"\nSaved Graded Benchmark to {out_parquet}")
-    print(f"Total benchmark cases: {len(df_cases)}")
-    print("Breakdown by Evaluation Split:")
-    print(df_cases["evaluation_split"].value_counts())
-    print("\nBreakdown by Understatement Delta (%):")
-    print(df_cases["understatement_delta_pct"].value_counts().sort_index())
-    print("\nBenchmark Label distribution (0=Concordant, 1=Inconsistent):")
-    print(df_cases["benchmark_label"].value_counts())
+        print(f"\nSaved Graded Benchmark to {out_parquet}")
+        print(f"Total benchmark cases: {len(df_cases)}")
+        print("Breakdown by Evaluation Split:")
+        print(df_cases["evaluation_split"].value_counts())
+        print("\nBreakdown by Understatement Delta (%):")
+        print(df_cases["understatement_delta_pct"].value_counts().sort_index())
+        print("\nBenchmark Label distribution (0=Concordant, 1=Inconsistent):")
+        print(df_cases["benchmark_label"].value_counts())
+
+    return df_cases
 
 
 if __name__ == "__main__":
     generate_graded_benchmark()
+

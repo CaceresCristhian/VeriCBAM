@@ -108,11 +108,11 @@ class ProbabilisticEvidenceFusionEngine:
         streams = []
 
         # 1. Stoichiometric Physics Evidence
-        # If physically violated: deterministic floor breach
+        # If physically violated: route-specific engineering lower bound breach under proxy capacity
         if ev.stoichiometric_violated:
-            lr_stoich = 1e6  # Deterministic overrule
-            c_stoich = 1.0   # Chemistry is 100% reliable
-            note = "Deterministic physical bound violation (mass balance floor breach)"
+            lr_stoich = 500.0  # High likelihood ratio capped for proxy capacity uncertainty (Step 7)
+            c_stoich = 0.95   # High confidence for route-specific stoichiometry floor breach
+            note = "Engineering lower bound violation (route-specific stoichiometry breach under proxy capacity)"
             streams.append(EvidenceStream("Stoichiometry", lr_stoich, c_stoich, weight=1.5, diagnostic_note=note))
         elif ev.stoichiometric_discrepancy_sigma is not None:
             if ev.stoichiometric_discrepancy_sigma < 0.5:

@@ -1,5 +1,5 @@
 threshold,model,positive_count,total_count,prevalence,roc_auc,pr_auc,brier_score,ece
-Primary Rule: delta >= 10%,Model E1 (Bayesian),120,325,0.3692,0.7761,0.574,0.2525,0.1159
-Primary Rule: delta >= 10%,Model E2 (Logistic),120,325,0.3692,0.9615,0.945,0.0818,0.0654
-Sensitivity: delta >= 5%,Model E1 (Bayesian),148,325,0.4554,0.7586,0.6409,0.2841,0.1743
-Sensitivity: delta >= 5%,Model E2 (Logistic),148,325,0.4554,0.9458,0.9442,0.0969,0.0422
+Primary Rule: delta >= 10%,Model E1 (Bayesian),120,325,0.3692,0.8935,0.8684,0.153,0.1652
+Primary Rule: delta >= 10%,Model E2 (Logistic),120,325,0.3692,0.9643,0.9484,0.0787,0.063
+Sensitivity: delta >= 5%,Model E1 (Bayesian),148,325,0.4554,0.8679,0.8709,0.2189,0.2389
+Sensitivity: delta >= 5%,Model E2 (Logistic),148,325,0.4554,0.9509,0.9482,0.0925,0.0483

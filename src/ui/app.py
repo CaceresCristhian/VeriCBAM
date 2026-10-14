@@ -1000,7 +1000,7 @@ elif menu == "3. Stoichiometric Physics Engine":
             | :--- | :---: | :--- | :--- | :--- |
             | **Physically Feasible / Concordant** | `✅ PHYSICALLY FEASIBLE` | Declared Scope 1 $\ge$ Net Stoichiometric Floor | Declared emissions exceed the absolute chemical minimum required by law of conservation of mass (calcination + BAT combustion). | **Accepted for Standard Desk Verification.** Proceed to historical trajectory and registry checks. |
             | **Route Misclassification Detected** | `⚠️ ROUTE MISCLASSIFICATION DETECTED` | Intensity matches low-carbon route (Scrap-EAF) but is impossible for claimed route (BF-BOF) | Plant claims to use one production method but reports emissions typical of a much lower-carbon alternative. | **Technical Route Audit.** Request production logbooks, electricity bills, and scrap purchasing invoices to verify physical technology. |
-            | **Physical Stoichiometric Violation** | `🚨 PHYSICAL FEASIBILITY VIOLATION` | Declared Scope 1 $<$ Net Stoichiometric Floor | The declaration claims emissions lower than what chemical reactions physically emit even with 100% thermodynamic efficiency. | **Immediate Rejection / Mandatory Audit.** Declaration cannot be true under the laws of chemistry. Freeze CBAM clearance and dispatch verifiers. |
+            | **Physical Stoichiometric Violation** | `🚨 PHYSICAL FEASIBILITY VIOLATION` | Declared Scope 1 $<$ Net Stoichiometric Floor | The declaration claims emissions lower than what chemical reactions physically emit under stoichiometric conversion efficiency and best-available thermal efficiency. | **Immediate Rejection / Mandatory Audit.** Declaration cannot be true under the laws of chemistry. Freeze CBAM clearance and dispatch verifiers. |
             | **Unsubstantiated Carbon Capture (CCUS)** | `⚠️ HIGH DEFICIT RISK` | Net emissions feasible only with massive CCUS deduction | Reported gross emissions violate floor unless credited with large unverified CCUS volumes. | **Audit CCUS Transfer Receipts.** Demand accredited ISO 14064-3 geological storage custody transfer certificates. |
             """
         )
@@ -1444,17 +1444,47 @@ elif menu == "7. Empirical Benchmark Evaluation & Ablation":
         st.markdown("### 1. Primary Model Comparison on Graded Benchmark (325 Cases)")
         st.caption("Evaluated across 177 authentic real-year negatives, 140 graded understatements, and 8 route mismatches. 95% CIs derived from 1,000 facility-level bootstrap resamples.")
 
-        display_df = df_summary[["model_name", "roc_auc", "pr_auc", "brier_score", "ece", "fpr_authentic"]].copy()
-        display_df.columns = ["Model Architecture", "ROC-AUC", "PR-AUC", "Brier Score", "ECE", "Authentic FPR"]
+        display_cols = ["model_name", "roc_auc", "pr_auc", "brier_score", "ece", "fpr_authentic"]
+        if "recall_at_fpr_5" in df_summary.columns:
+            display_cols.extend(["recall_at_fpr_5", "recall_at_fpr_10", "recall_at_fpr_20", "abstention_rate"])
+        display_df = df_summary[display_cols].copy()
+        
+        col_rename = {
+            "model_name": "Model Architecture",
+            "roc_auc": "ROC-AUC",
+            "pr_auc": "PR-AUC",
+            "brier_score": "Brier Score",
+            "ece": "ECE",
+            "fpr_authentic": "Authentic FPR",
+            "recall_at_fpr_5": "Recall@5% FPR",
+            "recall_at_fpr_10": "Recall@10% FPR",
+            "recall_at_fpr_20": "Recall@20% FPR",
+            "abstention_rate": "Abstention Rate",
+        }
+        display_df.rename(columns=col_rename, inplace=True)
+        fmt_dict = {
+            "ROC-AUC": "{:.4f}",
+            "PR-AUC": "{:.4f}",
+            "Brier Score": "{:.4f}",
+            "ECE": "{:.4f}",
+            "Authentic FPR": "{:.2%}",
+            "Recall@5% FPR": "{:.2%}",
+            "Recall@10% FPR": "{:.2%}",
+            "Recall@20% FPR": "{:.2%}",
+            "Abstention Rate": "{:.1%}",
+        }
         st.dataframe(
-            display_df.style.format({
-                "ROC-AUC": "{:.4f}",
-                "PR-AUC": "{:.4f}",
-                "Brier Score": "{:.4f}",
-                "ECE": "{:.4f}",
-                "Authentic FPR": "{:.2%}",
-            }),
+            display_df.style.format({k: v for k, v in fmt_dict.items() if k in display_df.columns}),
             use_container_width=True,
+        )
+
+        st.info(
+            "💡 **Key Methodological Finding (Step 6):** At matched false-positive rates (FPR = 5%, 10%, 20%), "
+            "Model D (Historical Trajectory Alone: Recall@5% = 83.3%, Recall@10% = 90.8%) performs on par with "
+            "Model E2 (Learned Logistic: Recall@5% = 85.0%, Recall@10% = 91.7%). The learned multimodal classifier does not "
+            "meaningfully exceed historical anomaly detection at matched false alarms. Multimodal Bayesian fusion (Model E1) "
+            "serves a distinct legal and operational purpose: physical sanity-checking, boundary-aware constraint enforcement, "
+            "and confidence-gated audit trails with near-zero authentic false positives (0.56% FPR)."
         )
 
         fig_bars = go.Figure()
@@ -1498,19 +1528,23 @@ elif menu == "7. Empirical Benchmark Evaluation & Ablation":
 
         if triage_csv.exists():
             st.markdown("### 4. Auditor Triage Efficiency (Resource Constraint Simulation)")
-            st.caption("Simulating customs capacity constraint: audit top k% highest-risk declarations.")
+            st.caption("Simulating customs capacity constraint: audit top k% highest-risk declarations against random sampling baseline (36.9% positive prevalence).")
             df_triage = pd.read_csv(triage_csv)
+            triage_cols = [c for c in [
+                "k_pct", "k_cases", "random_baseline_precision",
+                "e1_bayes_caught", "e1_bayes_precision", "e1_bayes_recall", "e1_bayes_lift",
+                "e2_logistic_caught", "e2_logistic_precision", "e2_logistic_recall", "e2_logistic_lift"
+            ] if c in df_triage.columns]
             st.dataframe(
-                df_triage[[
-                    "k_pct", "k_cases",
-                    "e1_bayes_caught", "e1_bayes_precision", "e1_bayes_recall",
-                    "e2_logistic_caught", "e2_logistic_precision", "e2_logistic_recall"
-                ]].style.format({
+                df_triage[triage_cols].style.format({
                     "k_pct": "Top {}%",
+                    "random_baseline_precision": "{:.1%}",
                     "e1_bayes_precision": "{:.1%}",
                     "e1_bayes_recall": "{:.1%}",
+                    "e1_bayes_lift": "{:.2f}x",
                     "e2_logistic_precision": "{:.1%}",
                     "e2_logistic_recall": "{:.1%}",
+                    "e2_logistic_lift": "{:.2f}x",
                 }),
                 use_container_width=True,
             )
@@ -1542,14 +1576,14 @@ elif menu == "7. Empirical Benchmark Evaluation & Ablation":
     with st.expander("📋 Decision Matrix: Summary of Evaluated Model Architectures & Deployment Roles", expanded=True):
         st.markdown(
             r"""
-            | Model Architecture | Statistical Paradigm | ROC-AUC | PR-AUC | Authentic FPR | Primary Strength | Known Limitation | Recommended Deployment Role |
-            | :--- | :--- | :---: | :---: | :---: | :--- | :--- | :--- |
-            | **Model A: Naive Prior** | Constant Baseline ($P=0.05$) | 0.5000 | 0.3692 | 0.00% | Theoretical null control | Zero predictive capability | Null benchmark baseline |
-            | **Model B: Stoichiometry Alone** | First-Principles Deterministic Veto | 0.7081 | 0.5325 | 32.20% | 100% precision on physical breaches; court-proof | Misses subtle understatements above the chemical floor | Hard physical veto gate across all pipelines |
-            | **Model C: Satellite Alone** | Tropospheric $\text{NO}_2$ Column Plume | 0.5183 | 0.3781 | 96.61% | Independent orbital verification | High cloud noise; poor annual $\text{CO}_2$ proxy ($\rho = -0.100$) | Strictly auxiliary qualitative check ($w \le 1.0$) |
-            | **Model D: Historical Alone** | Robust Longitudinal Drop $\max(0, -z)$ | 0.9657 | 0.9470 | 51.98% | High statistical anomaly detection | High false alarms (52% FPR) on normal downtime | Primary historical anomaly detector |
-            | **Model E1: Expert Bayesian Fusion** | Probabilistic Log-Odds + Confidence Gating | 0.7761 | 0.5740 | 22.60% | 100% explainable; confidence gating; legally defensible | More conservative discrimination | **Stage 2: Accredited Verifier Audit Dossier** |
-            | **Model E2: Learned Logistic Regression** | Supervised Feature Fusion (GroupKFold) | **0.9615** | **0.9450** | **7.34%** | Maximum separation; 100% precision at top 20% triage | Learned weights reflect synthetic benchmark suite | **Stage 1: High-Throughput Customs Port Triage** |
+            | Model Architecture | Statistical Paradigm | ROC-AUC | PR-AUC | Authentic FPR | Recall @ 5% FPR | Abstention | Recommended Deployment Role |
+            | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
+            | **Model A: Naive Prior** | Constant Baseline ($P=0.08$) | 0.5000 | 0.3692 | 0.00% | 0.00% | 0.0% | Null benchmark baseline |
+            | **Model B: Stoichiometry Alone** | Route-Specific Engineering Lower Bound | 0.7909 | 0.7326 | 1.55% | 33.73% | 28.6% | Hard physical veto gate (when boundaries & capacity permit) |
+            | **Model C: Satellite Alone** | Tropospheric $\text{NO}_2$ Column Plume | 0.5183 | 0.3781 | 96.61% | 6.67% | 0.0% | Auxiliary qualitative check ($w \le 1.0$) |
+            | **Model D: Historical Alone** | Robust Longitudinal Drop $\max(0, -z)$ | 0.9631 | 0.9428 | 6.78% | 83.33% | 0.0% | Primary historical statistical anomaly detector |
+            | **Model E1: Expert Bayesian Fusion** | Probabilistic Log-Odds + Confidence Gating | 0.8935 | 0.8684 | 0.56% | 69.17% | 0.0% | **Stage 2: Accredited Verifier Audit Dossier (Near-zero false alarms: 0.56%)** |
+            | **Model E2: Learned Logistic Regression** | Supervised Feature Fusion (GroupKFold) | 0.9643 | 0.9484 | 6.78% | 85.00% | 0.0% | **Stage 1: High-Throughput Customs Port Triage (Max recall & lift)** |
             """
         )
 

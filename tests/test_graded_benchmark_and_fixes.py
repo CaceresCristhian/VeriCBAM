@@ -49,10 +49,14 @@ def test_m3_capacity_fallback_removal():
             assert row["stoich_violation_conservative"] is False or row["stoich_violation_conservative"] == 0
             assert pd.isna(row["stoich_margin_tonnes"])
 
-    # Verify plants with positive capacity have stoich_available=True and positive floors
-    pos_cap_cases = df[~df["facility_id"].isin(zero_cap_fids)]
-    assert (pos_cap_cases["stoich_available"] == True).all()
-    assert (pos_cap_cases["stoich_floor_central_tco2"] > 0).all()
+    # Verify plants with positive capacity and applicable boundaries have stoich_available=True and positive floors
+    from src.benchmark.graded_benchmark_generator import TRANSFERRED_GAS_STEEL_PLANTS
+    applicable_pos_cap = df[
+        (~df["facility_id"].isin(zero_cap_fids)) &
+        (~df["facility_id"].isin(TRANSFERRED_GAS_STEEL_PLANTS))
+    ]
+    assert (applicable_pos_cap["stoich_available"] == True).all()
+    assert (applicable_pos_cap["stoich_floor_central_tco2"] > 0).all()
 
     # Verify M3 route-mismatch guard: Hamborn (zero crude steel capacity) must NOT be in route mismatches
     route_mis = df[df["evaluation_split"] == "Route_Mismatch"]
@@ -194,3 +198,70 @@ def test_m5_one_sided_historical_score():
     assert dec_onesided.posterior_inconsistency_risk < 0.05
     # Two-sided score artificially inflates risk because it treats expansion as a suspicious anomaly
     assert dec_twosided.posterior_inconsistency_risk > dec_onesided.posterior_inconsistency_risk
+
+
+def test_model_b_abstentions_never_flagged():
+    """Verify Step 6: Model B abstentions return NaN (not 0.50) and are never counted as flags."""
+    df_pred = pd.read_parquet(WORKSPACE_ROOT / "experiments" / "results" / "graded_benchmark_predictions.parquet")
+    assert "prob_stoich_alone" in df_pred.columns
+
+    # When stoich_available is False, prob_stoich_alone must be NaN
+    abstaining = df_pred[~df_pred["stoich_available"]]
+    assert len(abstaining) > 0, "Expected abstaining cases"
+    assert abstaining["prob_stoich_alone"].isna().all(), "Abstaining cases must have NaN prob_stoich_alone"
+
+    # In authentic negatives, no abstaining case should ever be flagged
+    auth_neg = df_pred[df_pred["evaluation_split"] == "Negative_Authentic"]
+    auth_abstain = auth_neg[~auth_neg["stoich_available"]]
+    assert len(auth_abstain) > 0
+    # NaNs are not >= 0.50
+    flagged_abstentions = (auth_abstain["prob_stoich_alone"] >= 0.50).sum()
+    assert flagged_abstentions == 0, "Abstentions must never be counted as flagged"
+
+
+def test_recall_at_fpr_monotone():
+    """Verify Step 6: Recall@FPR is monotonically non-decreasing in FPR (5% <= 10% <= 20%)."""
+    summary_path = WORKSPACE_ROOT / "experiments" / "results" / "graded_model_comparison_summary.csv"
+    assert summary_path.exists(), "Summary CSV not found"
+    df_sum = pd.read_csv(summary_path)
+
+    for _, row in df_sum.iterrows():
+        r5 = row.get("recall_at_fpr_5")
+        r10 = row.get("recall_at_fpr_10")
+        r20 = row.get("recall_at_fpr_20")
+
+        if pd.notna(r5) and pd.notna(r10) and pd.notna(r20):
+            assert r5 <= r10 + 1e-6, f"{row['model_name']}: Recall@5% ({r5}) > Recall@10% ({r10})"
+            assert r10 <= r20 + 1e-6, f"{row['model_name']}: Recall@10% ({r10}) > Recall@20% ({r20})"
+
+
+def test_model_d_zero_deviation_not_at_cutoff():
+    """Verify Step 6: Model D score at z=0 (no deviation) does not equal the 0.50 cutoff."""
+    df_pred = pd.read_parquet(WORKSPACE_ROOT / "experiments" / "results" / "graded_benchmark_predictions.parquet")
+    # In authentic negatives, median probability of Model D must be low (~0.1-0.3, well below 0.50)
+    auth_neg = df_pred[df_pred["evaluation_split"] == "Negative_Authentic"]
+    med_auth_prob = auth_neg["prob_historical_alone"].median()
+    assert med_auth_prob < 0.35, f"Expected Model D authentic median < 0.35, got {med_auth_prob:.4f}"
+
+    # Authentic FPR at 0.50 must be low (< 10%), eliminating the 51.98% artifact
+    fpr_auth = (auth_neg["prob_historical_alone"] >= 0.50).mean()
+    assert fpr_auth < 0.10, f"Expected Model D authentic FPR < 10%, got {fpr_auth*100:.2f}%"
+
+
+def test_steel_boundary_applicability_and_conservative_floor():
+    """Verify Step 7: Boundary-mismatched steel plants abstain and conservative floor produces 0 authentic breaches."""
+    df_bench = pd.read_parquet(GRADED_BENCHMARK_PATH)
+    from src.benchmark.graded_benchmark_generator import TRANSFERRED_GAS_STEEL_PLANTS
+
+    # 1. Transferred process gas steelworks must have stoich_applicable=False and stoich_available=False
+    for fid in TRANSFERRED_GAS_STEEL_PLANTS:
+        fac_cases = df_bench[df_bench["facility_id"] == fid]
+        assert len(fac_cases) > 0
+        assert (fac_cases["stoich_applicable"] == False).all()
+        assert (fac_cases["stoich_available"] == False).all()
+
+    # 2. Authentic negatives must have 0 conservative floor breaches
+    auth_neg = df_bench[df_bench["evaluation_split"] == "Negative_Authentic"]
+    cons_breaches = auth_neg["stoich_violation_conservative"].sum()
+    assert cons_breaches == 0, f"Expected 0 conservative floor breaches on authentic negatives, got {cons_breaches}"
+
