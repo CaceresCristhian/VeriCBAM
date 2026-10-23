@@ -1,6 +1,6 @@
 """
 VeriCBAM Stoichiometry - Cement Sector Models
-Implements first-principles chemical calcination mass balance and thermodynamic minimum energy constraints
+Implements first-principles chemical calcination mass balance and Best Available Techniques (BAT) minimum energy constraints
 for cement clinker production, adhering to EU CBAM Annex IV and IPCC Tier 3 guidelines.
 """
 
@@ -19,7 +19,7 @@ MOLAR_MASS_MGO = 40.3044    # g/mol
 RATIO_CO2_CAO = MOLAR_MASS_CO2 / MOLAR_MASS_CAO   # ~0.7848 t CO2 / t CaO
 RATIO_CO2_MGO = MOLAR_MASS_CO2 / MOLAR_MASS_MGO   # ~1.0919 t CO2 / t MgO
 
-# Best Available Technology (BAT) thermodynamic limits (EU BREF Cement, Lime & MgO)
+# Best Available Technology (BAT) energy benchmark limits (EU BREF Cement, Lime & MgO)
 BAT_THERMAL_CONSUMPTION_DRY_MJ_T = 3000.0  # MJ/tonne clinker (theoretical modern preheater/precalciner BAT)
 BEST_EFFICIENCY_THERMAL_MJ_T = 2900.0      # Absolute physical minimum with best raw meal reactivity
 POOR_EFFICIENCY_THERMAL_MJ_T = 4500.0      # Older long wet kiln
@@ -95,10 +95,10 @@ def compute_cement_thermal_combustion_minimum(
     fuel_type: str = "coal",
     efficiency_mj_per_tonne: float = BAT_THERMAL_CONSUMPTION_DRY_MJ_T,
 ) -> float:
-    """Computes thermodynamic minimum combustion CO2 required to supply kiln thermal energy.
+    """Computes BAT benchmark minimum combustion CO2 required to supply kiln thermal energy.
 
     Supplies the endothermic calcination enthalpy (CaCO3 -> CaO + CO2, Delta H = +178.2 kJ/mol CaCO3)
-    plus thermodynamic heat losses in state-of-the-art kilns.
+    plus thermal heat losses in state-of-the-art kilns.
 
     Args:
         clinker_tonnes (float): Total mass of clinker produced in tonnes.
@@ -119,7 +119,7 @@ def compute_cement_thermal_combustion_minimum(
 
 
 def audit_cement_declaration(declaration: CementDeclarationInput) -> StoichiometricAuditResult:
-    """Audits a CBAM cement declaration against stoichiometric and thermodynamic bounds.
+    """Audits a CBAM cement declaration against stoichiometric and BAT benchmark bounds.
 
     Calculates minimum process emissions from limestone calcination (CaCO3 -> CaO + CO2 and MgCO3 -> MgO + CO2)
     and minimum combustion emissions based on kiln thermal requirements to verify physical compliance.
@@ -143,7 +143,7 @@ def audit_cement_declaration(declaration: CementDeclarationInput) -> Stoichiomet
         mgo_fraction=declaration.mgo_content_clinker,
     )
 
-    # 2. Thermodynamic combustion minimum (using best available technology as conservative lower bound)
+    # 2. BAT combustion minimum (using best available technology as conservative lower bound)
     min_combustion = compute_cement_thermal_combustion_minimum(
         clinker_tonnes=clinker,
         fuel_type=declaration.reported_fuel_type,
@@ -167,13 +167,13 @@ def audit_cement_declaration(declaration: CementDeclarationInput) -> Stoichiomet
         is_feasible = False
         reason = (
             f"Physical Impossibility Violation: Reported direct emissions ({reported_emissions:,.0f} t CO2) "
-            f"fall below the thermodynamic & stoichiometric lower bound ({net_min_expected:,.0f} t CO2). "
+            f"fall below the stoichiometric & BAT lower bound ({net_min_expected:,.0f} t CO2). "
             f"Under-reporting margin: {abs(discrepancy):,.0f} t CO2 ({abs(discrepancy_pct):.1f}% below physical floor)."
         )
         confidence = "High (Deterministic Stoichiometric Proof)"
     else:
         is_feasible = True
-        reason = "Complies with thermodynamic and mass balance lower bounds."
+        reason = "Complies with stoichiometric and mass balance lower bounds."
         confidence = "High (Physically Verified)"
 
     return StoichiometricAuditResult(

@@ -30,7 +30,7 @@ European industrial buyers, customs declarants, and National Competent Authoriti
 
 2. **The "Arithmetic of Scarcity" & Administrative Timeline Delays:**  
    A severe structural market failure compounds this cost burden:
-   * **Demand vs. Supply Deficit:** An estimated **~12,000 EU import entities** are seeking authorized CBAM declarant status across tens of thousands of supplying installations worldwide. Yet only **~403 verification bodies globally** historically held EU ETS accreditation under the Accreditation and Verification Regulation (**AVR - Commission Implementing Regulation (EU) 2018/2067**; dedicated CBAM verifier accreditations under **Commission Delegated Regulation (EU) 2025/2551** roll out gradually from late 2026).
+   * **Demand vs. Supply Deficit:** An estimated **~12,000 EU import entities** are seeking authorized CBAM declarant status across tens of thousands of supplying installations worldwide. Yet historically, only **~403 verification bodies** held EU ETS accreditation under the Accreditation and Verification Regulation (**AVR - Commission Implementing Regulation (EU) 2018/2067**) across Europe; dedicated CBAM verifier accreditations under **Commission Delegated Regulation (EU) 2025/2551** roll out gradually from late 2026.
    * **Extended Verification Lead Times:** A complete physical site verification cycle takes **3 to 6 months** from initial engagement, monitoring plan reconciliation, on-site physical walk-through, to final report sign-off.
    * **The Punitive Alternative (Default Value Mark-Up):** If an overseas installation cannot secure verified data in time, importers are forced to surrender CBAM certificates calculated via the European Commission's **default emissions values**, which carry punitive administrative mark-ups under Implementing Regulation (EU) 2025/2547:
      $$\text{Markup} = +10\% \text{ (2026)} \longrightarrow +20\% \text{ (2027)} \longrightarrow +30\% \text{ (from 2028)}.$$
@@ -64,22 +64,22 @@ Rather than claiming to replace accredited legal certification bodies or directl
 ### 2.2 Formal Research Sub-Questions & Hypotheses
 * **RQ1 (Physical Plausibility & Stoichiometric Floors):**  
   *Question:* How accurately can first-principles chemical engineering mass balances (limestone calcination and iron reduction) establish conservative lower bounds on declared emissions without relying on historical facility data?  
-  *Hypothesis $H_1$:* Stoichiometric mass-balance floors can deterministically detect gross understatements ($\ge 30\%$) and route misclassifications with 100% precision on applicable facilities, but will remain blind to moderate understatements ($10\%–20\%$) that remain above the physical floor.
+  *Hypothesis $H_1$:* Stoichiometric mass-balance floors can deterministically detect gross understatements ($\ge 30\%$) and route misclassifications with high precision (>98% on applicable facilities, with an observed 1.55% false-alarm rate on authentic plant-years), but will remain blind to moderate understatements ($10\%–20\%$) that remain above the physical floor.
 * **RQ2 (Earth Observation Activity & Atmospheric Limits):**  
   *Question:* Can Copernicus Sentinel-5P TROPOMI tropospheric $\text{NO}_2$ column density serve as a quantitative operational activity proxy for heavy industry, and what are its physical limitations?  
-  *Hypothesis $H_2$:* Due to coarse spatial footprint ($5.5 \times 3.5\text{ km}$), regional background advection, wind dispersion, and persistent cloud obscuration, satellite trace-gas observations alone cannot reliably quantify annual plant-level $\text{CO}_2$ emissions ($\text{ROC-AUC} \approx 0.50$), but provide valuable qualitative operational gating when clear-sky conditions exist.
+  *Hypothesis $H_2$:* Due to coarse spatial footprint ($5.5 \times 3.5\text{ km}$), regional background advection, wind dispersion, and persistent cloud obscuration, satellite trace-gas observations alone cannot reliably quantify annual plant-level $\text{CO}_2$ emissions (yielding near-random discriminative power when uncoupled from ground activity), but provide valuable qualitative operational gating when clear-sky conditions exist.
 * **RQ3 (Historical Behavior & Multi-Pollutant Fingerprinting):**  
   *Question:* Can facility-specific multivariate historical profiles and co-pollutant combustion ratios ($\text{NO}_x/\text{CO}_2$) detect selective $\text{CO}_2$ under-reporting in newly declared reporting periods?  
-  *Hypothesis $H_3$:* High-temperature combustion couples $\text{NO}_x$ and $\text{CO}_2$ formation; because $\text{NO}_x$ is regulated under local air pollution permits, selective under-reporting of $\text{CO}_2$ causes a statistically detectable divergence in the leave-one-year-out co-pollutant ratio, independent of remote sensing.
+  *Hypothesis $H_3$:* High-temperature combustion couples $\text{NO}_x$ and $\text{CO}_2$ formation; under the controlled benchmark condition where declared $\text{CO}_2$ is selectively understated while permit-regulated $\text{NO}_x$ remains unperturbed, this causes a statistically detectable divergence in the leave-one-year-out co-pollutant ratio, independent of remote sensing.
 * **RQ4 (Multimodal Evidence Fusion vs. Single Modalities):**  
   *Question:* Does fusing physical, observational, historical, and co-pollutant evidence streams yield superior discrimination, probability calibration, and false-positive control compared to isolated modalities?  
-  *Hypothesis $H_4$:* While historical trajectory alone achieves high raw discrimination, combining it with stoichiometric boundaries and confidence gating in a weighted Bayesian framework yields superior calibration ($\text{ECE} \le 0.15$), eliminates false alarms on authentic plants ($\text{Authentic FPR} < 1\%$), and ensures legal explainability.
+  *Hypothesis $H_4$:* While historical trajectory alone achieves high raw statistical discrimination, combining it with stoichiometric boundaries and confidence gating in a weighted Bayesian framework (Model E1) provides an ultra-low false-positive rate on authentic compliant plants ($\le 1\%$ at $\tau = 0.5$) and full legal explainability, while supervised logistic fusion (Model E2) optimizes probability calibration ($\text{ECE} \approx 0.063$).
 * **RQ5 (Uncertainty Quantification & Missing Data Handling):**  
   *Question:* How can an evidence-fusion engine systematically represent observational uncertainty (e.g., cloud cover, unobserved capacity, missing historical years) without generating overconfident false alarms?  
-  *Hypothesis $H_5$:* A formal evidence confidence factor $C_i \in [0, 1]$ combined with an explicit `Insufficient Evidence` abstention gate ($C_{\text{overall}} < 0.50$) prevents premature adverse audit findings when evidence is noisy or missing.
+  *Hypothesis $H_5$:* A formal evidence confidence factor $C_i \in [0, 1]$ combined with an explicit `Insufficient Evidence` abstention gate ($C_{\text{overall}} < 0.50$) provides an architectural safeguard against premature adverse audit findings when evidence is noisy or missing (noting that in the primary benchmark cohort with complete registries, the abstention rate remained at 0.0%).
 * **RQ6 (Explainability & Dual-Stage Regulatory Triage):**  
   *Question:* Can an automated system generate auditable, evidence-grounded dossiers that satisfy the strategic and risk analysis requirements of Commission Implementing Regulation (EU) 2025/2546?  
-  *Hypothesis $H_6$:* A dual-stage architecture—deploying supervised classification (Model E2) for high-throughput customs port triage and white-box Bayesian log-odds reasoning (Model E1) for accredited verifier audit dossiers—optimizes both operational triage recall and legal defensibility.
+  *Hypothesis $H_6$:* A dual-stage architecture—deploying supervised classification (Model E2) for high-throughput customs port triage and white-box Bayesian log-odds reasoning (Model E1) for accredited verifier audit dossiers—supports the strategic and risk analysis principles of Commission Implementing Regulation (EU) 2025/2546 while maintaining auditable evidential trails.
 
 ---
 
@@ -149,7 +149,7 @@ $$E_{\text{floor, clinker}} = P_{\text{clinker}} \times (0.495 + 0.275) - E_{\te
 #### C. Conservative Utilization Proxy & Transferred Process Gas Boundary Rule
 When auditing against external registry capacity (rather than audited production), VeriCBAM evaluates the conservative floor at **minimum plausible utilization ($\eta_{\min} = 0.50$)**:
 $$E_{\text{floor, conservative}} = C_{\text{nameplate}} \times 0.50 \times EF_{\text{floor, route}}$$
-Furthermore, in integrated steelworks exporting blast furnace gas (BFG) across reporting fence lines to external utility power plants (verified for *ArcelorMittal Bremen, Eisenhüttenstadt, Taranto, HKM Duisburg, Tata Steel IJmuiden*), direct Scope 1 stack totals omit off-gas combustion. VeriCBAM sets `stoich_applicable = False` for these installations, allowing the stream to explicitly abstain ($\hat{p} = \text{NaN}$) and reducing authentic false-positive floor breaches to **0 across all 177 real facility-years**.
+Furthermore, in integrated steelworks transferring blast furnace gas (BFG) across reporting fence lines to external utility power plants (a documented engineering hypothesis applied to *ArcelorMittal Bremen, Eisenhüttenstadt, Taranto, HKM Duisburg, Tata Steel IJmuiden*, pending on-site energy balance documentation), direct Scope 1 stack totals omit off-gas combustion. VeriCBAM sets `stoich_applicable = False` for these installations, allowing the stream to explicitly abstain ($\hat{p} = \text{NaN}$) and avoiding false physical floor breaches on authentic facility-years.
 
 ### 3.2 Multi-Pollutant Combustion Ratio ($\text{NO}_x/\text{CO}_2$)
 Within-facility high-temperature combustion couples fuel/thermal $\text{NO}_x$ and $\text{CO}_2$ emissions (median empirical $\text{CV} = 11.1\%$ across European plants). For facility $i$ in year $t$, VeriCBAM calculates the leave-one-year-out ratio $R_{i, -t} = \text{Median}_{s \neq t}(E_{\text{NO}_x, i, s} / E_{\text{CO}_2, i, s})$ and robust scale $\sigma_{R, i, -t}$. A sharp increase in the observed ratio indicates that declared $\text{CO}_2$ dropped without an operational reduction in combustion activity.
@@ -180,7 +180,7 @@ An $L_2$-regularized Logistic Regression model trained on standardized multimoda
 * **Dataset Provenance:** Official European Pollutant Release and Transfer Register (E-PRTR) & Industrial Emissions Directive (IED) integrated database v16.0 (DOI: `10.2909/657ac3cb-affa-4295-a4a9-27b4f539adab`).
 * **Cohort Structure:** Exactly 30 premier European industrial installations (15 Cement, 15 Steel) spanning 9 EU Member States (Germany, Poland, Austria, France, Netherlands, Italy, Slovakia, Greece, Sweden, Denmark).
 * **Observation Completeness:** Exactly **177 authentic facility-year observations** across 2018–2023. Three facility-years are missing due to documented blast furnace relinings (e.g., ArcelorMittal Bremen BF2 in 2020) and are left unimputed.
-* **Biomass Data Sparsity Finding (Step 11):** In the official EEA dataset, `co2_excl_biomass_tonnes` is missing (`NaN`) for **163 of 177 facility-years (92.1% missingness)**. Total direct `Carbon dioxide (CO2)` is therefore the only complete, verified pan-European regulatory series.
+* **Biomass Data Sparsity Finding (Step 11):** In the official EEA dataset, `co2_excl_biomass_tonnes` is missing (`NaN`) for **144 of 177 facility-years (81.4% missingness)**, with only 33 non-null records. Total direct `Carbon dioxide (CO2)` is therefore the only complete, verified pan-European regulatory series.
 
 ### 4.2 Verified Technology & Capacity Registry
 Constructed from the Global Energy Monitor (GEM) Global Steel & Cement Trackers, corporate sustainability reports, and official national environmental operating permits (e.g., Bezirksregierung Düsseldorf, Arpa Puglia, GIOŚ Poland), documenting:
@@ -200,31 +200,33 @@ To rigorously evaluate model performance in the absence of public non-EU fraud d
 
 ## 5. Experimental Results, Ablations & Key Scientific Insights
 
-### 5.1 Primary Graded Benchmark Performance (325 Cases, Primary Rule $\delta \ge 10\%$)
+### 5.1 Primary Graded Benchmark Performance (325 Cases across 30 Facilities, 36.92% Positive Prevalence, Primary Rule $\delta \ge 10\%$)
 Evaluated across 1,000 facility-clustered bootstrap resamples (95% confidence intervals):
 
-| Model Architecture | Statistical Paradigm | ROC-AUC (95% CI) | PR-AUC (95% CI) | Brier Score | ECE | Authentic FPR | Recall @ 5% FPR | Abstention Rate | Recommended Role |
-| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
-| **Model A: Naive Prior** | Constant Baseline ($P=0.08$) | 0.5000 [0.500, 0.500] | 0.3692 [0.369, 0.369] | 0.2329 | 0.3192 | 0.00% | 0.00% | 0.0% | Null Baseline |
-| **Model B: Stoichiometry Alone** | First-Principles Chemical Bound | 0.7909 [0.719, 0.891] | 0.7326 [0.641, 0.845] | 0.1884 | 0.1571 | 1.55% | 33.73% | 28.6% | Hard Physical Veto |
-| **Model C: Satellite Alone (S-5P)** | Tropospheric $\text{NO}_2$ Plume | 0.5183 [0.499, 0.544] | 0.3781 [0.359, 0.396] | 0.3731 | 0.3474 | 96.61% | 6.67% | 0.0% | Auxiliary Qualitative Check |
-| **Model D: Historical Alone** | Robust Longitudinal Drop $\max(0, -z)$ | 0.9631 [0.957, 0.972] | 0.9428 [0.931, 0.957] | 0.0826 | 0.0632 | 6.78% | 83.33% | 0.0% | Historical Anomaly Detection |
-| **Model E1: Expert Bayesian Fusion** | Log-Odds + Confidence Gating | 0.8935 [0.865, 0.924] | 0.8684 [0.832, 0.901] | 0.1530 | 0.1652 | **0.56%** | 69.17% | 0.0% | **Stage 2: Verifier Audit Dossier** |
-| **Model E2: Learned Logistic** | Supervised GroupKFold Fusion | **0.9643** [0.956, 0.973] | **0.9484** [0.938, 0.961] | **0.0787** | **0.0630** | 6.78% | **85.00%** | 0.0% | **Stage 1: Customs Port Triage** |
+| Model Architecture | Statistical Paradigm | ROC-AUC (95% CI) | PR-AUC (95% CI) | Brier Score | ECE | Authentic FPR | Recall @ 5% FPR | Recall @ 10% FPR | Abstention Rate | Recommended Role |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
+| **Model A: Naive Prior** | Constant Baseline ($P=0.08$) | 0.5000 [0.500, 0.500] | 0.3692 [0.369, 0.369] | 0.2329 | 0.3192 | 0.00% | 0.00% | 0.00% | 0.0% | Null Baseline |
+| **Model B: Stoichiometry Alone** | First-Principles Chemical Bound | 0.7909 [0.719, 0.891] | 0.7326 [0.641, 0.845] | 0.1884 | 0.1571 | 1.55% | 33.73% | 48.33% | 28.6% | Hard Physical Veto |
+| **Model C: Satellite Alone (S-5P)\*** | Tropospheric $\text{NO}_2$ Plume | 0.5183 [0.499, 0.544] | 0.3781 [0.359, 0.396] | 0.3731 | 0.3474 | 96.61%\* | 6.67% | 11.67% | 0.0% | Auxiliary Qualitative Check |
+| **Model D: Historical Alone** | Robust Longitudinal Drop $\max(0, -z)$ | 0.9631 [0.957, 0.972] | 0.9428 [0.931, 0.957] | 0.0826 | **0.0632** | 6.78% | 83.33% | 90.83% | 0.0% | Historical Anomaly Detection |
+| **Model E1: Expert Bayesian Fusion** | Log-Odds + Confidence Gating | 0.8935 [0.865, 0.924] | 0.8684 [0.832, 0.901] | 0.1530 | 0.1652 | **0.56%** | 69.17% | 70.00% | 0.0% | **Stage 2: Verifier Audit Dossier** |
+| **Model E2: Learned Logistic** | Supervised GroupKFold Fusion | **0.9643** [0.956, 0.973] | **0.9484** [0.938, 0.961] | **0.0787** | **0.0630** | 6.78% | **85.00%** | **91.67%** | 0.0% | **Stage 1: Customs Port Triage** |
+
+*\*Note on Model C: The 96.61% Authentic FPR for Model C is an artifact of applying a standard $\tau = 0.5$ cutoff to an uncalibrated raw proxy score. At matched false-alarm rates (10% FPR), its recall is 11.67%, consistent with random observational noise in cloudy temperate zones.*
 
 ### 5.2 Key Methodological & Empirical Insights
 1. **The Step 6 Methodological Finding (Matched FPR Parity):**  
-   When evaluated at matched false-alarm rates ($\text{FPR} = 5\%, 10\%$), **Model D (Historical Alone: Recall@5% = 83.33%, Recall@10% = 90.83%)** performs nearly identically to **Model E2 (Learned Logistic: Recall@5% = 85.00%, Recall@10% = 91.67%)**. This establishes that longitudinal historical drift is the dominant statistical driver of recall in facility reporting. The value of multimodal Bayesian fusion (**Model E1**) lies in **physical interpretability, boundary-aware constraint enforcement, and an ultra-low authentic false positive rate (0.56%)**, protecting compliant plants from unwarranted inspections.
+   When evaluated at matched false-alarm rates ($\text{FPR} = 5\%, 10\%$), **Model D (Historical Alone: Recall@5% = 83.33%, Recall@10% = 90.83%)** performs nearly identically to **Model E2 (Learned Logistic: Recall@5% = 85.00%, Recall@10% = 91.67%)**. This establishes that longitudinal historical drift is the dominant statistical driver of recall in facility reporting within this benchmark. The distinct value of multimodal Bayesian fusion (**Model E1**) lies in **physical interpretability, boundary-aware constraint enforcement, and an ultra-low authentic false positive rate (0.56% at $\tau = 0.5$)**, protecting compliant plants from unwarranted physical audits.
 2. **Satellite Remote Sensing Limitation (Empirical Negative Result):**  
-   Tropospheric $\text{NO}_2$ plume contrast shows no significant correlation with annual $\text{CO}_2$ ($\rho = 0.198, p = 0.312$ cross-sectionally; within-plant mean $\rho = -0.100$). Satellite alone achieves $\text{ROC-AUC} = 0.5183$ (random chance). This empirical finding refutes claims that satellite observations can autonomously verify annual emissions, justifying downweighting satellite evidence as an auxiliary indicator ($w_{\text{sat}} = 1.0$).
+   Tropospheric $\text{NO}_2$ plume contrast shows no significant correlation with annual $\text{CO}_2$ ($\rho = 0.198, p = 0.312$ cross-sectionally; within-plant mean $\rho = -0.100$). Satellite alone achieves $\text{ROC-AUC} = 0.5183$. This empirical exploratory pilot (covering 5 plants across cloudy European conditions) demonstrates that satellite observations alone are inconclusive for annual facility-level verification, justifying downweighting satellite evidence as an auxiliary operational gate ($w_{\text{sat}} = 1.0$).
 3. **Step-by-Step Methodological Attribution:**  
-   Dynamically tracking 5 pipeline configurations confirms continuous performance gains: Baseline (Phase 0: E1 AUC 0.8404) $\rightarrow$ Removal of Capacity Fallback (E1 AUC 0.8432) $\rightarrow$ Leave-One-Out $\text{NO}_x$ (E1 AUC 0.8382) $\rightarrow$ One-Sided Sign & Boundary Fix (Primary E1 AUC **0.8935**, Auth FPR **0.56%**).
+   Dynamically tracking pipeline ablation configurations: Baseline (Phase 0: E1 AUC 0.8404) $\rightarrow$ Removal of Unverified Capacity Fallback (E1 AUC 0.8432) $\rightarrow$ Leave-One-Out $\text{NO}_x$ (E1 AUC 0.8382, reflecting natural variance in multi-pollutant ratios) $\rightarrow$ Combined One-Sided Sign Score & Process Gas Boundary Filter (Primary E1 AUC **0.8935**, Auth FPR **0.56%** at $\tau = 0.5$).
 
 ### 5.3 Auditor Resource-Constraint Triage Simulation
-Simulating customs inspection capacity against a random baseline ($36.92\%$ positive prevalence):
+Simulating customs inspection capacity against a random baseline ($36.92\%$ positive prevalence in the 325-case benchmark suite):
 * **Top 10% Budget (32 cases):** Model E1 achieves **100.0% Precision (2.71x lift)**; Model E2 achieves **100.0% Precision (2.71x lift)**.
-* **Top 20% Budget (65 cases):** Model E1 achieves **98.5% Precision (2.67x lift)**; Model E2 achieves **100.0% Precision (2.71x lift)**, capturing **54.2% of all understatements**.
-* **Top 30% Budget (97 cases):** Model E2 achieves **92.8% Precision (2.51x lift)**, capturing **75.0% of all market understatements**.
+* **Top 20% Budget (65 cases):** Model E1 achieves **98.5% Precision (2.67x lift)**; Model E2 achieves **100.0% Precision (2.71x lift)**, capturing **54.2% of all benchmark understatements**.
+* **Top 30% Budget (97 cases):** Model E2 achieves **92.8% Precision (2.51x lift)**, capturing **75.0% of all synthetic understatements in this benchmark cohort**.
 
 ---
 
@@ -258,7 +260,7 @@ gantt
 | :--- | :---: | :---: | :--- | :--- |
 | **Persistent Cloud Obscuration in S-5P** | High | High | Overpass data gaps over North/Central Europe. | Formal clear-sky QA filter (`qa_value >= 0.50`), dynamic confidence gating ($C_{\text{sat}} = 1 - f_{\text{cloud}}$), and explicit `Insufficient Evidence` abstention gate. |
 | **Transferred Process Gases in Steelworks** | High | High | False physical violation flags on BF-BOF plants exporting gas to off-site power plants. | Verified GEM/permit boundary mapping setting `stoich_applicable = False` for transferred-gas plants; conservative floor evaluated at 50% capacity. |
-| **Biomass Emission Reporting Missingness** | Medium | High | Inability to separate biogenic fuel CO₂. | Documented that 92.1% of EEA records lack excluding-biomass CO₂; standardized on total direct $\text{CO}_2$ as verified regulatory proxy. |
+| **Biomass Emission Reporting Missingness** | Medium | High | Inability to separate biogenic fuel CO₂. | Documented that 81.4% (144/177) of EEA records lack excluding-biomass CO₂; standardized on total direct $\text{CO}_2$ as verified regulatory proxy. |
 | **Data Leakage in Supervised Models** | Critical | Low | Artificially inflated benchmark metrics. | Implemented 5-fold `GroupKFold` cross-validation grouped strictly by `facility_id`, completely isolating facilities between folds. |
 
 ---
@@ -287,69 +289,79 @@ gantt
 
 *(Required under Milestone 2 — October 26, 2026)*
 
-### Option 1: Executive / Thought-Leadership Post (Strictly CBAM & Industrial Audit Reality)
-*Modeled after high-engagement executive thought-leadership structure: punchy opening statistic, systemic dilemma, diagnostic contrast, 4-pillar evidence contract, and engaging call to discussion.*
+### Option 1: Executive / Thought-Leadership Post (Fact-Checked & Regulatory Grounded)
+*Target Audience: Compliance officers, customs declarants, industrial buyers, and sustainability directors.*
 
 ```markdown
-Under the EU Carbon Border Adjustment Mechanism (CBAM), a single on-site industrial audit costs €50,000 to €150,000. 📉 Yet worldwide, only ~403 accredited verifiers exist to inspect tens of thousands of heavy industrial plants.
+Under the EU's Carbon Border Adjustment Mechanism (CBAM), accredited verifiers check the embedded emissions that importers declare. But which declarations deserve an on-site audit first? 🏭
 
-I think part of the compliance bottleneck opens before the auditor boards the plane. Most industrial importers ask whether they can get an auditor on-site in time. The question I would put first is: What physical evidence justifies sending an auditor to that specific plant? 💶 🏭
+For my Master's Capstone in Data Science at the University of Europe for Applied Sciences (Berlin), supervised by Dr. Humera Noor, I developed VeriCBAM: a research prototype that screens plant-level industrial emissions reports (cement and steel) for consistency against four independent evidence streams:
+1. Chemical engineering lower bounds (stoichiometric calcination & reduction floors under EU BAT standards).
+2. A facility's own reporting history and multi-year combustion profiles (EEA E-PRTR).
+3. Coupled NOx-to-CO2 combustion ratios from environmental filings.
+4. Copernicus Sentinel-5P satellite tropospheric NO2 plume contrast as an auxiliary operational check.
 
-A self-reported spreadsheet can look compliant and say little about whether the emissions are physically possible. A declarant can submit complete paperwork for a blast furnace or cement kiln with numbers that violate chemical mass conservation or historical combustion ratios.
+I evaluated the framework across 30 European industrial complexes, 177 real facility-years (2018–2023), and a 325-case controlled benchmark featuring synthetic understatements (5% to 50%) and route misclassifications.
 
-In my Master’s Capstone project at the University of Europe for Applied Sciences (Berlin)—Project VeriCBAM—I treat emissions consistency like an evidence contract. 📑 Before dispatching an audit team, verify the non-negotiables:
-1. The physical baseline (stoichiometric calcination & iron reduction floors under EU BAT standards).
-2. The operational fingerprint (coupled NOx/CO2 combustion ratios over multi-year registries).
-3. The atmospheric reality (Copernicus Sentinel-5P satellite activity plumes).
-4. The calibrated triage threshold (isolating the top 20% highest-risk declarations with 100% precision).
+Key findings:
+📊 A facility's longitudinal reporting history was the strongest statistical signal (achieving ~91% recall at a 10% false-alarm rate).
+⚖️ Learned fusion matched historical discrimination, while white-box Bayesian fusion provided transparent legal explainability and an ultra-low false-alarm rate (0.56% at tau = 0.5) on authentic plants.
+🛰️ Sentinel-5P satellite plume contrast alone performed near chance (ROC-AUC 0.52), confirming that coarse spaceborne observations cannot replace ground data in cloudy temperate zones.
+🏭 Engineering boundaries matter: integrated steelworks transferring process gases to external power plants require explicit system-boundary rules to avoid false floor violations.
 
-Then let the multi-source evidence decide. 📊
+Scope & Limits: This is a controlled decision-support prototype on 30 facilities designed to prioritize verifier attention, not replace accredited statutory audits under Commission Implementing Regulation (EU) 2025/2546.
 
-What would you put in your carbon verification contract... ?
+If you manage industrial supply chains or CBAM compliance, what evidence would you want before dispatching a physical audit team? 👇
 
-#CBAM #CarbonAccounting #IndustrialDecarbonization #DataScience #ComplianceTech #SupplyChainRisk #GreenTech
+#CBAM #CarbonAccounting #DataScience #IndustrialDecarbonization #ComplianceTech #SupplyChainRisk #SustainableIndustry
 ```
 
-### Option 2: Data Science & AI Engineering Post (Targeting Technical Leaders & Recruiters)
-*Focused on physics-informed data science, multimodal fusion, and overcoming the limitations of black-box prediction in legal compliance.*
+### Option 2: Technical / Data Science Post (Focus on Physics-Informed ML & Benchmark Rigor)
+*Target Audience: Tech leads, machine learning engineers, data science recruiters, and researchers.*
 
 ```markdown
-Over 90% of climate tech AI projects try to predict carbon emissions using pure black-box regression. Yet with the EU CBAM entering definitive financial enforcement, carbon reporting is now a matter of legal liability. ⚖️
+I built an emissions-consistency screening prototype for my Data Science Master's Capstone, and the most valuable findings were the unflattering ones. 🔬
 
-Here is the uncomfortable truth: a neural network doesn't know chemistry. If a machine learning model fits an overseas declaration claiming steel emissions below 1.35 t CO₂/t for an integrated blast furnace, it hasn’t discovered operational efficiency—it has hallucinated past the law of conservation of mass. 🔬
+Project: VeriCBAM (EU CBAM consistency assessment for steel and cement).
+Dataset: 30 European plants, 177 authentic E-PRTR plant-years (2018–2023), and a 325-case graded benchmark (177 authentic negatives, 140 synthetic understatements at 5%–50%, and 8 process route mismatches; 36.9% positive prevalence). 
 
-For my Master’s Capstone in Data Science at University of Europe for Applied Sciences (Berlin), supervised by Dr. Humera Noor, I developed VeriCBAM: an explainable, multimodal evidence-fusion system for industrial emissions consistency assessment.
+Metrics evaluated via 1,000 facility-clustered bootstrap resamples and GroupKFold cross-validation (ROC-AUC, 95% CI):
+• Historical Drift Alone: 0.963 [0.957, 0.972]
+• Learned Logistic Fusion: 0.964 [0.956, 0.973]
+• Expert Bayesian Fusion: 0.894 [0.865, 0.924]
+• Satellite NO2 Alone: 0.518 [0.499, 0.544]
 
-Instead of blind prediction, we built an evidence-first audit framework:
-🔹 Chemical Stoichiometry: Hard physical mass-balance floors (limestone calcination and iron reduction).
-🔹 Longitudinal Fingerprints: Facility-level pooled MAD drift and NOx/CO2 combustion ratios from verified EEA registries.
-🔹 Earth Observation: Copernicus Sentinel-5P TROPOMI satellite plume contrast, accounting for cloud obscuration limits.
-🔹 Calibrated Dual-Stage Inference: White-box Bayesian log-odds (0.56% false alarms on authentic plants) and supervised triage (100% precision in the top 20% risk tier across 325 benchmark cases).
+At a matched 10% false-alarm rate, recall was 91% (historical-only), 92% (learned logistic), and 70% (expert Bayesian). Multimodal fusion did not beat a facility's own historical trajectory in raw statistical separation.
 
-Code and benchmarks are open-source and reproducible on GitHub: https://github.com/CaceresCristhian/VeriCBAM
+Three lessons from the benchmark:
+1️⃣ Threshold artifacts can invent false positives: A fixed tau = 0.5 cut-off gave an uncalibrated proxy an apparent 96.6% false-positive rate. Comparing models at matched false-alarm rates (5% and 10% FPR) is essential for fair evaluation.
+2️⃣ First-principles physics requires boundary awareness: A naive steel blast-furnace floor initially flagged genuine plants until we accounted for transferred blast-furnace process gases exported to external utility units.
+3️⃣ Acknowledge observational limits: Sentinel-5P satellite observations over cloudy European sites cannot resolve annual plant-level CO2; remote sensing acts only as an auxiliary gating factor.
 
-How do you ensure your domain AI models respect first-principles physical laws before deployment? 👇
+Code, reproducible pipeline, and benchmark tables are open-source: https://github.com/CaceresCristhian/VeriCBAM
+
+How do you ensure your domain machine learning models respect first-principles physical and operational boundaries? 👇
 
 #DataScience #MachineLearning #PhysicsInformedAI #CBAM #Copernicus #AIExplainability #Python #PythonDataScience
 ```
 
-### Option 3: Comprehensive Capstone Project Launch Announcement
-*Formal academic and professional announcement detailing project scope, supervisory context, and technical achievements.*
+### Option 3: Formal Academic & Capstone Launch Announcement
+*Target Audience: Academic peers, professors, industry partners, and university network.*
 
 ```markdown
 🌍 Excited to officially announce my Data Science Master's Capstone Project at the University of Europe for Applied Sciences (UE Germany), Berlin, supervised by Dr. Humera Noor:
 
 🚀 Project VeriCBAM: Multimodal Evidence Fusion & Decision Support for EU Carbon Border Compliance.
 
-In 2026, the EU's Carbon Border Adjustment Mechanism (CBAM) entered definitive financial enforcement. Importers of energy-intensive commodities (steel, cement, fertilisers) face legal liability for verifying embedded emissions across global supply chains—yet on-site audits cost €50,000 to €150,000+ per integrated industrial site, and only ~403 accredited verifiers exist worldwide.
+With the EU's Carbon Border Adjustment Mechanism (CBAM) entering definitive financial enforcement under Regulation (EU) 2023/956, European importers face legal liability for verifying embedded emissions across global supply chains. However, comprehensive on-site audits for complex heavy industry are logistically constrained and costly, while accredited verifiers remain scarce.
 
-Can independent physical, historical, and empirical data streams help compliance officers prioritize audits objectively?
+Can independent physical, historical, and multi-pollutant data streams help compliance officers prioritize verification resources objectively?
 
-VeriCBAM fuses four independent pillars:
+VeriCBAM integrates four independent evidence pillars:
 1️⃣ Chemical Engineering Stoichiometry: First-principles conservation-of-mass lower bounds (limestone calcination and iron reduction limits under EU BAT benchmarks).
 2️⃣ Longitudinal Fingerprints & Co-Pollutants: Multi-year facility baselines and coupled NOx/CO2 combustion ratios from verified industrial registries (EEA E-PRTR).
 3️⃣ Earth Observation Activity: Copernicus Sentinel-5P tropospheric NO2 plume contrast, rigorously accounting for atmospheric dispersion and cloud-cover limits.
-4️⃣ Explainable Bayesian Fusion & Triage: A dual-stage architecture combining supervised triage (Model E2: 100% precision in top 20% risk tier) with white-box Bayesian audit dossiers (Model E1: near-zero 0.56% false alarms).
+4️⃣ Explainable Bayesian Fusion & Triage: A dual-stage architecture combining supervised triage (Model E2: 100% precision in top 20% risk tier) with white-box Bayesian audit dossiers (Model E1: 0.56% false alarms on authentic plants).
 
 Code & Benchmarks are fully open-source and reproducible on GitHub: https://github.com/CaceresCristhian/VeriCBAM
 
@@ -363,7 +375,7 @@ Code & Benchmarks are fully open-source and reproducible on GitHub: https://gith
 1. **European Union (2023):** *Regulation (EU) 2023/956 of the European Parliament and of the Council of 10 May 2023 establishing a carbon border adjustment mechanism.* Official Journal of the European Union, L 130/52. [ELI: http://data.europa.eu/eli/reg/2023/956/oj]
 2. **European Commission (2025):** *Commission Implementing Regulation (EU) 2025/2546 of 10 December 2025 on the application of the principles for verification of declared embedded emissions pursuant to Regulation (EU) 2023/956.* [ELI: http://data.europa.eu/eli/reg_impl/2025/2546/oj]
 3. **European Commission (2025):** *Commission Implementing Regulation (EU) 2025/2547 of 10 December 2025 laying down rules for the calculation, monitoring, and reporting of embedded emissions in goods imported into the customs territory of the Union.* [ELI: http://data.europa.eu/eli/reg_impl/2025/2547/oj]
-4. **European Commission (2025):** *Commission Delegated Regulation (EU) 2025/2551 of 10 December 2025 supplementing Regulation (EU) 2023/956 with requirements for the accreditation, control, and oversight of verifiers.* [ELI: http://data.europa.eu/eli/reg_del/2025/2551/oj]
+4. **European Commission (2025):** *Commission Delegated Regulation (EU) 2025/2551 of 20 November 2025 (published in OJ L on 10 December 2025) supplementing Regulation (EU) 2023/956 with requirements for the accreditation, control, and oversight of verifiers.* [ELI: http://data.europa.eu/eli/reg_del/2025/2551/oj]
 5. **European Parliament & Council (2025):** *Regulation (EU) 2025/2083 of the European Parliament and of the Council (Omnibus I Simplification Package).* [ELI: http://data.europa.eu/eli/reg/2025/2083/oj]
 6. **European Commission (2023):** *Commission Implementing Regulation (EU) 2023/1773 of 17 August 2023 laying down rules for the transitional period of Regulation (EU) 2023/956.* [ELI: http://data.europa.eu/eli/reg_impl/2023/1773/oj]
 7. **European Commission (2018):** *Commission Implementing Regulation (EU) 2018/2067 on the verification of data and on the accreditation of verifiers (Accreditation and Verification Regulation - AVR).* [ELI: http://data.europa.eu/eli/reg_impl/2018/2067/oj]
@@ -374,5 +386,5 @@ Code & Benchmarks are fully open-source and reproducible on GitHub: https://gith
 12. **IPCC (2019):** *2019 Refinement to the 2006 IPCC Guidelines for National Greenhouse Gas Inventories, Volume 3: Industrial Processes and Product Use (IPPU).* Chapter 2 (Mineral Industry) and Chapter 4 (Metal Industry). IGES, Japan. [URL: https://www.ipcc-nggip.iges.or.jp/public/2019rf/vol3.html]
 13. **European Commission (2021):** *Commission Staff Working Document: Impact Assessment Report Accompanying the document Proposal for a Regulation establishing a Carbon Border Adjustment Mechanism.* **SWD(2021) 643 final**, Brussels.
 14. **Global Energy Monitor (GEM) (2024–2026):** *Global Steel Plant Tracker (GSPT)* and *Global Cement and Concrete Plant Tracker (GCCT).* [URL: https://globalenergymonitor.org]
-15. **GMK Center (2024):** *CBAM Verification: Requirements, Costs and Industry Bottlenecks in the Steel Sector.* Kyiv/Brussels. [URL: https://gmk.center]
+15. **GMK Center (2024):** *CBAM Verification: Requirements, Costs and Industry Bottlenecks in the Steel Sector.* Industry economic assessment & consultancy report, Kyiv/Brussels. [URL: https://gmk.center]
 16. **International Organization for Standardization (2019):** *ISO 14064-3:2019: Greenhouse gases — Part 3: Specification with guidance for the verification and validation of greenhouse gas statements.* Geneva.

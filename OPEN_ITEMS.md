@@ -13,7 +13,7 @@ This register records methodological choices, unverified claims, credentials act
 
 ## 2. Decision on CO2 Definition (Item N3) - RESOLVED
 - **Status:** Empirical Evaluation Completed (Retain Total CO2 as Primary).
-- **Finding:** In `benchmark_cohort_multipollutant.parquet`, `co2_excl_biomass_tonnes` is missing (`NaN`) for **163 out of 177 rows (92.1%)** in official EEA reporting. Only 14 facility-years report a non-null value.
+- **Finding:** In `benchmark_cohort_multipollutant.parquet`, `co2_excl_biomass_tonnes` is missing (`NaN`) for **144 out of 177 rows (81.4%)** in official EEA reporting. Only 33 facility-years report a non-null value.
 - **Resolution:** Total `Carbon dioxide (CO2)` is the only viable pan-European reporting series. Retained as primary standard, documented in `DATA_PROVENANCE.md` and `MODEL_CARD.md`.
 
 ---

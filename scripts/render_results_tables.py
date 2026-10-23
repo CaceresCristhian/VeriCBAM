@@ -107,9 +107,11 @@ def update_docs():
     if README_PATH.exists():
         content = README_PATH.read_text(encoding="utf-8")
 
-        # Update test badge from 19/19 to 24/24
-        content = content.replace("19/19 tests pass", "24/24 tests pass")
-        content = content.replace("19/19 passed", "24/24 passed")
+        # Update test badge to 28/28
+        content = content.replace("19/19 tests pass", "28/28 tests pass")
+        content = content.replace("19/19 passed", "28/28 passed")
+        content = content.replace("24/24 tests pass", "28/28 tests pass")
+        content = content.replace("24/24 passed", "28/28 passed")
 
         # Update Graded benchmark section in README
         # Regex replacement for section 6.1

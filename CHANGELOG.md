@@ -70,13 +70,13 @@ This release executes the full scientific, regulatory, and methodological improv
   3. `test_m6_leave_one_year_out_nox_baseline`: verifies strict exclusion of evaluated year and 3-year minimum requirement.
   4. `test_duplicate_resolution_rule`: tests deterministic maximum-release deduplication.
   5. `test_m5_one_sided_historical_score`: tests one-sided vs two-sided sign logic and Bayesian engine response.
-- Total pytest suite passing: **24/24 tests passed** (increased from 19/19 baseline).
+- Total pytest suite passing: **28/28 tests passed** (increased from 19/19 baseline and 24/24 intermediate).
 
 ---
 
 ### 3. Documentation & Verification Tooling (Phase 3)
 - Created `scripts/render_results_tables.py` to inject empirical results from CSVs directly into `README.md` and `docs/MODEL_CARD.md`.
-- Updated test badge in `README.md` to "24/24 tests pass".
+- Updated test badge in `README.md` to "28/28 tests pass".
 - Added note on unsupervised pooled historical scale (N4) across documentation.
 - Documented CO2 variable choice in `docs/DATA_PROVENANCE.md` (N3).
 
@@ -102,3 +102,12 @@ This release executes the full scientific, regulatory, and methodological improv
 
 ### 5. Master Pipeline & Reproducibility (Phase 5)
 - Updated `scripts/reproduce_all.py` to execute all 11 stages end-to-end, including documentation rendering and full test suite execution.
+
+---
+
+### 6. Benchmark Evaluation, Boundary Disambiguation & Rigor (Phase 6)
+- **Step 6 Matched-FPR Parity Analysis:** Formalized evaluation showing Model D and Model E2 achieve statistical recall parity at matched 5% (83.3% vs 85.0%) and 10% (90.8% vs 91.7%) false-alarm rates; articulated Model E1's primary value as white-box interpretability and near-zero false alarms (0.56% at $\tau = 0.5$).
+- **Step 7 Process Gas Transfer Boundary Handling:** Addressed blast furnace gas exports to adjacent power stations for five integrated steelworks by setting `stoich_applicable = False` pending detailed site energy balances, eliminating false physical breaches on compliant integrated works.
+- **Biomass Data Provenance Correction:** Confirmed exact EEA missingness for `co2_excl_biomass_tonnes`: 144 of 177 observations missing (81.4%), solidifying total direct $\text{CO}_2$ as the mandatory regulatory series.
+- **Academic Rigor & Terminology Alignment:** Replaced all residual "thermodynamic" descriptions in code and documentation with "stoichiometric lower bound / BAT reference floor".
+- **Pytest Expansion:** Added 4 additional boundary and calibration regression tests, bringing the automated test suite to **28/28 passing tests**.

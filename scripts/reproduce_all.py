@@ -80,7 +80,7 @@ def main():
     print("\n" + "=" * 80)
     if all_passed:
         print("ALL 11 PIPELINE STEPS COMPLETED SUCCESSFULLY!")
-        print("100% Deterministic Reproducibility Confirmed.")
+        print("Deterministic master pipeline execution completed across all 11 scientific stages.")
         print("=" * 80)
     else:
         print("REPRODUCTION PIPELINE ENCOUNTERED AN ERROR.")

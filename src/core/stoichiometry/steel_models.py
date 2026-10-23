@@ -1,6 +1,6 @@
 """
 VeriCBAM Stoichiometry - Iron & Steel Sector Models
-Implements first-principles carbon reduction mass balances and furnace thermodynamic energy constraints
+Implements first-principles carbon reduction mass balances and Best Available Techniques (BAT) energy constraints
 for primary and secondary steelmaking routes, adhering to EU CBAM Annex IV and IPCC guidelines.
 """
 
@@ -17,7 +17,7 @@ from typing import Dict, Any, Tuple
 MIN_C_REDUCTION_PER_T_FE = 0.3226  # t Carbon / t hot metal
 STOICHIOMETRIC_MIN_CO2_REDUCTION_BF = 1.182  # t CO2 / t crude iron purely for reduction
 
-# Empirical & thermodynamic benchmarks from EU BREF Iron and Steel (t CO2 / t liquid steel Scope 1):
+# Empirical & process benchmarks from EU BREF Iron and Steel (t CO2 / t liquid steel Scope 1):
 ROUTE_BENCHMARKS = {
     "BF-BOF": {  # Integrated Blast Furnace - Basic Oxygen Furnace
         "absolute_min_scope1_tco2_per_t": 1.35,  # Absolute best efficiency with top gas recovery & high scrap
@@ -71,9 +71,9 @@ class SteelStoichiometricAuditResult:
 
 
 def audit_steel_declaration(declaration: SteelDeclarationInput) -> SteelStoichiometricAuditResult:
-    """Audits a CBAM steel declaration against production route thermodynamics and mass balances.
+    """Audits a CBAM steel declaration against production route BAT benchmarks and mass balances.
 
-    Evaluates emissions against route-specific thermodynamic lower bounds, taking into account
+    Evaluates emissions against route-specific engineering lower bounds, taking into account
     stoichiometric carbon requirements for hematite reduction:
         Fe2O3 + 3 C -> 2 Fe + 3 CO
     and subsequent carbon oxidation (yielding ~1.182 t CO2 / t crude iron minimum reduction emissions in BF-BOF routes).
@@ -128,7 +128,7 @@ def audit_steel_declaration(declaration: SteelDeclarationInput) -> SteelStoichio
 
     if discrepancy < tolerance:
         is_feasible = False
-        confidence = "High (Thermodynamic Violation)"
+        confidence = "High (Process Floor Violation)"
         reason = (
             f"Physical Impossibility Violation: Reported direct emissions ({reported_emissions:,.0f} t CO2; "
             f"{reported_intensity:.3f} t CO2/t steel) fall below the physical minimum for claimed route "
@@ -138,7 +138,7 @@ def audit_steel_declaration(declaration: SteelDeclarationInput) -> SteelStoichio
     else:
         is_feasible = True
         confidence = "High (Physically Verified)"
-        reason = f"Reported emissions are consistent with thermodynamic bounds for {route}."
+        reason = f"Reported emissions are consistent with BAT process bounds for {route}."
 
     # Route misclassification check:
     # E.g. Claiming BF-BOF emissions (1.8 t/t) when declaring EAF, or vice-versa

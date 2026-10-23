@@ -298,7 +298,7 @@ Trains an $L_2$-regularized Logistic Regression classifier on the standardized m
 1. **Recall Parity at Matched False-Positive Rates (Step 6 Finding):**  
    When evaluated at matched false-alarm budgets ($\text{FPR} = 5\%, 10\%$), **Model D (Historical Alone: 83.3% / 90.8% recall)** performs nearly identically to **Model E2 (Learned Logistic: 85.0% / 91.7% recall)**. This proves that longitudinal historical drift is the primary statistical driver of recall in facility time series, whereas multimodal fusion (**Model E1**) provides *physical explainability, boundary-aware mass-balance enforcement, and near-zero false alarms (0.56% FPR)* for legal audit dossiers.
 2. **Biomass Reporting Sparsity in Official EEA Data (Step 11 Finding):**  
-   Inspection of the EEA E-PRTR database confirms that `Carbon dioxide (CO2) excluding biomass` is missing (`NaN`) for **163 out of 177 facility-years (92.1%)**. Total direct `Carbon dioxide (CO2)` is therefore the only complete pan-European regulatory series.
+   Inspection of the EEA E-PRTR database confirms that `Carbon dioxide (CO2) excluding biomass` is missing (`NaN`) for **144 out of 177 facility-years (81.4%)**, with only 33 non-null records. Total direct `Carbon dioxide (CO2)` is therefore the only complete pan-European regulatory series.
 3. **Deterministic Reproducibility:**  
    Running `python scripts/reproduce_all.py` executes all 11 data, modeling, calibration, and testing stages end-to-end, passing **28/28 automated `pytest` unit and integration tests**.
 

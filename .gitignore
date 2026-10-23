@@ -32,6 +32,7 @@ copernicus.txt
 *.token
 *credential*
 *secrets*
+admin/*.pdf
 
 # IDE and OS
 .idea/
