@@ -64,22 +64,22 @@ Rather than claiming to replace accredited legal certification bodies or directl
 ### 2.2 Formal Research Sub-Questions & Hypotheses
 * **RQ1 (Physical Plausibility & Stoichiometric Floors):**  
   *Question:* How accurately can first-principles chemical engineering mass balances (limestone calcination and iron reduction) establish conservative lower bounds on declared emissions without relying on historical facility data?  
-  *Hypothesis $H_1$:* Stoichiometric mass-balance floors can deterministically detect gross understatements ($\ge 30\%$) and route misclassifications with high precision (>98% on applicable facilities, with an observed 1.55% false-alarm rate on authentic plant-years), but will remain blind to moderate understatements ($10\%–20\%$) that remain above the physical floor.
+  *Hypothesis $H_1$:* Stoichiometric mass-balance floors will deterministically detect gross understatements ($\ge 30\%$) and route misclassifications with high precision and low false alarms on applicable facilities, but will remain blind to moderate understatements ($10\%–20\%$) that remain above the physical floor.
 * **RQ2 (Earth Observation Activity & Atmospheric Limits):**  
   *Question:* Can Copernicus Sentinel-5P TROPOMI tropospheric $\text{NO}_2$ column density serve as a quantitative operational activity proxy for heavy industry, and what are its physical limitations?  
-  *Hypothesis $H_2$:* Due to coarse spatial footprint ($5.5 \times 3.5\text{ km}$), regional background advection, wind dispersion, and persistent cloud obscuration, satellite trace-gas observations alone cannot reliably quantify annual plant-level $\text{CO}_2$ emissions (yielding near-random discriminative power when uncoupled from ground activity), but provide valuable qualitative operational gating when clear-sky conditions exist.
+  *Hypothesis $H_2$:* Due to coarse spatial footprint ($5.5 \times 3.5\text{ km}$), regional background advection, wind dispersion, and persistent cloud obscuration, satellite trace-gas observations alone cannot reliably quantify annual plant-level $\text{CO}_2$ emissions (yielding low discriminative power when uncoupled from ground activity), but provide valuable qualitative operational gating when clear-sky conditions exist.
 * **RQ3 (Historical Behavior & Multi-Pollutant Fingerprinting):**  
   *Question:* Can facility-specific multivariate historical profiles and co-pollutant combustion ratios ($\text{NO}_x/\text{CO}_2$) detect selective $\text{CO}_2$ under-reporting in newly declared reporting periods?  
-  *Hypothesis $H_3$:* High-temperature combustion couples $\text{NO}_x$ and $\text{CO}_2$ formation; under the controlled benchmark condition where declared $\text{CO}_2$ is selectively understated while permit-regulated $\text{NO}_x$ remains unperturbed, this causes a statistically detectable divergence in the leave-one-year-out co-pollutant ratio, independent of remote sensing.
+  *Hypothesis $H_3$:* High-temperature combustion couples $\text{NO}_x$ and $\text{CO}_2$ formation; under controlled conditions where declared $\text{CO}_2$ is selectively understated while permit-regulated $\text{NO}_x$ remains unperturbed, this will induce a statistically detectable divergence in the leave-one-year-out co-pollutant ratio, independent of remote sensing.
 * **RQ4 (Multimodal Evidence Fusion vs. Single Modalities):**  
   *Question:* Does fusing physical, observational, historical, and co-pollutant evidence streams yield superior discrimination, probability calibration, and false-positive control compared to isolated modalities?  
-  *Hypothesis $H_4$:* While historical trajectory alone achieves high raw statistical discrimination, combining it with stoichiometric boundaries and confidence gating in a weighted Bayesian framework (Model E1) provides an ultra-low false-positive rate on authentic compliant plants ($\le 1\%$ at $\tau = 0.5$) and full legal explainability, while supervised logistic fusion (Model E2) optimizes probability calibration ($\text{ECE} \approx 0.063$).
+  *Hypothesis $H_4$:* While historical trajectory alone is hypothesized to achieve strong statistical anomaly discrimination, combining it with stoichiometric boundaries and confidence gating in a weighted Bayesian framework (Model E1) will provide an ultra-low false-positive rate on authentic compliant plants ($\le 1\%$) and full legal explainability, while supervised logistic fusion (Model E2) will optimize overall probability calibration.
 * **RQ5 (Uncertainty Quantification & Missing Data Handling):**  
   *Question:* How can an evidence-fusion engine systematically represent observational uncertainty (e.g., cloud cover, unobserved capacity, missing historical years) without generating overconfident false alarms?  
-  *Hypothesis $H_5$:* A formal evidence confidence factor $C_i \in [0, 1]$ combined with an explicit `Insufficient Evidence` abstention gate ($C_{\text{overall}} < 0.50$) provides an architectural safeguard against premature adverse audit findings when evidence is noisy or missing (noting that in the primary benchmark cohort with complete registries, the abstention rate remained at 0.0%).
+  *Hypothesis $H_5$:* A formal evidence confidence factor $C_i \in [0, 1]$ combined with an explicit `Insufficient Evidence` abstention gate ($C_{\text{overall}} < 0.50$) will provide an architectural safeguard against premature adverse audit findings, allowing the system to abstain rather than generating speculative accusations when observational confidence is low.
 * **RQ6 (Explainability & Dual-Stage Regulatory Triage):**  
   *Question:* Can an automated system generate auditable, evidence-grounded dossiers that satisfy the strategic and risk analysis requirements of Commission Implementing Regulation (EU) 2025/2546?  
-  *Hypothesis $H_6$:* A dual-stage architecture—deploying supervised classification (Model E2) for high-throughput customs port triage and white-box Bayesian log-odds reasoning (Model E1) for accredited verifier audit dossiers—supports the strategic and risk analysis principles of Commission Implementing Regulation (EU) 2025/2546 while maintaining auditable evidential trails.
+  *Hypothesis $H_6$:* A dual-stage architecture—deploying supervised classification (Model E2) for high-throughput customs port triage and white-box Bayesian log-odds reasoning (Model E1) for accredited verifier audit dossiers—will support the strategic and risk analysis principles of Commission Implementing Regulation (EU) 2025/2546 while maintaining auditable evidential trails.
 
 ---
 
@@ -220,35 +220,47 @@ To rigorously evaluate model performance in the absence of public non-EU fraud d
 
 ---
 
-## 5. Experimental Results, Ablations & Key Scientific Insights
+## 5. Proposed Experimental Evaluation Design & Validation Plan
 
-### 5.1 Primary Graded Benchmark Performance (325 Cases across 30 Facilities, 36.92% Positive Prevalence, Primary Rule $\delta \ge 10\%$)
-Evaluated across 1,000 facility-clustered bootstrap resamples (95% confidence intervals):
+### 5.1 Comparative Architecture Matrix (Candidate Models)
+To evaluate the research hypotheses, the project proposes benchmarking six distinct statistical and physical paradigms:
 
-| Model Architecture | Statistical Paradigm | ROC-AUC (95% CI) | PR-AUC (95% CI) | Brier Score | ECE | Authentic FPR | Recall @ 5% FPR | Recall @ 10% FPR | Abstention Rate | Recommended Role |
-| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
-| **Model A: Naive Prior** | Constant Baseline ($P=0.08$) | 0.5000 [0.500, 0.500] | 0.3692 [0.369, 0.369] | 0.2329 | 0.3192 | 0.00% | 0.00% | 0.00% | 0.0% | Null Baseline |
-| **Model B: Stoichiometry Alone** | First-Principles Chemical Bound | 0.7909 [0.719, 0.891] | 0.7326 [0.641, 0.845] | 0.1884 | 0.1571 | 1.55% | 33.73% | 48.33% | 28.6% | Hard Physical Veto |
-| **Model C: Satellite Alone (S-5P)\*** | Tropospheric $\text{NO}_2$ Plume | 0.5183 [0.499, 0.544] | 0.3781 [0.359, 0.396] | 0.3731 | 0.3474 | 96.61%\* | 6.67% | 11.67% | 0.0% | Auxiliary Qualitative Check |
-| **Model D: Historical Alone** | Robust Longitudinal Drop $\max(0, -z)$ | 0.9631 [0.957, 0.972] | 0.9428 [0.931, 0.957] | 0.0826 | **0.0632** | 6.78% | 83.33% | 90.83% | 0.0% | Historical Anomaly Detection |
-| **Model E1: Expert Bayesian Fusion** | Log-Odds + Confidence Gating | 0.8935 [0.865, 0.924] | 0.8684 [0.832, 0.901] | 0.1530 | 0.1652 | **0.56%** | 69.17% | 70.00% | 0.0% | **Stage 2: Verifier Audit Dossier** |
-| **Model E2: Learned Logistic** | Supervised GroupKFold Fusion | **0.9643** [0.956, 0.973] | **0.9484** [0.938, 0.961] | **0.0787** | **0.0630** | 6.78% | **85.00%** | **91.67%** | 0.0% | **Stage 1: Customs Port Triage** |
+| Candidate Model | Statistical Paradigm | Input Data Streams | Planned Evaluation Role | Expected Performance Profile |
+| :--- | :--- | :--- | :--- | :--- |
+| **Model A: Naive Prior** | Constant Uninformative Baseline | None ($P = 0.08$) | Null Reference | Theoretical lower bound (ROC-AUC $\approx 0.50$). |
+| **Model B: Stoichiometry Alone** | First-Principles Process Bounds | Tech Registry + Chemical Factors | Hard Physical Veto | High precision on severe violations; blind to moderate deviations. |
+| **Model C: Satellite Alone (S-5P)** | Atmospheric Plume Contrast | Sentinel-5P Level-2 Tropospheric $\text{NO}_2$ | Auxiliary Presence Check | Qualitative operational presence; limited annual $\text{CO}_2$ resolution. |
+| **Model D: Historical Alone** | Robust Longitudinal Anomaly Score | EEA E-PRTR 6-Year Panel | Historical Baseline | Strong anomaly discrimination based on individual facility trends. |
+| **Model E1: Expert Bayesian Fusion** | Weighted Log-Odds + Confidence Gate | All 5 Evidence Streams Fused | Verifier Audit Dossier | White-box interpretability, near-zero authentic false alarms. |
+| **Model E2: Learned Logistic Fusion** | Supervised GroupKFold Classification | Standardized Multimodal Features | Customs Triage Engine | Optimized probability calibration and ranked prioritization. |
 
-*\*Note on Model C: The 96.61% Authentic FPR for Model C is an artifact of applying a standard $\tau = 0.5$ cutoff to an uncalibrated raw proxy score. At matched false-alarm rates (10% FPR), its recall is 11.67%, consistent with random observational noise in cloudy temperate zones.*
+### 5.2 Graded Evaluation Benchmark Protocol (Layer B)
+Because authentic third-country fraud datasets are legally protected and confidential during the transitional phase of CBAM, the framework will be validated on a curated **325-case graded evaluation benchmark**:
+1. **177 Authentic Real-Year Negatives:** Unperturbed facility-years (2018–2023) across 30 European industrial complexes from official EEA E-PRTR reporting, reflecting natural operating variance ($\sigma_{\text{pooled}} = 0.0911$).
+2. **140 Graded Controlled Understatements:** Synthetic understatements generated across 5 distinct perturbation magnitudes:
+   $$\delta \in \{5\%, 10\%, 20\%, 30\%, 50\%\}, \quad (28\text{ cases per magnitude})$$
+   systematically testing model sensitivity from subtle reporting drift ($\delta = 5\%$) to severe fraud ($\delta = 50\%$).
+3. **8 Process Route Misclassifications:** Cross-route anomalies (e.g., declaring Scrap-EAF emissions for integrated BF-BOF works).
 
-### 5.2 Key Methodological & Empirical Insights
-1. **The Step 6 Methodological Finding (Matched FPR Parity):**  
-   When evaluated at matched false-alarm rates ($\text{FPR} = 5\%, 10\%$), **Model D (Historical Alone: Recall@5% = 83.33%, Recall@10% = 90.83%)** performs nearly identically to **Model E2 (Learned Logistic: Recall@5% = 85.00%, Recall@10% = 91.67%)**. This establishes that longitudinal historical drift is the dominant statistical driver of recall in facility reporting within this benchmark. The distinct value of multimodal Bayesian fusion (**Model E1**) lies in **physical interpretability, boundary-aware constraint enforcement, and an ultra-low authentic false positive rate (0.56% at $\tau = 0.5$)**, protecting compliant plants from unwarranted physical audits.
-2. **Satellite Remote Sensing Limitation (Empirical Negative Result):**  
-   Tropospheric $\text{NO}_2$ plume contrast shows no significant correlation with annual $\text{CO}_2$ ($\rho = 0.198, p = 0.312$ cross-sectionally; within-plant mean $\rho = -0.100$). Satellite alone achieves $\text{ROC-AUC} = 0.5183$. This empirical exploratory pilot (covering 5 plants across cloudy European conditions) demonstrates that satellite observations alone are inconclusive for annual facility-level verification, justifying downweighting satellite evidence as an auxiliary operational gate ($w_{\text{sat}} = 1.0$).
-3. **Step-by-Step Methodological Attribution:**  
-   Dynamically tracking pipeline ablation configurations: Baseline (Phase 0: E1 AUC 0.8404) $\rightarrow$ Removal of Unverified Capacity Fallback (E1 AUC 0.8432) $\rightarrow$ Leave-One-Out $\text{NO}_x$ (E1 AUC 0.8382, reflecting natural variance in multi-pollutant ratios) $\rightarrow$ Combined One-Sided Sign Score & Process Gas Boundary Filter (Primary E1 AUC **0.8935**, Auth FPR **0.56%** at $\tau = 0.5$).
+### 5.3 Planned Evaluation Metrics & Statistical Validation
+The candidate models will be evaluated across three complementary statistical dimensions:
+1. **Discrimination Performance:** Evaluated via Receiver Operating Characteristic (ROC-AUC) and Precision-Recall AUC (PR-AUC). To account for intra-facility correlation across multi-year observations, 95% confidence intervals will be estimated using **1,000 facility-clustered bootstrap resamples**.
+2. **Probability Calibration & Reliability:** Assessed using the Brier Score and Expected Calibration Error (ECE) across reliability diagrams to ensure posterior probabilities accurately reflect empirical inconsistency risk.
+3. **Operational Regulatory Triage Metrics:**
+   * **Authentic False Positive Rate (FPR):** Measuring false alarm rates on unperturbed compliant facilities to avoid wasting scarce verification resources.
+   * **Recall at Fixed False Alarm Budgets:** Comparing all candidate models at standardized operational thresholds ($\text{FPR} = 5\%$ and $\text{FPR} = 10\%$).
+   * **Auditor Resource-Constraint Simulation:** Simulating customs inspection capacity under realistic constraints (inspecting only the top 10%, 20%, or 30% highest-risk declarations) and measuring Precision@k and Triage Lift over random auditing.
 
-### 5.3 Auditor Resource-Constraint Triage Simulation
-Simulating customs inspection capacity against a random baseline ($36.92\%$ positive prevalence in the 325-case benchmark suite):
-* **Top 10% Budget (32 cases):** Model E1 achieves **100.0% Precision (2.71x lift)**; Model E2 achieves **100.0% Precision (2.71x lift)**.
-* **Top 20% Budget (65 cases):** Model E1 achieves **98.5% Precision (2.67x lift)**; Model E2 achieves **100.0% Precision (2.71x lift)**, capturing **54.2% of all benchmark understatements**.
-* **Top 30% Budget (97 cases):** Model E2 achieves **92.8% Precision (2.51x lift)**, capturing **75.0% of all synthetic understatements in this benchmark cohort**.
+### 5.4 Planned Ablation Studies & Sensitivity Analyses
+* **Stream Ablation Protocol:** Systematically removing individual evidence streams (stoichiometry, historical drift, multi-pollutant ratios, satellite contrast) to quantify the marginal contribution of each modality.
+* **Prior & Weight Sensitivity:** Evaluating the Bayesian engine across varying prior odds ($P(H) \in [0.01, 0.20]$) and evidential weight perturbations via Monte Carlo simulation.
+* **Capacity Utilization Sensitivity:** Assessing the robustness of stoichiometric floors under varying conservative utilization bounds ($\eta \in [0.40, 0.60]$).
+
+### 5.5 Proposed Success Criteria
+The project execution will be evaluated against the following primary success criteria:
+1. **Statistically Significant Triage Lift:** Supervised and Bayesian models must achieve at least a $2.0\times$ precision lift over random inspection in the top 20% risk tier.
+2. **False Alarm Suppression:** The white-box Bayesian architecture (Model E1) must suppress false positive alarms on authentic compliant facilities to below $1.0\%$ at default thresholds.
+3. **Legal Defensibility & Explainability:** The system must generate fully transparent, auditable breakdown dossiers satisfying the strategic risk assessment requirements of Commission Implementing Regulation (EU) 2025/2546.
 
 ---
 
@@ -286,7 +298,7 @@ gantt
 | **Data Leakage in Supervised Models** | Critical | Low | Artificially inflated benchmark metrics. | Implemented 5-fold `GroupKFold` cross-validation grouped strictly by `facility_id`, completely isolating facilities between folds. |
 
 ### 6.2 Future Research Roadmap: Multi-Sensor Operational Activity Proxying (VeriCBAM 2.0)
-While the current implementation uses Sentinel-5P tropospheric $\text{NO}_2$ as an operational presence check, our empirical analysis highlights the necessity of multi-sensor remote sensing to independently reconstruct factory activity. A planned second-stage roadmap includes:
+While the baseline proposal designs an initial Sentinel-5P tropospheric $\text{NO}_2$ operational presence check, extending the framework to multi-sensor remote sensing provides a compelling long-term roadmap to independently reconstruct factory activity:
 1. **Thermal Infrared (TIR) Operating Timelines:**  
    Industrial rotary cement kilns operate at internal temperatures exceeding $1,400^\circ\text{C}$, radiating external shell heat at $200^\circ\text{C}\text{--}350^\circ\text{C}$, while primary steel tapholes pour molten iron at $1,500^\circ\text{C}$. Leveraging satellite thermal infrared sensors (such as Landsat-8/9 TIRS or high-resolution commercial thermal platforms) enables detecting continuous thermal anomalies, reconstructing an indisputable operational timeline of kiln firing versus maintenance shutdowns.
 2. **All-Weather Synthetic Aperture Radar (SAR):**  
@@ -310,8 +322,8 @@ While the current implementation uses Sentinel-5P tropospheric $\text{NO}_2$ as 
    * **Tab 7: Empirical Benchmark Evaluation & Ablation:** Live comparison of all 6 models across 325 graded scenarios with triage simulation.
    * **Tab 8: Capstone Proposal, References & Roadmap:** Master academic documentation and direct EUR-Lex ELI links.
 3. **Automated Master Reproduction Pipeline (`scripts/reproduce_all.py`):**
-   Executes all 11 data generation, modeling, calibration, and testing stages end-to-end with 100% deterministic reproducibility.
-4. **Automated Test Suite:** **28/28 passing unit and integration tests** in `tests/` (`pytest`).
+   An end-to-end automated pipeline executing data ingestion, modeling, calibration, and benchmark evaluation stages with deterministic reproducibility.
+4. **Automated Verification Test Suite:** Modular unit and integration test suite in `tests/` (`pytest`) validating software correctness, stoichiometry bounds, and boundary rules.
 5. **Open-Source GitHub Repository:** Hosted at [https://github.com/CaceresCristhian/VeriCBAM](https://github.com/CaceresCristhian/VeriCBAM).
 
 ---

@@ -316,7 +316,7 @@ def build_pdf():
         if col_count == 11:
             col_w = [25*mm, 20*mm, 18*mm, 18*mm, 12*mm, 12*mm, 12*mm, 14*mm, 14*mm, 11*mm, 14*mm]
         elif col_count == 5:
-            col_w = [30*mm, 18*mm, 18*mm, 44*mm, 60*mm]
+            col_w = [28*mm, 35*mm, 35*mm, 32*mm, 40*mm]
         t = Table(parsed_rows, colWidths=col_w, repeatRows=1)
         t.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#2B6CB0")),
