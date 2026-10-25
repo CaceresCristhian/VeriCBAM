@@ -462,7 +462,7 @@ st.sidebar.markdown(
     <div class="sidebar-student-box">
         <div><span class="box-label">Student:</span> <span class="box-val">Cristhian David Cáceres Mateus</span></div>
         <div><span class="box-label">Program:</span> <span class="box-val">M.Sc. Data Science</span></div>
-        <div><span class="box-label">University:</span> <span class="box-val">UE Germany (Berlin)</span></div>
+        <div><span class="box-label">University:</span> <span class="box-val">UE Germany (Potsdam)</span></div>
         <div><span class="box-label">Supervisor:</span> <span class="box-val">Dr. Humera Noor</span></div>
     </div>
     """,
@@ -1605,7 +1605,7 @@ elif menu == "8. Capstone Proposal, References & Roadmap":
             """
             - **Author:** Cristhian David Cáceres Mateus
             - **Study Program:** Master of Science in Data Science
-            - **Institution:** University of Europe for Applied Sciences (UE Germany), Berlin Campus
+            - **Institution:** University of Europe for Applied Sciences (UE Germany), Potsdam Campus
             - **Supervisor:** Dr. Humera Noor
             - **Working Title:** *VeriCBAM: Multimodal Evidence Fusion & Decision Support for CBAM Emissions Consistency Assessment*
             - **Official Application:** Form filled & approved under Commission Delegated Regulation (EU) 2025/2551.
