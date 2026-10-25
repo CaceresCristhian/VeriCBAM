@@ -18,6 +18,7 @@ import streamlit.components.v1 as components
 
 # Add src to python path
 src_dir = Path(__file__).parents[1]
+WORKSPACE_ROOT = Path(__file__).parents[2]
 if str(src_dir) not in sys.path:
     sys.path.insert(0, str(src_dir))
 
@@ -1203,26 +1204,55 @@ elif menu == "5. Copernicus Satellite Engine (Sentinel-5P)":
                     unsafe_allow_html=True,
                 )
 
-            col_img, col_tl = st.columns([1.05, 1.35])
+            col_img, col_seg, col_tl = st.columns([1.0, 1.0, 1.35])
+            img_rel = str(ms_row.get("vhr_image_path", ""))
+            img_abs = WORKSPACE_ROOT / img_rel if img_rel else None
+
             with col_img:
-                st.markdown("#### 🛰️ Factory, Furnace Core & Freight Rail-Yard Optical Chip")
-                img_rel = str(ms_row.get("vhr_image_path", ""))
-                img_abs = WORKSPACE_ROOT / img_rel if img_rel else None
+                st.markdown("#### 🛰️ A. VHR Optical Factory & Rail-Yard")
                 if img_abs and img_abs.exists():
                     st.image(
                         str(img_abs),
                         caption=(
                             f"{target_fac_name} ({lat:.4f}°N, {lon:.4f}°E) | "
-                            f"Planet 3m Scene: {ms_row['planet_best_scene_id']} ({ms_row['planet_best_scene_date']}) | "
-                            f"USGS Landsat-8/9 Scene: {ms_row['landsat_scene_id']}"
+                            f"Planet 3m Scene: {ms_row['planet_best_scene_id']} ({ms_row['planet_best_scene_date']})"
                         ),
                         use_container_width=True,
                     )
                 else:
                     st.info("High-resolution optical chip not cached locally.")
 
+            with col_seg:
+                st.markdown("#### 🚂 B. Freight Rail-Yard & Stockpile Map")
+                if img_abs and img_abs.exists():
+                    from PIL import Image as _PILImage
+
+                    vhr_arr = np.asarray(_PILImage.open(img_abs).convert("RGB"), dtype=np.float32) / 255.0
+                    gray_arr = 0.299 * vhr_arr[:, :, 0] + 0.587 * vhr_arr[:, :, 1] + 0.114 * vhr_arr[:, :, 2]
+                    gx_arr = np.abs(np.diff(gray_arr, axis=1, prepend=gray_arr[:, :1]))
+                    gy_arr = np.abs(np.diff(gray_arr, axis=0, prepend=gray_arr[:1, :]))
+                    edge_mag = np.sqrt(gx_arr**2 + gy_arr**2)
+                    rail_mask = edge_mag > np.percentile(edge_mag, 86)
+                    r_c, g_c, b_c = vhr_arr[:, :, 0], vhr_arr[:, :, 1], vhr_arr[:, :, 2]
+                    ore_mask = (r_c > 0.34) & ((r_c / (b_c + 0.05)) > 1.32)
+                    coal_mask = (gray_arr > 0.07) & (gray_arr < 0.24) & (np.abs(r_c - b_c) < 0.05)
+
+                    seg_overlay = vhr_arr * 0.52
+                    seg_overlay[rail_mask] = [0.0, 0.92, 1.0]
+                    seg_overlay[ore_mask] = [1.0, 0.38, 0.08]
+                    seg_overlay[coal_mask & (~rail_mask)] = [0.98, 0.80, 0.08]
+                    seg_uint8 = (np.clip(seg_overlay, 0.0, 1.0) * 255).astype(np.uint8)
+                    st.image(
+                        seg_uint8,
+                        caption=(
+                            f"Cyan: Freight Rail Sidings & Wagons (Idx={ms_row['vhr_rail_yard_contrast_index']:.3f}) | "
+                            f"Orange/Gold: Ore & Coal Stockpiles (Idx={ms_row['vhr_stockpile_activity_index']:.3f})"
+                        ),
+                        use_container_width=True,
+                    )
+
             with col_tl:
-                st.markdown("#### 🔥 12-Month Kiln/Furnace Operation Timeline (NASA FIRMS VIIRS 375m)")
+                st.markdown("#### 🔥 C. 12-Month Operation Timeline (FIRMS 375m)")
                 if firms_tl_path.exists():
                     tl_df = pd.read_parquet(firms_tl_path)
                     tl_fac = tl_df[tl_df["facility_id"] == fac_id].sort_values("month")
@@ -1264,6 +1294,15 @@ elif menu == "5. Copernicus Satellite Engine (Sentinel-5P)":
                             legend=dict(orientation="h", y=1.12),
                         )
                         st.plotly_chart(fig_tl, use_container_width=True)
+
+            proof_img_path = WORKSPACE_ROOT / "data" / "03_satellite_cache" / "facility_imagery" / "stage2_visual_proof_duisburg.png"
+            if proof_img_path.exists():
+                with st.expander("🔬 View Full 4-Panel Spatial Verification Benchmark Figure (2D USGS Landsat-9 30m Thermal Heatmap + Freight Railcar Segmentation)", expanded=True):
+                    st.image(
+                        str(proof_img_path),
+                        caption="Full 4-Panel Visual Verification on thyssenkrupp Steel Europe AG Werk Beeckerwerth (Duisburg): (A) VHR Optical Yard, (B) Freight Rail Siding & Stockpile Detection, (C) 2D USGS Landsat-9 30m Surface Temperature Heatmap showing the +25.1°C Blast Furnace Core Anomaly next to the Rhine River, and (D) 12-Month NASA FIRMS VIIRS 375m Continuous Operation Timeline.",
+                        use_container_width=True,
+                    )
 
             with st.expander("📊 View Full 30-Facility Stage 2 Multi-Sensor Benchmark Table (USGS M2M + NASA FIRMS + Planet Labs)", expanded=False):
                 display_cols = [
