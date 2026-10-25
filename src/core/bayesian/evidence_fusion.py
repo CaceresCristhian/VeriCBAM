@@ -50,6 +50,9 @@ class EvidenceInput:
     nox_co2_anomaly_zscore: Optional[float] = None    # Internal multi-pollutant consistency (combustion ratio anomaly)
     registry_capacity_ratio: Optional[float] = None   # Declared volume vs known capacity
     route_mismatch_detected: bool = False   # True if declared route contradicts verified technology registry
+    thermal_anomaly_zscore: Optional[float] = None    # Stage 2: USGS Landsat-8/9 30m TIRS + NASA FIRMS VIIRS 375m thermal anomaly
+    thermal_operating_months_ratio: Optional[float] = None  # Stage 2: Fraction of months [0, 1] with active kiln/furnace heat
+    freight_logistics_zscore: Optional[float] = None  # Stage 2: Planet Labs 3m PSScene + VHR rail-yard & stockpile activity z-score
 
 
 @dataclass
@@ -219,6 +222,43 @@ class ProbabilisticEvidenceFusionEngine:
             c_route = 0.95
             note = "Declared production route directly contradicts verified facility technology registry"
             streams.append(EvidenceStream("Technology_Route", lr_route, c_route, weight=2.0, diagnostic_note=note))
+
+        # 7. Stage 2: Thermal Infrared Kiln/Furnace Operating Signature (Landsat-8/9 30m TIRS + NASA FIRMS VIIRS 375m)
+        if ev.thermal_anomaly_zscore is not None:
+            tz_therm = ev.thermal_anomaly_zscore
+            op_ratio = ev.thermal_operating_months_ratio if ev.thermal_operating_months_ratio is not None else 0.75
+            c_therm = float(np.clip(0.65 + 0.30 * op_ratio, 0.50, 0.95))
+            if tz_therm > 2.2:
+                lr_therm = 4.8
+                note = f"Intense localized 30m/375m furnace/kiln thermal anomaly (+{tz_therm:.2f} sigma) confirms high-temperature operation"
+            elif tz_therm > 1.2:
+                lr_therm = 2.4
+                note = f"Active localized thermal heat signature (+{tz_therm:.2f} sigma)"
+            elif tz_therm < -1.0:
+                lr_therm = 0.5
+                note = f"Sub-baseline thermal signature ({tz_therm:.2f} sigma)"
+            else:
+                lr_therm = 1.0
+                note = f"Thermal heat signature within normal operating band ({tz_therm:.2f} sigma)"
+            streams.append(EvidenceStream("Thermal_Infrared_Kiln", lr_therm, c_therm, weight=1.1, diagnostic_note=note))
+
+        # 8. Stage 2: Optical Freight Railcars & Raw-Material Stockpile Activity (Planet Labs 3m PSScene + VHR Yard)
+        if ev.freight_logistics_zscore is not None:
+            fz = ev.freight_logistics_zscore
+            c_freight = 0.85
+            if fz > 2.0:
+                lr_freight = 3.5
+                note = f"High rail-yard rolling-stock & bulk stockpile turnover (+{fz:.2f} sigma)"
+            elif fz > 1.0:
+                lr_freight = 1.9
+                note = f"Active freight rail siding & raw-material stockpile occupancy (+{fz:.2f} sigma)"
+            elif fz < -1.0:
+                lr_freight = 0.55
+                note = f"Low rail-yard & stockpile activity ({fz:.2f} sigma)"
+            else:
+                lr_freight = 1.0
+                note = f"Freight yard & stockpile activity consistent with baseline ({fz:.2f} sigma)"
+            streams.append(EvidenceStream("Optical_Freight_Logistics", lr_freight, c_freight, weight=0.9, diagnostic_note=note))
 
         return streams
 

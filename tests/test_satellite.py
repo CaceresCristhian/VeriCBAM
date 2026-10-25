@@ -79,3 +79,22 @@ def test_plume_analyzer_activity_concordance():
     assert res.valid_clear_sky_overpasses == 3
     assert res.plume_anomaly_zscore == 2.0  # (3.0e-5 - 2.0e-5) / 0.5e-5 = 2.0
     assert res.data_source == DATA_SOURCE_REAL
+
+
+def test_stage2_multisensor_dataset_integrity():
+    """Verify Stage 2 multi-sensor cache (USGS Landsat 30m TIRS, NASA FIRMS VIIRS 375m, Planet 3m, VHR Yard) covers all 30 facilities."""
+    from src.satellite.multisensor_client import MULTISENSOR_PARQUET, FIRMS_TIMELINE_PARQUET
+    import pandas as pd
+
+    assert MULTISENSOR_PARQUET.exists(), "Stage 2 multisensor parquet cache must exist"
+    assert FIRMS_TIMELINE_PARQUET.exists(), "Stage 2 FIRMS monthly timeline cache must exist"
+
+    df = pd.read_parquet(MULTISENSOR_PARQUET)
+    tl = pd.read_parquet(FIRMS_TIMELINE_PARQUET)
+
+    assert len(df) == 30
+    assert (df["landsat_scene_id"] != "NONE").all()
+    assert (df["thermal_delta_t_c"] > 0.0).all()
+    assert (df["planet_clear_passes_2023"] >= 100).all()
+    assert len(tl) == 30 * 12
+

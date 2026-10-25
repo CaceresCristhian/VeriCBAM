@@ -69,3 +69,36 @@ def test_prior_sensitivity_monotonicity():
     )
     sens = engine.evaluate_prior_sensitivity(ev, 750000, 700000, candidate_priors=[0.02, 0.05, 0.08, 0.15])
     assert sens[0.02] < sens[0.05] < sens[0.08] < sens[0.15]
+
+
+def test_stage2_multisensor_thermal_and_freight_fusion():
+    """Stage 2 thermal infrared (Landsat/VIIRS) and freight logistics (Planet/VHR) streams should elevate posterior risk."""
+    engine = ProbabilisticEvidenceFusionEngine(prior_inconsistency_prob=0.08)
+    ev_base = EvidenceInput(
+        stoichiometric_discrepancy_sigma=0.8,
+        stoichiometric_violated=False,
+        satellite_plume_anomaly_zscore=1.0,
+        satellite_cloud_fraction=0.15,
+        temporal_variance_zscore=1.2,
+        years_reported_history=5,
+    )
+    ev_stage2 = EvidenceInput(
+        stoichiometric_discrepancy_sigma=0.8,
+        stoichiometric_violated=False,
+        satellite_plume_anomaly_zscore=1.0,
+        satellite_cloud_fraction=0.15,
+        temporal_variance_zscore=1.2,
+        years_reported_history=5,
+        thermal_anomaly_zscore=2.8,
+        thermal_operating_months_ratio=1.0,
+        freight_logistics_zscore=2.3,
+    )
+    dec_base = engine.fuse_evidence(ev_base, reported_emissions_tco2=720000, physical_min_tco2=680000)
+    dec_stage2 = engine.fuse_evidence(ev_stage2, reported_emissions_tco2=720000, physical_min_tco2=680000)
+
+    assert "Thermal_Infrared_Kiln" in dec_stage2.evidence_likelihood_ratios
+    assert "Optical_Freight_Logistics" in dec_stage2.evidence_likelihood_ratios
+    assert dec_stage2.posterior_inconsistency_risk > dec_base.posterior_inconsistency_risk
+    assert dec_stage2.evidence_likelihood_ratios["Thermal_Infrared_Kiln"] >= 4.0
+    assert dec_stage2.evidence_likelihood_ratios["Optical_Freight_Logistics"] >= 3.0
+
