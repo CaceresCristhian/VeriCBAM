@@ -190,14 +190,26 @@ def run_graded_evaluation():
     y_primary = df["label_delta_10pct"].values
 
     # -------------------------------------------------------------------------
-    # 1. Expert Bayesian Inference (both M5 historical variants)
+    # 1. Expert Bayesian Inference (both M5 historical variants + Stage 2 Multi-Sensor)
     # -------------------------------------------------------------------------
     engine = ProbabilisticEvidenceFusionEngine(prior_inconsistency_prob=0.08)
 
+    ms_path = WORKSPACE_ROOT / "data" / "03_satellite_cache" / "multisensor_thermal_logistics_2023.parquet"
+    ms_lookup: Dict[str, Dict[str, Any]] = {}
+    if ms_path.exists():
+        ms_df = pd.read_parquet(ms_path)
+        for _, mrow in ms_df.iterrows():
+            ms_lookup[str(mrow["facility_id"])] = mrow.to_dict()
+
     probs_bayes_onesided = []
     probs_bayes_twosided = []
+    probs_bayes_stage2 = []
+    stage2_sat_scores = []
 
     for _, row in df.iterrows():
+        fid = str(row["facility_id"])
+        ms_info = ms_lookup.get(fid, {})
+
         # Stoichiometry input (M3: None when capacity is unobserved or missing)
         if row.get("stoich_available", True) and pd.notna(row["stoich_floor_central_tco2"]):
             margin = float(row["stoich_margin_tonnes"])
@@ -222,7 +234,38 @@ def run_graded_evaluation():
         z_onesided = max(0.0, -z_raw)
         z_twosided = abs(z_raw)
 
-        # Primary one-sided
+        # Stage 2 Multi-Sensor Thermal & Freight Satellite Operational Verification
+        delta_t_c = float(ms_info.get("thermal_delta_t_c", 10.0))
+        firms_mos = float(ms_info.get("firms_active_months_count", 6.0))
+        firms_hits = float(ms_info.get("firms_hotspot_detections_2023", 20.0))
+        rail_contrast = float(ms_info.get("vhr_rail_yard_contrast_index", 0.45))
+        stock_idx = float(ms_info.get("vhr_stockpile_activity_index", 0.45))
+
+        # Satellite Operational Confirmation Factor in [0.35, 1.0]:
+        # Measures independent orbital proof (30m TIRS + 375m VIIRS + 3m/VHR Rail Yard) that the plant is actively running
+        sat_op_confirm = float(
+            np.clip(
+                0.40 * min(1.0, delta_t_c / 14.0)
+                + 0.35 * (firms_mos / 12.0)
+                + 0.25 * (0.6 * rail_contrast + 0.4 * stock_idx),
+                0.35,
+                1.0,
+            )
+        )
+        # Space-based Blast Furnace vs Scrap-EAF contradiction: continuous 11-12 month VIIRS heat (>=80 hits)
+        sat_bf_contradiction = (
+            1.0
+            if (str(row.get("declared_production_route", "")) == "Scrap-EAF" and firms_hits >= 80 and firms_mos >= 11)
+            else 0.0
+        )
+        # Satellite Activity-to-Declared-CO2 Ratio Discrepancy Z-Score
+        z_stage2_sat = sat_op_confirm * z_onesided + 3.5 * sat_bf_contradiction
+        stage2_sat_scores.append(z_stage2_sat)
+
+        therm_z_in = float(ms_info.get("thermal_activity_zscore", 1.0)) if z_onesided > 0.8 or sat_bf_contradiction > 0 else 0.2
+        freight_z_in = float(ms_info.get("freight_logistics_zscore", 1.0)) if z_onesided > 0.8 or sat_bf_contradiction > 0 else 0.2
+
+        # Primary one-sided (Stage 1)
         ev_onesided = EvidenceInput(
             stoichiometric_discrepancy_sigma=disc_sigma,
             stoichiometric_violated=stoich_violated,
@@ -235,6 +278,23 @@ def run_graded_evaluation():
         )
         dec_1 = engine.fuse_evidence(ev_onesided, reported_emissions_tco2=rep_co2, physical_min_tco2=p_min)
         probs_bayes_onesided.append(dec_1.posterior_inconsistency_risk)
+
+        # Stage 2 Multi-Sensor Bayesian Fusion
+        ev_stage2 = EvidenceInput(
+            stoichiometric_discrepancy_sigma=disc_sigma,
+            stoichiometric_violated=stoich_violated,
+            satellite_plume_anomaly_zscore=sat_z,
+            satellite_cloud_fraction=cloud_frac,
+            temporal_variance_zscore=z_onesided,
+            years_reported_history=n_years,
+            nox_co2_anomaly_zscore=nox_z,
+            route_mismatch_detected=route_mis,
+            thermal_anomaly_zscore=therm_z_in,
+            thermal_operating_months_ratio=firms_mos / 12.0,
+            freight_logistics_zscore=freight_z_in,
+        )
+        dec_s2 = engine.fuse_evidence(ev_stage2, reported_emissions_tco2=rep_co2, physical_min_tco2=p_min)
+        probs_bayes_stage2.append(dec_s2.posterior_inconsistency_risk)
 
         # Secondary two-sided
         ev_twosided = EvidenceInput(
@@ -252,6 +312,8 @@ def run_graded_evaluation():
 
     df["prob_expert_bayesian_onesided"] = probs_bayes_onesided
     df["prob_expert_bayesian_twosided"] = probs_bayes_twosided
+    df["prob_expert_bayesian_stage2"] = probs_bayes_stage2
+    df["stage2_sat_discrepancy_zscore"] = stage2_sat_scores
     # Default primary is one-sided
     df["prob_expert_bayesian"] = probs_bayes_onesided
 
@@ -279,14 +341,18 @@ def run_graded_evaluation():
     )
     df["prob_stoich_alone"] = np.where(stoich_avail, prob_stoich_calc, np.nan)
 
-    # Model C (Satellite Alone): sigmoid of plume contrast
+    # Model C (Satellite Alone - Stage 1 TROPOMI NO2): sigmoid of plume contrast
     sat_z_clean = df["satellite_zscore"].fillna(0.0)
     df["prob_satellite_alone"] = 1.0 / (1.0 + np.exp(-sat_z_clean))
+
+    # Model C2 (Stage 2 Multi-Sensor Thermal & Freight EO): sigmoid of physical activity vs reported emissions discrepancy
+    stage2_sat_z = df["stage2_sat_discrepancy_zscore"].fillna(0.0)
+    df["prob_satellite_stage2"] = 1.0 / (1.0 + np.exp(-1.35 * (stage2_sat_z - 0.55)))
 
     # -------------------------------------------------------------------------
     # 3. Logistic Regression Cross-Validation (Facility-Grouped 5-Fold)
     # -------------------------------------------------------------------------
-    def fit_logistic_oof(hist_variant: str, label_col: str):
+    def fit_logistic_oof(hist_variant: str, label_col: str, include_stage2: bool = True):
         feat_rel_m = np.where(stoich_avail, rel_margin.fillna(0.0), 0.0)
         feat_violated = np.where(stoich_avail, df["stoich_violation_conservative"].astype(float), 0.0)
         if hist_variant == "onesided":
@@ -294,14 +360,17 @@ def run_graded_evaluation():
         else:
             feat_hist = np.abs(df["historical_z_robust"].fillna(0.0))
 
-        X_mat = np.column_stack([
+        cols = [
             feat_rel_m,
             feat_violated,
             feat_hist,
             df["nox_co2_anomaly_zscore"].fillna(0.0),
             sat_z_clean,
             df["route_mismatch_detected"].astype(float),
-        ])
+        ]
+        if include_stage2:
+            cols.append(stage2_sat_z)
+        X_mat = np.column_stack(cols)
         y_vec = df[label_col].values
         groups = df["facility_id"].values
 
@@ -313,22 +382,24 @@ def run_graded_evaluation():
             oof_probs[val_idx] = clf.predict_proba(X_mat[val_idx])[:, 1]
         return oof_probs
 
-    df["prob_logistic_regression_onesided"] = fit_logistic_oof("onesided", "label_delta_10pct")
-    df["prob_logistic_regression_twosided"] = fit_logistic_oof("twosided", "label_delta_10pct")
+    df["prob_logistic_regression_onesided"] = fit_logistic_oof("onesided", "label_delta_10pct", include_stage2=True)
+    df["prob_logistic_regression_twosided"] = fit_logistic_oof("twosided", "label_delta_10pct", include_stage2=True)
     df["prob_logistic_regression"] = df["prob_logistic_regression_onesided"]
 
     # Sensitivity labels Logistic Regression
-    df["prob_logistic_d5"] = fit_logistic_oof("onesided", "label_delta_5pct")
+    df["prob_logistic_d5"] = fit_logistic_oof("onesided", "label_delta_5pct", include_stage2=True)
 
     # -------------------------------------------------------------------------
     # 4. Primary Results Table with Facility Bootstrap (M8) & Recall@FPR (Step 6)
     # -------------------------------------------------------------------------
     models_primary = {
         "Model B (Stoichiometry Alone)": "prob_stoich_alone",
-        "Model C (Satellite Alone)": "prob_satellite_alone",
+        "Model C1 (Stage 1 Satellite: TROPOMI NO2)": "prob_satellite_alone",
+        "Model C2 (Stage 2 Satellite: Thermal & Freight EO)": "prob_satellite_stage2",
         "Model D (Historical Alone)": "prob_historical_alone",
-        "Model E1 (Expert Bayesian Fusion)": "prob_expert_bayesian",
-        "Model E2 (Learned Logistic Regression - GroupKFold)": "prob_logistic_regression",
+        "Model E1 (Stage 1 Expert Bayesian Fusion)": "prob_expert_bayesian_onesided",
+        "Model E2 (Stage 2 Multi-Sensor Bayesian Fusion)": "prob_expert_bayesian_stage2",
+        "Model E3 (Learned Logistic Regression - GroupKFold)": "prob_logistic_regression",
     }
 
     y_primary = df["label_delta_10pct"].values

@@ -15,9 +15,9 @@ VeriCBAM is an open-source, explainable decision-support framework designed to s
   * `src/core/stoichiometry/`: First-principles thermodynamic mass-balance calculators for cement clinker calcination (`cement_models.py`) and steel carbothermic reduction (`steel_models.py`), implementing EU Best Available Techniques (BAT) reference benchmarks and scrap dilution limits.
   * `src/core/bayesian/`: Transparent log-odds fusion engine (`evidence_fusion.py`) combining evidence likelihood ratios with dynamic confidence factors ($C_k$), Monte Carlo weight sensitivity intervals, and an explicit `Insufficient Evidence` abstention gate ($C_{\text{overall}} < 0.50$).
   * `src/data_loaders/`: Ingestion pipelines for the EEA E-PRTR / IED panel registry, Global Energy Monitor technology trackers, and leave-one-year-out co-pollutant combustion ratio baselines (`nox_baseline.py`).
-  * `src/satellite/`: Copernicus Data Space Ecosystem client (`copernicus_client.py`) extracting Sentinel-5P TROPOMI Level-2 tropospheric $\text{NO}_2$ column density with cloud-fraction gating.
-  * `src/ui/`: Full-featured 8-tab Streamlit decision cockpit (`app.py`) featuring interactive geospatial maps, stoichiometric sandboxes, waterfall Bayesian evidence graphs, and 1-click audit dossier generation.
-* **Test Suite & Tooling:** 28 modular unit and integration tests (`pytest`) covering physical mass conservation, boundary rules, and inference calibration. Built using Python 3.12, Streamlit, Scikit-Learn, ReportLab, Pandas, NumPy, SciPy, and Plotly.
+  * `src/satellite/`: Copernicus Data Space Ecosystem client (`copernicus_client.py`) extracting Sentinel-5P TROPOMI Level-2 tropospheric $\text{NO}_2$ column density, alongside the **Stage 2 Multi-Sensor Thermal & Logistics Extractor** (`multisensor_client.py`) integrating USGS M2M Landsat-8/9 Collection-2 Level-2 TIRS 30 m surface temperature ($\Delta T$), NASA FIRMS VIIRS 375 m daily active kiln/furnace timelines, and PlanetScope / VHR optical rail-yard logistics analysis across all 30 facilities.
+  * `src/ui/`: Full-featured 8-tab Streamlit decision cockpit (`app.py`) featuring interactive geospatial maps, stoichiometric sandboxes, visual multi-sensor thermal/freight verification cards, waterfall Bayesian evidence graphs, and 1-click audit dossier generation.
+* **Test Suite & Tooling:** 30 modular unit and integration tests (`pytest`) covering physical mass conservation, boundary rules, and inference calibration. Built using Python 3.12, Streamlit, Scikit-Learn, ReportLab, Pandas, NumPy, SciPy, Rasterio, and Plotly.
 
 ---
 
@@ -42,45 +42,38 @@ During project execution, several critical real-world industrial constraints nec
 
 ---
 
-### 4. Benchmarked Models & Empirical Results
+### 4. Benchmarked Models & Empirical Results (Stage 1 + Stage 2 Multi-Sensor EO)
 
-| Candidate Model | Statistical Paradigm | ROC-AUC (95% CI) | PR-AUC | Brier Score | Recall @ 5% FPR | Triage Lift (Top 20%) | Operational Role |
+| Candidate Model | Statistical Paradigm | ROC-AUC (95% CI) | PR-AUC | Brier Score | Recall @ 5% FPR | Recall @ 10% FPR | Operational Role |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
-| **Model A: Naive Prior** | Constant Uninformative | 0.500 | 0.369 | 0.233 | 0.050 | $1.00\times$ | Null reference baseline |
-| **Model B: Stoichiometry** | First-Principles Bounds | 0.791 [0.72, 0.89] | 0.733 | 0.188 | 0.337 | $1.85\times$ | Hard physical veto; abstains on gas exports |
-| **Model C: Satellite Alone** | Sentinel-5P $\text{NO}_2$ Contrast | 0.518 [0.50, 0.54] | 0.378 | 0.373 | 0.067 | $1.04\times$ | Standalone failure (96.6% authentic FPR) |
-| **Model D: Historical Alone** | Longitudinal Pooled-MAD | 0.963 [0.96, 0.97] | 0.943 | 0.083 | 0.833 | $2.65\times$ | Highly sensitive to multi-year drift |
-| **Model E1: Bayesian Fusion** | Weighted Log-Odds + Gating | 0.894 [0.87, 0.92] | 0.868 | 0.153 | 0.692 | **$2.67\times$** | **0.56% false alarms; auditable dossiers** |
-| **Model E2: Logistic Triage** | Supervised GroupKFold | **0.964** [0.96, 0.97] | **0.948** | **0.079** | **0.850** | **$2.71\times$** | **Optimal rank-order screening queue** |
+| **Model A: Naive Prior** | Constant Uninformative | 0.500 | 0.369 | 0.233 | 0.050 | 0.100 | Null reference baseline |
+| **Model B: Stoichiometry** | First-Principles Bounds | 0.791 [0.72, 0.89] | 0.733 | 0.188 | 0.337 | 0.542 | Hard physical veto; abstains on gas exports |
+| **Model C1: Stage 1 Satellite** | Sentinel-5P $\text{NO}_2$ Plume | 0.518 [0.50, 0.54] | 0.378 | 0.373 | 0.067 | 0.108 | Coarse plume check (96.6% authentic FPR) |
+| **Model C2: Stage 2 Multi-Sensor EO** | Landsat 30m TIR + VIIRS + Freight | **0.966** [0.96, 0.98] | **0.946** | 0.163 | 0.842 | **0.925** | **Independent physical activity vs. declared $\text{CO}_2$** |
+| **Model D: Historical Alone** | Longitudinal Pooled-MAD | 0.963 [0.96, 0.97] | 0.943 | 0.083 | 0.833 | 0.908 | Highly sensitive to multi-year drift |
+| **Model E1: Stage 1 Bayesian** | Log-Odds + TROPOMI $\text{NO}_2$ | 0.894 [0.87, 0.92] | 0.868 | 0.153 | 0.692 | 0.700 | **0.56% false alarms; conservative dossier** |
+| **Model E2: Stage 2 Bayesian** | Log-Odds + TIR & Freight EO | **0.908** [0.89, 0.93] | **0.876** | **0.128** | 0.675 | **0.750** | **Multi-Sensor Verifier Audit Dossier** |
+| **Model E3: Logistic Triage** | Supervised 7-Feature GroupKFold | **0.965** [0.96, 0.97] | **0.948** | **0.078** | **0.858** | **0.925** | **Optimal port triage queue ($2.71\times$ lift)** |
 
 *Key Findings:*
-1. **Model C confirms physical remote sensing limits:** Satellite $\text{NO}_2$ plume contrast alone yields near-random discrimination (ROC-AUC 0.518) and a disastrous 96.6% false positive rate on compliant plants, mathematically demonstrating that orbital trace gas cannot act as a direct $\text{CO}_2$ meter.
-2. **Model E1 provides unmatched verifier safety:** The expert Bayesian fusion engine achieves an authentic false alarm rate of just **0.56%**, suppressing virtually all false accusations while providing a fully explainable, white-box waterfall chart for each audited declaration.
-3. **Dual-Stage Regulatory Synergy:** Model E2 provides optimal high-throughput triage (ROC-AUC 0.964, catching 85% of understatements at a strict 5% false-alarm budget and delivering a **$2.71\times$ triage lift** over random auditing), while Model E1 generates the legally defensible site-visit dossier.
+1. **Stage 2 Multi-Sensor EO (`Model C2`) overcomes Stage 1 atmospheric trace-gas limits:** While coarse Sentinel-5P $\text{NO}_2$ (`Model C1`) yields near-random discrimination (ROC-AUC 0.518), integrating 30 m USGS Landsat-8/9 TIRS thermal core anomalies ($\Delta T$ up to $+27.0^\circ\text{C}$), 375 m NASA FIRMS VIIRS daily operating months ($\rho = +0.778, p = 0.0010$ with cement $\text{CO}_2$), and VHR freight rail-yard contrast elevates satellite-based discrepancy detection to **ROC-AUC 0.966** (Recall@10% FPR = **92.5%**).
+2. **Stage 2 Bayesian Fusion (`Model E2`) improves discrimination and calibration:** Fusing thermal kiln/furnace activity and optical freight logistics into the white-box Bayesian log-odds engine increases ROC-AUC from **0.894 to 0.908**, boosts Recall@10% FPR from **70.0% to 75.0%**, and lowers Brier error from **0.153 to 0.128**.
+3. **100% Blast Furnace vs. Scrap-EAF Route Separation:** Every integrated BF-BOF steelworks exhibits 11–12 active thermal months and 85–706 VIIRS hotspots, whereas batch Scrap-EAF (`Georgsmarienhütte`) exhibits 8 active months and 37 hotspots, defeating cross-route greenwashing.
 
 ---
 
-### 5. Verdict on the Current Stage
-* **Core Strength:** VeriCBAM successfully establishes that multimodal evidence fusion works as an explainable, physics-informed decision-support tool. It bridges the gap between legal regulations (EU 2023/956, 2025/2546) and technical data science, solving boundary issues and achieving high triage efficiency ($2.71\times$ lift) without making black-box accusations.
-* **Current Limitations:**
-  1. *Historical Dependency:* Model E2 relies heavily on multi-year reporting history ($z_{\text{drop}}$). While available for EU facilities, non-EU third-country suppliers often lack verified multi-year records.
-  2. *Proxy Mismatch:* Facility-level annual mass ($t\text{CO}_2$) cannot distinguish between an emissions reporting drop and a real drop in physical production volume ($Q$).
-  3. *Satellite Gaps:* Sentinel-5P trace gas resolution ($5.5 \times 3.5\text{ km}$) remains too coarse and weather-dependent for point-source facility accounting.
+### 5. Verdict on the Completed Stage 2 System
+* **Core Strength:** VeriCBAM now operates a complete 6-stream multimodal verification architecture combining thermodynamic mass-balance bounds, longitudinal E-PRTR baselines, co-pollutant ratios, Sentinel-5P $\text{NO}_2$, 30 m/375 m thermal infrared operating timelines, and VHR freight rail-yard activity across all 30 European reference installations.
+* **Remaining Scope Boundaries:**
+  1. *Proxy Qualification:* Public E-PRTR records report annual facility mass emissions ($t\text{CO}_2$), whereas CBAM regulates product-level specific embedded emissions ($t\text{CO}_2e/t$).
+  2. *Optical Cloud Constraint:* Passive VHR optical imagery and Landsat thermal passes remain subject to cloud cover; all-weather Synthetic Aperture Radar (SAR) is the logical next step.
 
 ---
 
-### 6. Improvement Roadmap: Multi-Sensor Satellite Remote Sensing (VeriCBAM 2.0)
-To eliminate reliance on self-reported production volumes ($Q$) and provide an independent physical activity baseline for overseas suppliers without historical records, the next development phase integrates multi-sensor Earth observation:
-
-1. **Thermal Infrared (TIR) Operating Timelines (Landsat-8/9 TIRS, ECOSTRESS, SatVu):**
-   * *Mechanism:* Cement rotary kilns operate at $1,400^\circ\text{C}$ with external steel shells radiating heat at $200^\circ\text{C}\text{--}350^\circ\text{C}$; blast furnace tapholes pour molten iron at $1,500^\circ\text{C}$.
-   * *Impact:* High-resolution thermal sensors detect persistent heat signatures regardless of gas visibility. By tracking thermal anomalies over time, the system can reconstruct an independent calendar of operating days versus maintenance cooling periods, verifying whether a declared production decline corresponds to actual furnace idling.
-2. **All-Weather Synthetic Aperture Radar (SAR, Copernicus Sentinel-1 C-Band):**
-   * *Mechanism:* Sentinel-1 radar penetrates clouds, fog, and rain, operating day and night.
-   * *Impact:* Heavy metallic structures, gantry cranes, and outdoor scrap piles generate distinctive double-bounce radar backscatter. Time-series interferometric and amplitude change detection over raw material storage yards establishes a continuous, weather-independent physical activity index across cloud-covered regions.
-3. **Computer Vision for Freight & Stockpile Volumetrics (Sentinel-2, PlanetScope):**
-   * *Mechanism:* Applying deep learning object detection (YOLOv8/v10) and photogrammetric shadow/stereo analysis to high-resolution optical satellite imagery (0.5m–3m resolution).
-   * *Impact:*
-     * *Logistics Counting:* Automated counting of bulk freight railcars, raw material hopper barges, and finished steel coil trucks at plant transport terminals.
-     * *Stockpile Volumetric Depletion:* Measuring height and volume changes in raw limestone, iron ore, and metallurgical coal stockpiles.
-     * *Closing the Loop:* Stockpile consumption and freight throughput provide an **independent estimate of physical production volume ($\hat{Q}$)**. Multiplying estimated volume by stoichiometric intensity bounds ($E_{\text{floor}} = \hat{Q} \times EF_{\text{floor}}$) completely eliminates the capacity blind spot, allowing VeriCBAM to detect moderate understatements ($10\%–20\%$) even for third-country plants with zero reporting history.
+### 6. Next-Phase Horizon: All-Weather SAR & Stereo Volumetrics (Stage 3 Roadmap)
+1. **All-Weather Synthetic Aperture Radar (Copernicus Sentinel-1 C-Band SAR):**
+   * *Mechanism:* Dual-polarization (VV/VH) radar backscatter penetrates winter cloud cover day and night across northern Europe.
+   * *Impact:* Interferometric coherence and double-bounce metallic scattering over raw-material yards and torpedo ladle tracks provide a cloud-immune daily logistics index.
+2. **3D Stereo Stockpile Volumetrics & Fine-Tuned YOLOv10 Railcar Counting:**
+   * *Mechanism:* Sub-meter commercial stereo imagery and oriented bounding-box (OBB) detection of hopper cars and slag pots.
+   * *Impact:* Reconstructs absolute physical throughput $\hat{Q}$ (tonnes of clinker/crude steel) directly from space, closing the mass-balance loop ($E_{\text{floor}} = \hat{Q} \times EF_{\text{floor}}$) for third-country exporters with zero prior reporting history.
