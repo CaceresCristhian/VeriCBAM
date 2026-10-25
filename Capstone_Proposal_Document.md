@@ -4,11 +4,9 @@
 **Student Name:** Cristhian David Cáceres Mateus  
 **Student ID / Matriculation No:** 93515346  
 **Degree Program:** Master of Science in Data Science (M.Sc. DSc)  
-**Academic Institution:** University of Europe for Applied Sciences (UE Germany), Berlin Campus  
+**Academic Institution:** University of Europe for Applied Sciences (UE Germany), Potsdam Campus  
 **Faculty Supervisor:** Dr. Humera Noor  
 **Submission Date:** October 2026 (Semester Winter 2026/2027)  
-**Official Code Repository:** [https://github.com/CaceresCristhian/VeriCBAM](https://github.com/CaceresCristhian/VeriCBAM)  
-**Associated Registration Form:** [`admin/VeriCBAM_Capstone_Application_Form_Filled_v2.pdf`](file:///admin/VeriCBAM_Capstone_Application_Form_Filled_v2.pdf)  
 
 ---
 
@@ -56,29 +54,29 @@ Rather than claiming to replace accredited legal certification bodies or directl
 
 ---
 
-## 2. Research Questions & Hypotheses
+## 2. Project Objectives & Technical Hypotheses
 
-### 2.1 Central Research Question
-> **To what extent can heterogeneous physical, observational, historical, and multi-pollutant evidence be fused into an explainable decision-support model that identifies controlled CBAM emissions inconsistencies more reliably than isolated single-modality sources?**
+### 2.1 Core Problem Statement & Overarching Objective
+> **Can heterogeneous physical, observational, historical, and multi-pollutant evidence be systematically fused into an explainable decision-support model that identifies controlled CBAM emissions inconsistencies more reliably than isolated single-modality sources?**
 
-### 2.2 Formal Research Sub-Questions & Hypotheses
-* **RQ1 (Physical Plausibility & Stoichiometric Floors):**  
-  *Question:* How accurately can first-principles chemical engineering mass balances (limestone calcination and iron reduction) establish conservative lower bounds on declared emissions without relying on historical facility data?  
+### 2.2 Technical Inquiries & Working Hypotheses
+* **Objective 1 (Physical Plausibility & Stoichiometric Floors):**  
+  *Technical Inquiry:* How accurately can first-principles chemical engineering mass balances (limestone calcination and iron reduction) establish conservative lower bounds on declared emissions without relying on historical facility data?  
   *Hypothesis $H_1$:* Stoichiometric mass-balance floors will deterministically detect gross understatements ($\ge 30\%$) and route misclassifications with high precision and low false alarms on applicable facilities, but will remain blind to moderate understatements ($10\%–20\%$) that remain above the physical floor.
-* **RQ2 (Earth Observation Activity & Atmospheric Limits):**  
-  *Question:* Can Copernicus Sentinel-5P TROPOMI tropospheric $\text{NO}_2$ column density serve as a quantitative operational activity proxy for heavy industry, and what are its physical limitations?  
+* **Objective 2 (Earth Observation Activity & Atmospheric Limits):**  
+  *Technical Inquiry:* Can Copernicus Sentinel-5P TROPOMI tropospheric $\text{NO}_2$ column density serve as a quantitative operational activity proxy for heavy industry, and what are its physical limitations?  
   *Hypothesis $H_2$:* Due to coarse spatial footprint ($5.5 \times 3.5\text{ km}$), regional background advection, wind dispersion, and persistent cloud obscuration, satellite trace-gas observations alone cannot reliably quantify annual plant-level $\text{CO}_2$ emissions (yielding low discriminative power when uncoupled from ground activity), but provide valuable qualitative operational gating when clear-sky conditions exist.
-* **RQ3 (Historical Behavior & Multi-Pollutant Fingerprinting):**  
-  *Question:* Can facility-specific multivariate historical profiles and co-pollutant combustion ratios ($\text{NO}_x/\text{CO}_2$) detect selective $\text{CO}_2$ under-reporting in newly declared reporting periods?  
+* **Objective 3 (Historical Behavior & Multi-Pollutant Fingerprinting):**  
+  *Technical Inquiry:* Can facility-specific multivariate historical profiles and co-pollutant combustion ratios ($\text{NO}_x/\text{CO}_2$) detect selective $\text{CO}_2$ under-reporting in newly declared reporting periods?  
   *Hypothesis $H_3$:* High-temperature combustion couples $\text{NO}_x$ and $\text{CO}_2$ formation; under controlled conditions where declared $\text{CO}_2$ is selectively understated while permit-regulated $\text{NO}_x$ remains unperturbed, this will induce a statistically detectable divergence in the leave-one-year-out co-pollutant ratio, independent of remote sensing.
-* **RQ4 (Multimodal Evidence Fusion vs. Single Modalities):**  
-  *Question:* Does fusing physical, observational, historical, and co-pollutant evidence streams yield superior discrimination, probability calibration, and false-positive control compared to isolated modalities?  
+* **Objective 4 (Multimodal Evidence Fusion vs. Single Modalities):**  
+  *Technical Inquiry:* Does fusing physical, observational, historical, and co-pollutant evidence streams yield superior discrimination, probability calibration, and false-positive control compared to isolated modalities?  
   *Hypothesis $H_4$:* While historical trajectory alone is hypothesized to achieve strong statistical anomaly discrimination, combining it with stoichiometric boundaries and confidence gating in a weighted Bayesian framework (Model E1) will provide an ultra-low false-positive rate on authentic compliant plants ($\le 1\%$) and full legal explainability, while supervised logistic fusion (Model E2) will optimize overall probability calibration.
-* **RQ5 (Uncertainty Quantification & Missing Data Handling):**  
-  *Question:* How can an evidence-fusion engine systematically represent observational uncertainty (e.g., cloud cover, unobserved capacity, missing historical years) without generating overconfident false alarms?  
+* **Objective 5 (Uncertainty Quantification & Missing Data Handling):**  
+  *Technical Inquiry:* How can an evidence-fusion engine systematically represent observational uncertainty (e.g., cloud cover, unobserved capacity, missing historical years) without generating overconfident false alarms?  
   *Hypothesis $H_5$:* A formal evidence confidence factor $C_i \in [0, 1]$ combined with an explicit `Insufficient Evidence` abstention gate ($C_{\text{overall}} < 0.50$) will provide an architectural safeguard against premature adverse audit findings, allowing the system to abstain rather than generating speculative accusations when observational confidence is low.
-* **RQ6 (Explainability & Dual-Stage Regulatory Triage):**  
-  *Question:* Can an automated system generate auditable, evidence-grounded dossiers that satisfy the strategic and risk analysis requirements of Commission Implementing Regulation (EU) 2025/2546?  
+* **Objective 6 (Explainability & Dual-Stage Regulatory Triage):**  
+  *Technical Inquiry:* Can an automated system generate auditable, evidence-grounded dossiers that satisfy the strategic and risk analysis requirements of Commission Implementing Regulation (EU) 2025/2546?  
   *Hypothesis $H_6$:* A dual-stage architecture—deploying supervised classification (Model E2) for high-throughput customs port triage and white-box Bayesian log-odds reasoning (Model E1) for accredited verifier audit dossiers—will support the strategic and risk analysis principles of Commission Implementing Regulation (EU) 2025/2546 while maintaining auditable evidential trails.
 
 ---
@@ -111,8 +109,8 @@ flowchart TD
         C5 --> D2
     end
     
-    D1 --> E1["Stage 2: Verifier Audit Dossier\n(100% White-Box Evidence Graph, Near-Zero FPR)"]
-    D2 --> E2["Stage 1: Customs Port Triage\n(Priority Rank-Order, 2.71x Lift at Top 20%)"]
+    D1 --> E1["Stage 2: Verifier Audit Dossier\n(White-Box Evidence Graph & Traceable Reasoning)"]
+    D2 --> E2["Stage 1: Customs Port Triage\n(Priority Risk Rank-Order & Inspection Queue)"]
     
     subgraph User_Touchpoints["Decision Cockpit & Operational Interfaces"]
         E1 --> F1["Accredited Verifiers / Lead Auditors\n(ISO 14064-3 / Reg. 2025/2546 Site Visit Dossier)"]
@@ -223,7 +221,7 @@ To rigorously evaluate model performance in the absence of public non-EU fraud d
 ## 5. Proposed Experimental Evaluation Design & Validation Plan
 
 ### 5.1 Comparative Architecture Matrix (Candidate Models)
-To evaluate the research hypotheses, the project proposes benchmarking six distinct statistical and physical paradigms:
+To validate the technical hypotheses and project objectives, the project proposes benchmarking six distinct statistical and physical paradigms:
 
 | Candidate Model | Statistical Paradigm | Input Data Streams | Planned Evaluation Role | Expected Performance Profile |
 | :--- | :--- | :--- | :--- | :--- |
@@ -297,8 +295,8 @@ gantt
 | **Biomass Emission Reporting Missingness** | Medium | High | Inability to separate biogenic fuel CO₂. | Documented that 81.4% (144/177) of EEA records lack excluding-biomass CO₂; standardized on total direct $\text{CO}_2$ as verified regulatory proxy. |
 | **Data Leakage in Supervised Models** | Critical | Low | Artificially inflated benchmark metrics. | Implemented 5-fold `GroupKFold` cross-validation grouped strictly by `facility_id`, completely isolating facilities between folds. |
 
-### 6.2 Future Research Roadmap: Multi-Sensor Operational Activity Proxying (VeriCBAM 2.0)
-While the baseline proposal designs an initial Sentinel-5P tropospheric $\text{NO}_2$ operational presence check, extending the framework to multi-sensor remote sensing provides a compelling long-term roadmap to independently reconstruct factory activity:
+### 6.2 Technical Extension Roadmap: Multi-Sensor Operational Activity Proxying (VeriCBAM 2.0)
+While the baseline proposal designs an initial Sentinel-5P tropospheric $\text{NO}_2$ operational presence check, extending the framework to multi-sensor remote sensing provides a compelling technical roadmap to independently reconstruct factory activity:
 1. **Thermal Infrared (TIR) Operating Timelines:**  
    Industrial rotary cement kilns operate at internal temperatures exceeding $1,400^\circ\text{C}$, radiating external shell heat at $200^\circ\text{C}\text{--}350^\circ\text{C}$, while primary steel tapholes pour molten iron at $1,500^\circ\text{C}$. Leveraging satellite thermal infrared sensors (such as Landsat-8/9 TIRS or high-resolution commercial thermal platforms) enables detecting continuous thermal anomalies, reconstructing an indisputable operational timeline of kiln firing versus maintenance shutdowns.
 2. **All-Weather Synthetic Aperture Radar (SAR):**  
@@ -333,14 +331,14 @@ While the baseline proposal designs an initial Sentinel-5P tropospheric $\text{N
 *(Required under Milestone 2 — October 26, 2026)*
 
 ### Conceptual Project Announcement (Idea-Only, Zero Numerical Data)
-*A purely conceptual statement presenting the research project, the regulatory dilemma, and the evidence-fusion architecture without empirical numbers, statistics, or prematurely claimed results.*
+*A purely conceptual statement presenting the project initiative, the regulatory dilemma, and the evidence-fusion architecture without empirical numbers, statistics, or prematurely claimed results.*
 
 ```markdown
 With the European Union's Carbon Border Adjustment Mechanism (CBAM) entering definitive financial enforcement, European importers of carbon-intensive commodities like steel and cement face legal responsibility for the emissions embedded in their global supply chains.
 
 The compliance challenge is immediate: verifying supplier carbon declarations requires physical on-site audits, yet accredited verifiers are scarce worldwide and international site visits are logistically constrained. Meanwhile, self-reported carbon spreadsheets cannot always be taken at face value.
 
-For my Master’s Capstone in Data Science at the University of Europe for Applied Sciences (Berlin), supervised by Dr. Humera Noor, I am working on Project VeriCBAM: an explainable decision-support framework designed to screen industrial emissions reports against independent evidence before physical audits are scheduled.
+For my Master’s Capstone in Data Science at the University of Europe for Applied Sciences (Potsdam), supervised by Dr. Humera Noor, I am working on Project VeriCBAM: an explainable decision-support framework designed to screen industrial emissions reports against independent evidence before physical audits are scheduled.
 
 Instead of treating emissions estimation as a black-box machine learning problem, the framework approaches verification as an evidence-fusion challenge:
 • Grounding declarations in first-principles chemical engineering (establishing mass-balance lower bounds for iron reduction and limestone calcination).

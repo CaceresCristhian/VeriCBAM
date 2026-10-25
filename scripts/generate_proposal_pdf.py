@@ -24,7 +24,7 @@ WORKSPACE = Path(r"c:\Users\crist\Projects\UEprojects\Capstone")
 MD_PATH = WORKSPACE / "Capstone_Proposal_Document.md"
 PDF_PATH = WORKSPACE / "Capstone_Proposal_Document.pdf"
 
-# Register TrueType Arial fonts for full Unicode support (accents, euro, math symbols, em-dashes)
+# Register TrueType Arial fonts for full Unicode support (accents, euro, math symbols, Greek letters)
 FONTS_DIR = Path(os.environ.get("WINDIR", r"C:\Windows")) / "Fonts"
 pdfmetrics.registerFont(TTFont("Arial", str(FONTS_DIR / "arial.ttf")))
 pdfmetrics.registerFont(TTFont("Arial-Bold", str(FONTS_DIR / "arialbd.ttf")))
@@ -72,45 +72,183 @@ class NumberedCanvas(canvas.Canvas):
         self.restoreState()
 
 
+def parse_braced_arg(s: str, start_idx: int):
+    """Parses a balanced {arg} substring from start_idx."""
+    if start_idx >= len(s) or s[start_idx] != '{':
+        return None, start_idx
+    depth = 0
+    for i in range(start_idx, len(s)):
+        if s[i] == '{':
+            depth += 1
+        elif s[i] == '}':
+            depth -= 1
+            if depth == 0:
+                return s[start_idx + 1:i], i + 1
+    return None, start_idx
+
+
+def replace_fractions(text: str) -> str:
+    """Recursively parses and converts LaTeX \\frac{num}{den} to clean (num / den)."""
+    while r"\frac" in text:
+        idx = text.find(r"\frac")
+        num, next_idx = parse_braced_arg(text, idx + 5)
+        if num is None:
+            break
+        den, end_idx = parse_braced_arg(text, next_idx)
+        if den is None:
+            break
+        num_clean = replace_fractions(num.strip())
+        den_clean = replace_fractions(den.strip())
+        if any(op in num_clean for op in ["+", "-", "×", "·", " "]):
+            num_expr = f"({num_clean})"
+        else:
+            num_expr = num_clean
+        if any(op in den_clean for op in ["+", "-", "×", "·", " "]):
+            den_expr = f"({den_clean})"
+        else:
+            den_expr = den_clean
+        text = text[:idx] + f"({num_expr} / {den_expr})" + text[end_idx:]
+    return text
+
+
+def convert_latex_math(s: str, is_display: bool = False) -> str:
+    """Converts a LaTeX math expression to clean typographical text with Unicode symbols and ReportLab tags."""
+    text = s.strip()
+    if is_display:
+        if text.startswith("$$"):
+            text = text[2:].strip()
+        if text.endswith("$$"):
+            text = text[:-2].strip()
+        elif text.endswith(".$$"):
+            text = text[:-3].strip() + "."
+        elif text.endswith(",$$"):
+            text = text[:-3].strip() + ","
+    else:
+        if text.startswith("$") and text.endswith("$"):
+            text = text[1:-1].strip()
+
+    # Temperature and degree symbols
+    text = re.sub(r"(\d+(?:,\d+)?)\s*\^\\circ\\text\{C\}", r"\1°C", text)
+    text = re.sub(r"(\d+(?:,\d+)?)\s*\^\\circ C", r"\1°C", text)
+    text = re.sub(r"\^\\circ\\text\{C\}", "°C", text)
+    text = re.sub(r"\^\\circ", "°", text)
+
+    # Reaction arrows with delta H
+    text = re.sub(r"\\xrightarrow\{\\Delta H\s*=\s*\+?178\\text\{ kJ/mol\}\}", " —[ ΔH = +178 kJ/mol ]→ ", text)
+    text = re.sub(r"\\xrightarrow\{([^}]+)\}", r" —[ \1 ]→ ", text)
+
+    # Fractions
+    text = replace_fractions(text)
+
+    # Summations
+    text = re.sub(r"\\sum_\{k=1\}\^\{6\}", "Σ<sub>(k=1..6)</sub>", text)
+    text = re.sub(r"\\sum_\{([^}]+)\}\^\{([^}]+)\}", r"Σ<sub>(\1..\2)</sub>", text)
+    text = text.replace(r"\sum", "Σ")
+
+    # Common chemical formulas using <sub> tags
+    text = text.replace(r"\text{CaCO}_3", "CaCO<sub>3</sub>").replace(r"CaCO_3", "CaCO<sub>3</sub>").replace("CaCO₃", "CaCO<sub>3</sub>")
+    text = text.replace(r"\text{CaO}", "CaO")
+    text = text.replace(r"\text{CO}_2", "CO<sub>2</sub>").replace(r"CO_2", "CO<sub>2</sub>").replace("CO₂", "CO<sub>2</sub>").replace(r"\text{CO}", "CO")
+    text = text.replace(r"\text{NO}_x", "NO<sub>x</sub>").replace(r"NO_x", "NO<sub>x</sub>").replace("NOx", "NO<sub>x</sub>")
+    text = text.replace(r"\text{NO}_2", "NO<sub>2</sub>").replace(r"NO_2", "NO<sub>2</sub>").replace("NO₂", "NO<sub>2</sub>")
+    text = text.replace(r"\text{SO}_x", "SO<sub>x</sub>").replace(r"SO_x", "SO<sub>x</sub>").replace("SOx", "SO<sub>x</sub>")
+    text = text.replace(r"\text{SO}_2", "SO<sub>2</sub>").replace(r"SO_2", "SO<sub>2</sub>").replace("SO₂", "SO<sub>2</sub>")
+    text = text.replace(r"\text{Fe}_2\text{O}_3", "Fe<sub>2</sub>O<sub>3</sub>").replace(r"Fe_2O_3", "Fe<sub>2</sub>O<sub>3</sub>").replace("Fe₂O₃", "Fe<sub>2</sub>O<sub>3</sub>")
+    text = text.replace(r"\text{Fe}", "Fe")
+    text = text.replace(r"t\text{CO}_2e", "t CO<sub>2</sub>e").replace(r"tCO_2e", "t CO<sub>2</sub>e").replace("t CO₂e", "t CO<sub>2</sub>e")
+
+    # Units
+    text = text.replace(r"\text{ kJ/mol}", " kJ/mol").replace(r"\text{kJ/mol}", " kJ/mol")
+    text = text.replace(r"\text{ g/mol}", " g/mol").replace(r"\text{g/mol}", " g/mol")
+    text = text.replace(r"\text{ t CO}_2/\text{t CaO}", " t CO<sub>2</sub>/t CaO")
+    text = text.replace(r"\text{ t CO}_2/\text{t clinker}", " t CO<sub>2</sub>/t clinker")
+    text = text.replace(r"\text{ t CO}_2/\text{t crude steel}", " t CO<sub>2</sub>/t crude steel")
+    text = text.replace(r"\text{ t CO}_2/\text{t hot metal}", " t CO<sub>2</sub>/t hot metal")
+    text = text.replace(r"\text{ t CO}_2/\text{t}", " t CO<sub>2</sub>/t").replace(r"t CO_2/t", "t CO<sub>2</sub>/t")
+    text = text.replace(r"\text{ t/t}", " t/t")
+    text = text.replace(r"\text{ GJ/t clinker}", " GJ/t clinker").replace(r"\text{GJ/t clinker}", " GJ/t clinker")
+    text = text.replace(r"\text{ kg coke/t}", " kg coke/t").replace(r"\text{kg coke/t}", " kg coke/t")
+    text = text.replace(r"\text{ km}", " km").replace(r"\text{km}", " km")
+    text = text.replace(r"\text{mol/m}^2", "mol/m<sup>2</sup>").replace("mol/m²", "mol/m<sup>2</sup>")
+
+    # Greek letters (supported in Windows Arial)
+    text = text.replace(r"\gamma", "γ").replace(r"\Gamma", "Γ")
+    text = text.replace(r"\delta", "δ").replace(r"\Delta", "Δ")
+    text = text.replace(r"\sigma", "σ").replace(r"\Sigma", "Σ")
+    text = text.replace(r"\tau", "τ")
+    text = text.replace(r"\eta", "η")
+    text = text.replace(r"\mu", "μ")
+    text = text.replace(r"\rho", "ρ")
+
+    # Math operators and functions
+    text = text.replace(r"\operatorname{logit}", "logit")
+    text = text.replace(r"\operatorname{LR}", "LR")
+    text = text.replace(r"\hat{p}", "p̂")
+    text = text.replace(r"\ln", "ln")
+    text = text.replace(r"\max", "max")
+    text = text.replace(r"\min", "min")
+    text = text.replace(r"\left(", "(").replace(r"\right)", ")")
+    text = text.replace(r"\left[", "[").replace(r"\right]", "]")
+    text = text.replace(r"\left", "").replace(r"\right", "")
+    text = text.replace(r"\mid", "|")
+    text = text.replace(r"\approx", "≈")
+    text = text.replace(r"\le", "≤").replace(r"\ge", "≥")
+    text = text.replace(r"\in", " in ")  # Arial does not have U+2208 (element of)
+    text = text.replace(r"\times", "×")
+    text = text.replace(r"\cdot", "·")
+    text = text.replace(r"\neq", "≠")
+    text = text.replace(r"\longrightarrow", " → ")
+    text = text.replace(r"\rightarrow", " → ")
+    text = text.replace(r"\uparrow", " (gas)").replace(r"\downarrow", " (precipitate)")
+    text = text.replace(r"\quad", " &nbsp; &nbsp; ").replace(r"\qquad", " &nbsp; &nbsp; &nbsp; &nbsp; ")
+    text = text.replace(r"\%", "%")
+    text = text.replace(r"\{", "{").replace(r"\}", "}")
+    text = text.replace(r"\bar{V}_\text{bg}", "V<sub>bg</sub>").replace(r"\bar{V}_\text{target}", "V<sub>target</sub>")
+    text = text.replace(r"\bar{V}_{\text{bg}}", "V<sub>bg</sub>").replace(r"\bar{V}_{\text{target}}", "V<sub>target</sub>")
+    text = text.replace(r"\bar{V}", "V")
+
+    # Clean any remaining \text{...}
+    text = re.sub(r"\\text\{([^}]+)\}", r"\1", text)
+
+    # Convert subscripts _sub or _{sub} to <sub>sub</sub>
+    text = re.sub(r"_\{([^}]+)\}", r"<sub>\1</sub>", text)
+
+    text = text.replace(r"\operatorname", "")
+    text = text.replace(r"--", "–")
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
+
+
 def clean_markdown_inline(text: str) -> str:
     """Convert common inline markdown to HTML tags compatible with ReportLab with Arial."""
-    # First, protect links: [label](url) -> label
+    # 1. Protect links: [label](url) -> label
     text = re.sub(r"\[(.*?)\]\((.*?)\)", r'<font color="#2B6CB0"><u>\1</u></font>', text)
 
-    # Protect inline code: `code` -> monospace font, escaping internal characters
+    # 2. Protect inline code: `code` -> monospace font, escaping internal characters
     def replace_code(m):
         code_val = m.group(1).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
         return f'<font face="Courier" color="#1A365D">{code_val}</font>'
     text = re.sub(r"`(.*?)`", replace_code, text)
 
-    # Common chemical and technical math approximations
-    text = text.replace(r"\text{CO}_2", "CO₂").replace(r"\text{NO}_x", "NOx").replace(r"\text{SO}_x", "SOx")
-    text = text.replace(r"\text{CaO}", "CaO").replace(r"\text{CaCO}_3", "CaCO₃")
-    text = text.replace(r"\text{Fe}_2\text{O}_3", "Fe₂O₃").replace(r"\text{Fe}", "Fe")
-    text = text.replace(r"\text{CO}", "CO").replace(r"\text{t CO}_2/\text{t}", "t CO₂/t")
-    text = text.replace(r"\text{ROC-AUC}", "ROC-AUC").replace(r"\text{PR-AUC}", "PR-AUC")
-    text = text.replace(r"\text{ECE}", "ECE").replace(r"\text{FPR}", "FPR")
-    text = text.replace(r"\sigma_{\text{pooled}}", "σ_pooled")
-    text = text.replace(r"\rightarrow", " → ").replace(r"\approx", " ≈ ").replace(r"\le", " ≤ ").replace(r"\ge", " ≥ ")
-    text = text.replace(r"\in", " ∈ ").replace(r"\times", " × ")
+    # 3. Inline math: $math$ -> clean typography with convert_latex_math
+    def replace_inline_math(m):
+        raw_math = m.group(1)
+        conv = convert_latex_math(raw_math, is_display=False)
+        return f'<i>{conv}</i>'
+    text = re.sub(r"\$([^\$\n]+)\$", replace_inline_math, text)
 
-    # Math inline: replace $math$ with clean text
-    def replace_math(m):
-        math_content = m.group(1).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-        math_content = math_content.replace(r"\delta", "δ").replace(r"\sigma", "σ").replace(r"\tau", "τ").replace(r"\eta", "η")
-        math_content = math_content.replace(r"\mu", "μ").replace(r"\rho", "ρ")
-        math_content = math_content.replace(r"\text{--}", "–").replace(r"\text{", "").replace(r"}", "")
-        return f'<i>{math_content}</i>'
-    text = re.sub(r"\$([^\$]+)\$", replace_math, text)
-
-    # Bold italic: ***text***
+    # 4. Bold italic: ***text***
     text = re.sub(r"\*\*\*(.*?)\*\*\*", r"<b><i>\1</i></b>", text)
-    # Bold: **text**
+    # 5. Bold: **text**
     text = re.sub(r"\*\*(.*?)\*\*", r"<b>\1</b>", text)
-    # Italic: *text* (avoid touching isolated underscores in filenames)
+    # 6. Italic: *text* (avoid touching isolated underscores in filenames)
     text = re.sub(r"(?<!\w)\*([^\*]+)\*(?!\w)", r"<i>\1</i>", text)
-    # Underscore italics only when flanked by spaces or punctuation: e.g. " _italic_ "
+    # 7. Underscore italics only when flanked by spaces or punctuation: e.g. " _italic_ "
     text = re.sub(r"(?<=\s)_([^_]+)_(?=\s|[.,;:!?)])", r"<i>\1</i>", text)
+
+    # Clean standard chemical abbreviations in regular prose
+    text = text.replace("CO2", "CO<sub>2</sub>").replace("NOx", "NO<sub>x</sub>").replace("SOx", "SO<sub>x</sub>")
+    text = text.replace("CaCO3", "CaCO<sub>3</sub>").replace("Fe2O3", "Fe<sub>2</sub>O<sub>3</sub>")
 
     return text
 
@@ -219,13 +357,13 @@ def build_pdf():
     formula_style = ParagraphStyle(
         "Formula_Custom",
         parent=styles["Normal"],
-        fontName="Courier-Bold",
-        fontSize=8.5,
-        leading=12,
+        fontName="Arial-Bold",
+        fontSize=9,
+        leading=13,
         textColor=colors.HexColor("#1A365D"),
         alignment=TA_CENTER,
-        spaceBefore=2,
-        spaceAfter=2,
+        spaceBefore=3,
+        spaceAfter=3,
     )
 
     callout_style = ParagraphStyle(
@@ -269,16 +407,14 @@ def build_pdf():
     story.append(Paragraph("Multimodal Evidence Fusion & Decision Support for CBAM Emissions Consistency Assessment", subtitle_style))
     story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor("#2B6CB0"), spaceAfter=7))
 
-    # Metadata Card
+    # Metadata Card (3 Clean Rows, Potsdam Campus, No Scope/Repo row)
     meta_table_data = [
         [Paragraph("Student Name:", meta_key_style), Paragraph("Cristhian David Cáceres Mateus", meta_val_style),
          Paragraph("Matriculation No:", meta_key_style), Paragraph("93515346", meta_val_style)],
         [Paragraph("Degree Program:", meta_key_style), Paragraph("Master of Science in Data Science (M.Sc. DSc)", meta_val_style),
-         Paragraph("Institution:", meta_key_style), Paragraph("University of Europe for Applied Sciences (Berlin)", meta_val_style)],
+         Paragraph("Institution:", meta_key_style), Paragraph("University of Europe for Applied Sciences (Potsdam)", meta_val_style)],
         [Paragraph("Faculty Supervisor:", meta_key_style), Paragraph("Dr. Humera Noor", meta_val_style),
          Paragraph("Submission Date:", meta_key_style), Paragraph("October 2026 (Semester Winter 2026/2027)", meta_val_style)],
-        [Paragraph("Official Repository:", meta_key_style), Paragraph("https://github.com/CaceresCristhian/VeriCBAM", meta_val_style),
-         Paragraph("Proposal Scope:", meta_key_style), Paragraph("Official Detailed Specification Annex", meta_val_style)],
     ]
 
     meta_table = Table(meta_table_data, colWidths=[28 * mm, 57 * mm, 30 * mm, 55 * mm])
@@ -286,16 +422,22 @@ def build_pdf():
         ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#F7FAFC")),
         ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor("#CBD5E0")),
         ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#EDF2F7")),
-        ('TOPPADDING', (0, 0), (-1, -1), 3),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
-        ('LEFTPADDING', (0, 0), (-1, -1), 5),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 5),
+        ('TOPPADDING', (0, 0), (-1, -1), 3.5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 3.5),
+        ('LEFTPADDING', (0, 0), (-1, -1), 6),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 6),
     ]))
     story.append(meta_table)
     story.append(Spacer(1, 6))
 
     # Parse body
     i = 0
+    # Advance past frontmatter header until after the first horizontal rule
+    for idx, l in enumerate(lines[:25]):
+        if l.strip() in ["---", "***", "___"]:
+            i = idx + 1
+            break
+
     in_code_block = False
     code_lines = []
     code_lang = ""
@@ -312,11 +454,8 @@ def build_pdf():
         col_count = len(parsed_rows[0])
         avail_width = 170 * mm
         col_w = [avail_width / col_count] * col_count
-        # Custom widths for benchmark table if 11 cols
-        if col_count == 11:
-            col_w = [25*mm, 20*mm, 18*mm, 18*mm, 12*mm, 12*mm, 12*mm, 14*mm, 14*mm, 11*mm, 14*mm]
-        elif col_count == 5:
-            col_w = [28*mm, 35*mm, 35*mm, 32*mm, 40*mm]
+        if col_count == 5:
+            col_w = [28 * mm, 35 * mm, 35 * mm, 32 * mm, 40 * mm]
         t = Table(parsed_rows, colWidths=col_w, repeatRows=1)
         t.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#2B6CB0")),
@@ -344,9 +483,7 @@ def build_pdf():
         # Code block handling
         if stripped.startswith("```"):
             if in_code_block:
-                # End of code block
                 in_code_block = False
-                # If it was a mermaid diagram, render an architectural callout box
                 if code_lang == "mermaid" or any("flowchart" in l or "gantt" in l for l in code_lines):
                     diagram_note = "<b>System Architecture & Dataflow:</b> End-to-end multimodal pipeline linking document ingestion to physical bounds, remote sensing, and dual-stage Bayesian/logistic inference. <i>(Interactive visualization available in Streamlit UI Tab 1)</i>"
                     if any("gantt" in l for l in code_lines):
@@ -363,7 +500,6 @@ def build_pdf():
                     story.append(callout_box)
                     story.append(Spacer(1, 4))
                 else:
-                    # Render code box
                     code_text = "<br/>".join(code_lines)
                     code_p = Paragraph(code_text, code_style)
                     code_box = Table([[code_p]], colWidths=[170 * mm])
@@ -439,27 +575,31 @@ def build_pdf():
             i += 1
             continue
 
-        # Centered Math Block ($$...$$)
-        if stripped.startswith("$$") and stripped.endswith("$$") and len(stripped) > 4:
-            formula_text = stripped[2:-2].strip()
-            formula_text = formula_text.replace(r"\operatorname{logit}", "logit").replace(r"\mid", "|")
-            formula_text = formula_text.replace(r"\sum_{k=1}^{6}", "Σ (k=1..6)").replace(r"\cdot", "·")
-            formula_text = formula_text.replace(r"\ln(\operatorname{LR}_k)", "ln(LR_k)")
-            formula_text = formula_text.replace(r"\max\left(0, -\frac{\ln E_{\text{declared}, i, t} - M_{i, -t}}{\sigma_{\text{pooled}}}\right)", "max(0, - (ln E_declared - M) / σ_pooled)")
-            formula_text = formula_text.replace(r"\frac{\bar{V}_{\text{target}} - \bar{V}_{\text{bg}}}{1.4826 \times \text{MAD}_{\text{bg}}}", "(V_target - V_bg) / (1.4826 × MAD_bg)")
-            formula_text = formula_text.replace(r"\max(0, 1 - f_{\text{cloud}})", "max(0, 1 - f_cloud)")
-            formula_text = formula_text.replace(r"\xrightarrow{\Delta H = +178\text{ kJ/mol}}", " —[ ΔH = +178 kJ/mol ]→ ")
-            formula_text = formula_text.replace(r"\uparrow", "↑")
-            formula_text = clean_markdown_inline(formula_text)
-            formula_p = Paragraph(formula_text, formula_style)
+        # Centered Display Math Block ($$...$$)
+        if stripped.startswith("$$"):
+            # Check if multi-line or single-line
+            if (stripped.endswith("$$") or stripped.endswith(".$$") or stripped.endswith(",$$")) and len(stripped) > 4:
+                formula_raw = stripped
+            else:
+                formula_parts = [stripped]
+                while i + 1 < len(lines):
+                    i += 1
+                    next_stripped = lines[i].strip()
+                    formula_parts.append(next_stripped)
+                    if next_stripped.endswith("$$") or next_stripped.endswith(".$$") or next_stripped.endswith(",$$"):
+                        break
+                formula_raw = " ".join(formula_parts)
+
+            formula_clean = convert_latex_math(formula_raw, is_display=True)
+            formula_p = Paragraph(formula_clean, formula_style)
             formula_box = Table([[formula_p]], colWidths=[170 * mm])
             formula_box.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#F7FAFC")),
                 ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor("#CBD5E0")),
-                ('LEFTPADDING', (0, 0), (-1, -1), 6),
-                ('RIGHTPADDING', (0, 0), (-1, -1), 6),
-                ('TOPPADDING', (0, 0), (-1, -1), 3),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+                ('LEFTPADDING', (0, 0), (-1, -1), 8),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+                ('TOPPADDING', (0, 0), (-1, -1), 4),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
             ]))
             story.append(formula_box)
             story.append(Spacer(1, 4))
