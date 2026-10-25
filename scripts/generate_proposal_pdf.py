@@ -65,7 +65,7 @@ class NumberedCanvas(canvas.Canvas):
         # Footer (on all pages)
         footer_text = f"Page {self._pageNumber} of {page_count}"
         self.drawRightString(190 * mm, 12 * mm, footer_text)
-        self.drawString(20 * mm, 12 * mm, "M.Sc. Data Science Capstone | Student ID: 93515346 | Supervisor: Dr. Humera Noor")
+        self.drawString(20 * mm, 12 * mm, "VeriCBAM — Master Capstone Proposal | M.Sc. Data Science | Supervisor: Dr. Humera Noor")
         self.setStrokeColor(colors.HexColor("#CBD5E0"))
         self.setLineWidth(0.5)
         self.line(20 * mm, 15 * mm, 190 * mm, 15 * mm)
@@ -417,7 +417,7 @@ def build_pdf():
          Paragraph("Submission Date:", meta_key_style), Paragraph("October 2026 (Semester Winter 2026/2027)", meta_val_style)],
     ]
 
-    meta_table = Table(meta_table_data, colWidths=[28 * mm, 57 * mm, 30 * mm, 55 * mm])
+    meta_table = Table(meta_table_data, colWidths=[31 * mm, 54 * mm, 31 * mm, 54 * mm])
     meta_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#F7FAFC")),
         ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor("#CBD5E0")),
@@ -454,7 +454,9 @@ def build_pdf():
         col_count = len(parsed_rows[0])
         avail_width = 170 * mm
         col_w = [avail_width / col_count] * col_count
-        if col_count == 5:
+        if col_count == 4:
+            col_w = [36 * mm, 50 * mm, 42 * mm, 42 * mm]
+        elif col_count == 5:
             col_w = [28 * mm, 35 * mm, 35 * mm, 32 * mm, 40 * mm]
         t = Table(parsed_rows, colWidths=col_w, repeatRows=1)
         t.setStyle(TableStyle([
