@@ -149,10 +149,25 @@ $$E_{\text{floor, clinker}} = P_{\text{clinker}} \times (0.495 + 0.275) - E_{\te
 #### C. Conservative Utilization Proxy & Transferred Process Gas Boundary Rule
 When auditing against external registry capacity (rather than audited production), VeriCBAM evaluates the conservative floor at **minimum plausible utilization ($\eta_{\min} = 0.50$)**:
 $$E_{\text{floor, conservative}} = C_{\text{nameplate}} \times 0.50 \times EF_{\text{floor, route}}$$
-Furthermore, in integrated steelworks transferring blast furnace gas (BFG) across reporting fence lines to external utility power plants (a documented engineering hypothesis applied to *ArcelorMittal Bremen, Eisenhüttenstadt, Taranto, HKM Duisburg, Tata Steel IJmuiden*, pending on-site energy balance documentation), direct Scope 1 stack totals omit off-gas combustion. VeriCBAM sets `stoich_applicable = False` for these installations, allowing the stream to explicitly abstain ($\hat{p} = \text{NaN}$) and avoiding false physical floor breaches on authentic facility-years.
+
+#### D. The Real-World Industrial Boundary Problem (Why Textbook Chemistry Fails Without System Modeling)
+In academic literature, mass-balance stoichiometry is often treated as a trivial textbook exercise. In industrial practice, however, heavy industrial facilities are not isolated closed systems:
+* **Off-Gas Transfers Across Fence Lines:** In modern integrated blast furnace steelworks, carbothermic reduction produces enormous volumes of high-energy Blast Furnace Gas (BFG) and Coke Oven Gas (COG). In major industrial clusters, these process gases are routinely piped across legal property lines to external utility power stations or adjacent district heating networks. Consequently, the direct Scope 1 stack emissions of the steelmaking installation appear deceptively low, because a substantial portion of the chemical carbon leaves the legal perimeter in gaseous form to generate off-site electricity.
+* **The Naive Model Failure:** If an audit system naively evaluates the steel plant using standard textbook stoichiometry alone, it inevitably triggers false alarms on compliant facilities. VeriCBAM resolves this by incorporating cross-registry system boundary mapping: for facilities with documented off-gas export infrastructure (e.g., *ArcelorMittal Bremen, Eisenhüttenstadt, Taranto, HKM Duisburg, Tata Steel IJmuiden*), the stoichiometric stream sets `stoich_applicable = False` and explicitly abstains ($\hat{p} = \text{NaN}$) until complete site energy balances are provided, eliminating false accusations against compliant producers.
+
+#### E. The Structural Blind Spot of Physical Basements
+Stoichiometric process bounds establish a deterministic lower basement (e.g., $1.350\text{ t CO}_2/\text{t}$ for BF-BOF steel; $0.770\text{ t CO}_2/\text{t}$ for cement clinker). However, physical floors have an inherent structural blind spot:
+* If an integrated blast furnace normally operates at $1.90\text{ t CO}_2/\text{t}$, and the operator under-reports its emissions as $1.55\text{ t CO}_2/\text{t}$, **stoichiometry alone is completely blind to this evasion**, because $1.55 > 1.35$.
+* Physical boundaries are mathematically incapable of detecting moderate understatements that remain above the theoretical minimum. To close this gap, an audit system must fuse physical limits with longitudinal statistical baselines and multi-pollutant combustion profiles.
 
 ### 3.2 Multi-Pollutant Combustion Ratio ($\text{NO}_x/\text{CO}_2$)
 Within-facility high-temperature combustion couples fuel/thermal $\text{NO}_x$ and $\text{CO}_2$ emissions (median empirical $\text{CV} = 11.1\%$ across European plants). For facility $i$ in year $t$, VeriCBAM calculates the leave-one-year-out ratio $R_{i, -t} = \text{Median}_{s \neq t}(E_{\text{NO}_x, i, s} / E_{\text{CO}_2, i, s})$ and robust scale $\sigma_{R, i, -t}$. A sharp increase in the observed ratio indicates that declared $\text{CO}_2$ dropped without an operational reduction in combustion activity.
+
+#### A. The Multi-Pollutant Regulatory Invariant Dilemma
+The inclusion of co-pollutant ratios addresses the risk of data falsification through a structural regulatory invariant:
+* Heavy industrial installations are already subject to continuous environmental monitoring for toxic local air pollutants ($\text{NO}_x$, $\text{SO}_2$, particulate matter) under municipal and national operating permits (such as the EU Industrial Emissions Directive, national air quality laws, or automated continuous emission monitoring systems - CEMS).
+* While an operator faces a strong financial incentive to depress declared $\text{CO}_2$ under trade carbon mechanisms, they face immediate legal penalties and operational shutdowns if they tamper with locally mandated air pollution permits.
+* If an operator selectively under-reports $\text{CO}_2$ to customs authorities while their local environmental permits reflect normal high-temperature combustion $\text{NO}_x$, the co-pollutant ratio diverges sharply. Reconciling false carbon declarations against separate, independently enforced air quality registries creates an effective deterrence mechanism.
 
 ### 3.3 Longitudinal Historical Trajectory (One-Sided Pooled MAD Scale)
 For facility $i$ in year $t$, longitudinal log-ratio drift is evaluated against the historical median $M_{i, -t} = \text{Median}_{s \neq t}(\ln E_{\text{CO}_2, i, s})$ and scaled by the cohort-wide pooled Median Absolute Deviation ($\sigma_{\text{pooled}} = 0.0911$ across 177 plant-years):
@@ -162,6 +177,13 @@ The one-sided operator $\max(0, -z)$ ensures that production expansions ($E_{\te
 ### 3.4 Earth Observation Activity (Copernicus Sentinel-5P TROPOMI)
 Tropospheric $\text{NO}_2$ column density ($\text{mol/m}^2$, Level-2 product filtered at `qa_value >= 0.50`) is extracted within a 5 km facility radius ($\bar{V}_{\text{target}}$) and compared to a 15–30 km background ring ($\bar{V}_{\text{bg}}$):
 $$z_{\text{sat}} = \frac{\bar{V}_{\text{target}} - \bar{V}_{\text{bg}}}{1.4826 \times \text{MAD}_{\text{bg}}}, \qquad C_{\text{sat}} = \max(0, 1 - f_{\text{cloud}})$$
+
+#### A. Physical & Atmospheric Realities of Spaceborne Observations
+A common misconception in carbon accounting is that spaceborne remote sensing can directly meter annual factory emissions. VeriCBAM incorporates satellite data with explicit physical and atmospheric qualifications:
+* **Spatial Footprint:** Sentinel-5P TROPOMI pixels ($5.5 \times 3.5\text{ km}$) encompass entire industrial parks, nearby transport arteries, and surrounding residential heating, diluting point-source signals.
+* **Atmospheric Dispersion & Lifetime:** Tropospheric $\text{NO}_2$ is a short-lived photochemical tracer heavily influenced by planetary boundary layer height, wind advection, and hydroxyl radical chemistry, introducing significant meteorological variance.
+* **Persistent Cloud Obscuration:** In temperate industrial regions, cloud decks obscure optical spectrometers for substantial portions of the year, providing sporadic clear-sky overpass snapshots rather than continuous monitoring.
+* **The True Role of Satellite Data:** Spaceborne observation functions effectively as an **auxiliary operational activity gate**—verifying whether a facility was physically active, cycling, or completely idle—rather than an annual emissions meter.
 
 ### 3.5 Weighted Bayesian Evidence Fusion (Model E1)
 $$\operatorname{logit} P(H \mid E) = \operatorname{logit} P(H) + \sum_{k=1}^{6} w_k \cdot C_k \cdot \ln(\operatorname{LR}_k)$$
@@ -263,6 +285,15 @@ gantt
 | **Biomass Emission Reporting Missingness** | Medium | High | Inability to separate biogenic fuel CO₂. | Documented that 81.4% (144/177) of EEA records lack excluding-biomass CO₂; standardized on total direct $\text{CO}_2$ as verified regulatory proxy. |
 | **Data Leakage in Supervised Models** | Critical | Low | Artificially inflated benchmark metrics. | Implemented 5-fold `GroupKFold` cross-validation grouped strictly by `facility_id`, completely isolating facilities between folds. |
 
+### 6.2 Future Research Roadmap: Multi-Sensor Operational Activity Proxying (VeriCBAM 2.0)
+While the current implementation uses Sentinel-5P tropospheric $\text{NO}_2$ as an operational presence check, our empirical analysis highlights the necessity of multi-sensor remote sensing to independently reconstruct factory activity. A planned second-stage roadmap includes:
+1. **Thermal Infrared (TIR) Operating Timelines:**  
+   Industrial rotary cement kilns operate at internal temperatures exceeding $1,400^\circ\text{C}$, radiating external shell heat at $200^\circ\text{C}\text{--}350^\circ\text{C}$, while primary steel tapholes pour molten iron at $1,500^\circ\text{C}$. Leveraging satellite thermal infrared sensors (such as Landsat-8/9 TIRS or high-resolution commercial thermal platforms) enables detecting continuous thermal anomalies, reconstructing an indisputable operational timeline of kiln firing versus maintenance shutdowns.
+2. **All-Weather Synthetic Aperture Radar (SAR):**  
+   Optical and thermal sensors remain constrained by cloud decks in temperate industrial zones. In contrast, Sentinel-1 C-band SAR penetrates persistent cloud cover, rain, and operates regardless of daylight. By tracking temporal changes in radar backscatter over heavy metal structures, scrap yards, and processing units, SAR establishes an all-weather activity index.
+3. **Computer Vision for Freight & Logistics Tracking:**  
+   Applying object detection to high-resolution optical imagery (Sentinel-2, PlanetScope) to monitor raw material stockpile depletion (limestone, coal, iron ore) and count bulk cargo barges and railcars at industrial terminals allows independent estimation of physical production volume ($Q$). This estimated volume can then be directly paired with stoichiometric intensity bounds.
+
 ---
 
 ## 7. Deliverables & Resource Management
@@ -285,87 +316,31 @@ gantt
 
 ---
 
-## 8. Required Milestone Deliverables: LinkedIn Thought-Leadership Posts
+## 8. Required Milestone Deliverables: LinkedIn Thought-Leadership Post
 
 *(Required under Milestone 2 — October 26, 2026)*
 
-### Option 1: Executive / Thought-Leadership Post (Fact-Checked & Regulatory Grounded)
-*Target Audience: Compliance officers, customs declarants, industrial buyers, and sustainability directors.*
+### Conceptual Project Announcement (Idea-Only, Zero Numerical Data)
+*A purely conceptual statement presenting the research project, the regulatory dilemma, and the evidence-fusion architecture without empirical numbers, statistics, or prematurely claimed results.*
 
 ```markdown
-Under the EU's Carbon Border Adjustment Mechanism (CBAM), accredited verifiers check the embedded emissions that importers declare. But which declarations deserve an on-site audit first? 🏭
+With the European Union's Carbon Border Adjustment Mechanism (CBAM) entering definitive financial enforcement, European importers of carbon-intensive commodities like steel and cement face legal responsibility for the emissions embedded in their global supply chains.
 
-For my Master's Capstone in Data Science at the University of Europe for Applied Sciences (Berlin), supervised by Dr. Humera Noor, I developed VeriCBAM: a research prototype that screens plant-level industrial emissions reports (cement and steel) for consistency against four independent evidence streams:
-1. Chemical engineering lower bounds (stoichiometric calcination & reduction floors under EU BAT standards).
-2. A facility's own reporting history and multi-year combustion profiles (EEA E-PRTR).
-3. Coupled NOx-to-CO2 combustion ratios from environmental filings.
-4. Copernicus Sentinel-5P satellite tropospheric NO2 plume contrast as an auxiliary operational check.
+The compliance challenge is immediate: verifying supplier carbon declarations requires physical on-site audits, yet accredited verifiers are scarce worldwide and international site visits are logistically constrained. Meanwhile, self-reported carbon spreadsheets cannot always be taken at face value.
 
-I evaluated the framework across 30 European industrial complexes, 177 real facility-years (2018–2023), and a 325-case controlled benchmark featuring synthetic understatements (5% to 50%) and route misclassifications.
+For my Master’s Capstone in Data Science at the University of Europe for Applied Sciences (Berlin), supervised by Dr. Humera Noor, I am working on Project VeriCBAM: an explainable decision-support framework designed to screen industrial emissions reports against independent evidence before physical audits are scheduled.
 
-Key findings:
-📊 A facility's longitudinal reporting history was the strongest statistical signal (achieving ~91% recall at a 10% false-alarm rate).
-⚖️ Learned fusion matched historical discrimination, while white-box Bayesian fusion provided transparent legal explainability and an ultra-low false-alarm rate (0.56% at tau = 0.5) on authentic plants.
-🛰️ Sentinel-5P satellite plume contrast alone performed near chance (ROC-AUC 0.52), confirming that coarse spaceborne observations cannot replace ground data in cloudy temperate zones.
-🏭 Engineering boundaries matter: integrated steelworks transferring process gases to external power plants require explicit system-boundary rules to avoid false floor violations.
+Instead of treating emissions estimation as a black-box machine learning problem, the framework approaches verification as an evidence-fusion challenge:
+• Grounding declarations in first-principles chemical engineering (establishing mass-balance lower bounds for iron reduction and limestone calcination).
+• Cross-referencing facility reporting history and co-pollutant combustion profiles from independent environmental registries.
+• Leveraging spaceborne Earth observation as an external activity check to confirm whether industrial sites were operational.
+• Unifying these heterogeneous signals into a transparent, white-box decision model that helps compliance officers prioritize where in-depth audits are truly needed.
 
-Scope & Limits: This is a controlled decision-support prototype on 30 facilities designed to prioritize verifier attention, not replace accredited statutory audits under Commission Implementing Regulation (EU) 2025/2546.
+The goal is not to replace accredited human verifiers, but to provide them with an objective, physics-informed screening copilot that highlights physical inconsistencies and directs attention where it matters most.
 
-If you manage industrial supply chains or CBAM compliance, what evidence would you want before dispatching a physical audit team? 👇
+How is your organization approaching data integrity and verification in global carbon supply chains?
 
-#CBAM #CarbonAccounting #DataScience #IndustrialDecarbonization #ComplianceTech #SupplyChainRisk #SustainableIndustry
-```
-
-### Option 2: Technical / Data Science Post (Focus on Physics-Informed ML & Benchmark Rigor)
-*Target Audience: Tech leads, machine learning engineers, data science recruiters, and researchers.*
-
-```markdown
-I built an emissions-consistency screening prototype for my Data Science Master's Capstone, and the most valuable findings were the unflattering ones. 🔬
-
-Project: VeriCBAM (EU CBAM consistency assessment for steel and cement).
-Dataset: 30 European plants, 177 authentic E-PRTR plant-years (2018–2023), and a 325-case graded benchmark (177 authentic negatives, 140 synthetic understatements at 5%–50%, and 8 process route mismatches; 36.9% positive prevalence). 
-
-Metrics evaluated via 1,000 facility-clustered bootstrap resamples and GroupKFold cross-validation (ROC-AUC, 95% CI):
-• Historical Drift Alone: 0.963 [0.957, 0.972]
-• Learned Logistic Fusion: 0.964 [0.956, 0.973]
-• Expert Bayesian Fusion: 0.894 [0.865, 0.924]
-• Satellite NO2 Alone: 0.518 [0.499, 0.544]
-
-At a matched 10% false-alarm rate, recall was 91% (historical-only), 92% (learned logistic), and 70% (expert Bayesian). Multimodal fusion did not beat a facility's own historical trajectory in raw statistical separation.
-
-Three lessons from the benchmark:
-1️⃣ Threshold artifacts can invent false positives: A fixed tau = 0.5 cut-off gave an uncalibrated proxy an apparent 96.6% false-positive rate. Comparing models at matched false-alarm rates (5% and 10% FPR) is essential for fair evaluation.
-2️⃣ First-principles physics requires boundary awareness: A naive steel blast-furnace floor initially flagged genuine plants until we accounted for transferred blast-furnace process gases exported to external utility units.
-3️⃣ Acknowledge observational limits: Sentinel-5P satellite observations over cloudy European sites cannot resolve annual plant-level CO2; remote sensing acts only as an auxiliary gating factor.
-
-Code, reproducible pipeline, and benchmark tables are open-source: https://github.com/CaceresCristhian/VeriCBAM
-
-How do you ensure your domain machine learning models respect first-principles physical and operational boundaries? 👇
-
-#DataScience #MachineLearning #PhysicsInformedAI #CBAM #Copernicus #AIExplainability #Python #PythonDataScience
-```
-
-### Option 3: Formal Academic & Capstone Launch Announcement
-*Target Audience: Academic peers, professors, industry partners, and university network.*
-
-```markdown
-🌍 Excited to officially announce my Data Science Master's Capstone Project at the University of Europe for Applied Sciences (UE Germany), Berlin, supervised by Dr. Humera Noor:
-
-🚀 Project VeriCBAM: Multimodal Evidence Fusion & Decision Support for EU Carbon Border Compliance.
-
-With the EU's Carbon Border Adjustment Mechanism (CBAM) entering definitive financial enforcement under Regulation (EU) 2023/956, European importers face legal liability for verifying embedded emissions across global supply chains. However, comprehensive on-site audits for complex heavy industry are logistically constrained and costly, while accredited verifiers remain scarce.
-
-Can independent physical, historical, and multi-pollutant data streams help compliance officers prioritize verification resources objectively?
-
-VeriCBAM integrates four independent evidence pillars:
-1️⃣ Chemical Engineering Stoichiometry: First-principles conservation-of-mass lower bounds (limestone calcination and iron reduction limits under EU BAT benchmarks).
-2️⃣ Longitudinal Fingerprints & Co-Pollutants: Multi-year facility baselines and coupled NOx/CO2 combustion ratios from verified industrial registries (EEA E-PRTR).
-3️⃣ Earth Observation Activity: Copernicus Sentinel-5P tropospheric NO2 plume contrast, rigorously accounting for atmospheric dispersion and cloud-cover limits.
-4️⃣ Explainable Bayesian Fusion & Triage: A dual-stage architecture combining supervised triage (Model E2: 100% precision in top 20% risk tier) with white-box Bayesian audit dossiers (Model E1: 0.56% false alarms on authentic plants).
-
-Code & Benchmarks are fully open-source and reproducible on GitHub: https://github.com/CaceresCristhian/VeriCBAM
-
-#DataScience #MachineLearning #EarthObservation #Copernicus #CBAM #Decarbonization #Python #GreenTech #MasterThesis
+#DataScience #MachineLearning #PhysicsInformedAI #CBAM #IndustrialDecarbonization #SupplyChainCompliance #ExplainableAI #CleanTech
 ```
 
 ---
