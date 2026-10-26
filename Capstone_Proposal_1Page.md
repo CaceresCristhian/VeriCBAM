@@ -14,8 +14,8 @@ Under the European Union's **Carbon Border Adjustment Mechanism (CBAM)**, compan
 * **The Real-World Problem:** To prevent companies from under-reporting their emissions to save money, reports must be verified by independent auditors. However, sending human inspectors to physically audit thousands of overseas factories is slow, expensive, and logistically difficult.
 * **The Data Science Opportunity:** Before sending an inspector on an expensive site visit, regulators and auditors need a **pre-screening tool** that automatically cross-checks a factory's self-reported $\text{CO}_2$ number against independent public data to flag suspicious or unrealistic declarations.
 
-### 2. Research Question & Project Objectives
-> **Core Research Question:** *How can we combine basic industrial physics, historical emissions records, air pollutant ratios, and satellite observations into an explainable Data Science model that reliably flags inconsistent $\text{CO}_2$ declarations while minimizing false alarms?*
+### 2. Core Project Question & System Objectives
+> **Core Project Question:** *How can we combine basic industrial physics, historical emissions records, air pollutant ratios, and satellite observations into an explainable decision-support system that reliably flags inconsistent $\text{CO}_2$ declarations while minimizing false alarms?*
 
 * **Objective 1 (Multi-Source Data Integration):** Collect and align real-world factory emissions, production capacities, and satellite air-quality data for 30 major cement and steel plants.
 * **Objective 2 (Multi-Stream Anomaly Detection):** Build five complementary checks that test a factory's declared emissions from different angles (physical minimums, technology type, historical trends, co-pollutants, and satellite plumes).
