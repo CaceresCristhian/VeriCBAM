@@ -241,12 +241,12 @@ def build_gantt_drawing() -> Drawing:
     d.add(Line(x0 + cw, 2 * mm, x0 + cw, y_top, strokeColor=colors.HexColor("#CBD5E0"), strokeWidth=0.5))
 
     sprints = [
-        ("Sprint 0: Cohort & Registry", 0.02, 0.12, "#2B6CB0", "M1: Oct 12", 0.10),
-        ("Sprint 1: Stoichiometry & Proposal", 0.13, 0.34, "#2B6CB0", "M2: Oct 26 / PR1: Nov 9", 0.23),
-        ("Sprint 2: S-5P & Ratio Baselines", 0.35, 0.47, "#3182CE", "PR2: Nov 23", 0.47),
-        ("Sprint 3: Bayesian & GroupKFold", 0.48, 0.60, "#3182CE", "PR3: Dec 07", 0.60),
-        ("Sprint 4: 8-Tab Cockpit & Dossier", 0.61, 0.73, "#38A169", "PR4: Dec 21", 0.73),
-        ("Sprint 5: Thesis & Oral Defense", 0.74, 0.96, "#805AD5", "Sub: Jan 4 / Def: Jan 18", 0.95),
+        ("Sprint 0: Cohort & Ingestion [DONE]", 0.02, 0.12, "#2E7D32", "M1: Oct 12", 0.10),
+        ("Sprint 1: Stoichiometry & Floors [DONE]", 0.13, 0.28, "#2E7D32", "M2: Oct 30", 0.26),
+        ("Sprint 2: S-5P & Ratios [DONE]", 0.29, 0.40, "#2E7D32", "5-Stream Pipeline", 0.38),
+        ("Sprint 3: Bayesian & Benchmark [DONE]", 0.41, 0.52, "#2E7D32", "325-Case Eval", 0.50),
+        ("Sprint 4: Multi-Sensor & Quick Audit [DONE]", 0.53, 0.65, "#2E7D32", "Stage 2 EO Live", 0.63),
+        ("Sprint 5: Thesis Drafting & Defense [ACTIVE]", 0.66, 0.96, "#1565C0", "PR1: Nov 9 / Jan 18 Def", 0.95),
     ]
 
     row_h = 5.2 * mm

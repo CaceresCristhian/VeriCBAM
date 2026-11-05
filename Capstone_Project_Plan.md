@@ -1,4 +1,4 @@
-# VeriCBAM: Capstone Project Work Plan, Risk Matrix & Execution Roadmap
+# VeriCBAM: Capstone Project Work Plan, Status & Execution Roadmap
 ## A Data-Driven Decision-Support Tool for Screening Carbon Border (CBAM) Emissions Reports
 
 * **Student Name:** Cristhian David Cáceres Mateus (Matriculation No: 93515346)
@@ -8,41 +8,41 @@
 
 ---
 
-### 1. Project Execution Schedule & Academic Milestones (Winter 2026/2027)
+### 1. Updated Execution Schedule & Milestone Status (Status: November 2026)
 
-| Phase / Sprint | Timeline | Key Activities & Tasks | Primary Deliverable / Milestone |
+| Sprint / Phase | Planned Dates | Key Completed Technical Tasks | Deliverable & Current Status |
 | :--- | :---: | :--- | :--- |
-| **Milestone 1 & Sprint 0** | Oct 03 – Oct 14, 2026 | Define project scope; collect and clean historical emissions data for 30 European cement and steel plants (177 annual records) and plant capacity data. | **M1: Topic Approval (Oct 12, 2026)** & Cleaned Facility Dataset |
-| **Milestone 2 & Sprint 1** | Oct 15 – Nov 09, 2026 | Finalize 1-page proposal; implement Check 1 (Physical Minimums) and Check 2 (Production Technology) for cement and steel plants. | **M2: Proposal Approval (Oct 26, 2026)** & **Progress Report 1 (Nov 09)** |
-| **Sprint 2** | Nov 10 – Nov 23, 2026 | Implement Check 3 (Historical Trends), Check 4 ($\text{NO}_x$ vs. $\text{CO}_2$ Pollutant Ratios), and Check 5 (Copernicus Sentinel-5P Satellite $\text{NO}_2$ extraction). | **M4: Progress Report 2 (Nov 23, 2026)** & 5-Check Data Pipeline |
-| **Sprint 3** | Nov 24 – Dec 07, 2026 | Build the Bayesian Risk Fusion model and 5-fold Cross-Validated Logistic Regression model; run evaluation across the 325-case benchmark. | **M5: Progress Report 3 (Dec 07, 2026)** & Model Comparison Results |
-| **Sprint 4** | Dec 08 – Dec 21, 2026 | Build the interactive Streamlit Web Dashboard, visual map inspector, 1-click Audit Dossier generator, and automated unit tests (`pytest`). | **M6: Progress Report 4 (Dec 21, 2026)** & Live Web Dashboard |
-| **Sprint 5 & Defense** | Dec 22 – Jan 18, 2027 | Write and proofread the final Master Thesis manuscript, verify code reproducibility, and prepare the final defense presentation. | **M7: Final Submission (Jan 04, 2027)** & **M8: Defense (Jan 18, 2027)** |
+| **Sprint 0: Cohort & Ingestion** | Oct 03 – Oct 14 | Scoped project; ingested and cleaned 177 plant-years across 30 EU cement/steel facilities from EEA E-PRTR v16 and GEM trackers. | **M1: Topic Approval (Oct 12)**<br/>`[COMPLETED]` |
+| **Sprint 1: Stoichiometry & Planning** | Oct 15 – Oct 26 | Implemented calcination and steel reduction mass-balance floors (`cement_models.py`, `steel_models.py`); boundary gas-export rules. | **M2: Proposal Approved (Oct 30)**<br/>`[COMPLETED]` |
+| **Sprint 2: Satellite & Baselines** | Oct 27 – Nov 04 | Ingested Sentinel-5P TROPOMI NO₂; built leave-one-year-out NOx/CO₂ ratios and one-sided robust pooled-MAD longitudinal drift scores. | **5-Stream Data Pipeline**<br/>`[COMPLETED]` |
+| **Sprint 3: Modeling & Evaluation** | Oct 28 – Nov 05 | Built Bayesian Log-Odds Fusion (Model E1) & GroupKFold Logistic Triage (Model E3); evaluated 325-case graded benchmark with 1,000 bootstrap CIs. | **325-Case Benchmark**<br/>`[COMPLETED]` |
+| **Sprint 4: Multi-Sensor & Dashboard** | Nov 01 – Nov 05 | Built live 8-tab Streamlit Cockpit with Tab 1 Quick Audit & PDF Dossier; integrated Stage 2 Multi-Sensor EO (Landsat 30m TIR, VIIRS 375m, Planet VHR). | **Live App & Quick Audit**<br/>`[COMPLETED]` |
+| **Sprint 5: Thesis & Defense** | Nov 06 – Jan 18 | Master thesis drafting (Chapters 1–6), code reproducibility audit, external verifier outreach, and final oral defense presentation. | **PR1 (Nov 09) / Final Sub (Jan 04)**<br/>`[ACTIVE]` |
 
 ---
 
-### 2. Project Risk Management Matrix
+### 2. Project Risk Management & Resolution Matrix
 
-| Identified Risk | Severity | Likelihood | Impact on Project | Mitigation Strategy |
+| Identified Technical Risk | Severity | Likelihood | Impact on Project | Implemented Mitigation & Current Resolution |
 | :--- | :---: | :---: | :--- | :--- |
-| **Cloud Cover Blocking Satellite Data** | High | High | Missing satellite observations over northern Europe during winter. | Weight satellite evidence by cloud-free visibility; if data is too cloudy, automatically reduce its weight or output *"Insufficient Evidence"*. |
-| **Shared Factory Energy / Off-Site Gases** | High | Medium | Some steel plants send furnace gas to nearby power plants, making their own stack emissions look artificially low. | Flag factories with off-site gas transfers in the plant registry so they are not falsely accused by the physical minimum check. |
-| **Missing Data in Public Registries** | Medium | Medium | A few factories have missing reporting years in public databases. | Do not invent or guess missing years; leave them blank (`NaN`) and rely on the remaining available checks. |
-| **Data Leakage in Machine Learning** | Critical | Low | Testing a model on the same factory it was trained on would give unrealistic accuracy. | Use **Grouped 5-Fold Cross-Validation** (`GroupKFold` by facility), ensuring all years of a factory are kept strictly in either training or testing. |
-| **Lack of Public Fraud Examples** | High | Medium | Real fraudulent CBAM reports are legally confidential and not publicly available. | Create a transparent **325-case test benchmark** by combining 177 real compliant reports with controlled under-reporting scenarios ($5\%$ to $50\%$). |
+| **Cloud Cover in Sentinel-5P Satellite** | High | High | Trace-gas data gaps during northern European winter. | **Resolved:** Weighted satellite evidence by cloud fraction ($C_{\text{sat}} = 1 - f_{\text{cloud}}$) and integrated cloud-resilient thermal infrared (Landsat/VIIRS). |
+| **Off-Site Process Gases in Steelworks** | High | Medium | False physical violations on blast furnace plants exporting gas to power plants. | **Resolved:** Mapped plant boundaries in GEM registry; set `stoich_applicable = False` for gas-exporting plants to eliminate false alarms. |
+| **Data Leakage in Machine Learning** | Critical | Low | Artificially inflated accuracy from training and testing on the same plant. | **Resolved:** Enforced strict 5-Fold `GroupKFold(groups=facility_id)`, ensuring all years of any plant are strictly isolated between folds. |
+| **Confidentiality of Overseas Fraud** | High | Medium | Real non-EU fraudulent CBAM reports are legally confidential. | **Resolved:** Built a 325-case controlled benchmark combining 177 real compliant years with 148 graded synthetic understatements ($5\%\text{--}50\%$). |
 
 ---
 
-### 3. Expected Deliverables & Resources Required
-* **Core Deliverables:**
-  1. **Python Data & Modeling Package (`src/`):** Clean, documented code implementing the five evidence checks, Bayesian risk fusion, and cross-validated logistic regression.
-  2. **Interactive Streamlit Web Application (`src/ui/app.py`):** A visual dashboard allowing users to explore the 30 facilities on a map, test "what-if" reporting scenarios, view the risk breakdown, and export a 1-page Audit Dossier.
-  3. **Automated Test & Reproduction Suite (`tests/`, `scripts/`):** Unit tests verifying code reliability and a single script to reproduce all thesis tables and charts.
-* **Resources & Supervision:** Runs on a standard laptop using open-source Python libraries (`pandas`, `scikit-learn`, `streamlit`, `plotly`, `pytest`) and free public datasets (EEA E-PRTR, Global Energy Monitor, Copernicus Sentinel-5P), reviewed bi-weekly with **Dr. Humera Noor**.
+### 3. Core Deliverables & Current Completion Status
+1. **VeriCBAM Python Engine (`src/`):** 100% complete and passing 30/30 unit tests (`pytest`).
+2. **Interactive Cloud Decision Cockpit:** Live at https://vericbam-uqpz4jrnpteqetfvjxtslh.streamlit.app/ featuring the new **Tab 1 Quick Audit & 1-Click PDF Dossier Generator**.
+3. **Stage 2 Multi-Sensor Satellite Dataset:** Cached 30-facility dataset combining USGS Landsat-8/9 30m TIR $\Delta T$, NASA FIRMS VIIRS 375m operating calendars, and Planet VHR freight contrast.
+4. **Master Thesis Manuscript:** Drafting in progress following academic structure under bi-weekly supervision of **Dr. Humera Noor**.
 
 ---
 
-### 4. Future Extension Roadmap (Stage 2 Horizon)
-Once the Stage 1 system is complete, the framework can be extended with higher-resolution satellite data to estimate factory activity directly from space:
-1. **Thermal Infrared Satellite Data (Landsat / NASA VIIRS):** Detecting heat directly from cement kilns and steel blast furnaces to verify how many months per year a plant was actively running.
-2. **High-Resolution Optical Imagery (PlanetScope):** Observing factory rail yards and raw material stockpiles to confirm physical production activity independently of self-reported numbers.
+### 4. Remaining Roadmap Towards Master Thesis Submission (Winter 2026/2027)
+* **Nov 09, 2026:** Progress Report 1 Submission (Demonstrating completed Stage 1 & Stage 2 empirical evaluation).
+* **Nov 23, 2026:** Progress Report 2 Submission (Draft Thesis Methodology & Empirical Results chapters).
+* **Dec 07 – Dec 21, 2026:** Progress Reports 3 & 4 (Complete manuscript review, conclusion, and policy recommendations).
+* **Jan 04, 2027:** Final Master Thesis Submission (Binding university submission).
+* **Jan 18, 2027:** Master Thesis Oral Defense & Examination.
