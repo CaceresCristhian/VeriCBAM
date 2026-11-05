@@ -213,29 +213,29 @@ def clean_markdown_inline(text: str) -> str:
 
 def build_gantt_drawing() -> Drawing:
     """Draws a crisp visual Gantt chart for Winter 2026/2027 (Oct 2026 – Jan 2027)."""
-    w = 182 * mm
-    h = 46 * mm
+    w = 184 * mm
+    h = 41 * mm
     d = Drawing(w, h)
 
     # Background card
     d.add(Rect(0, 0, w, h, fillColor=colors.HexColor("#F8FAFC"), strokeColor=colors.HexColor("#CBD5E0"), strokeWidth=0.6, rx=3, ry=3))
 
     # Title banner
-    d.add(Rect(0, h - 6 * mm, w, 6 * mm, fillColor=colors.HexColor("#1A365D"), strokeColor=None))
-    d.add(String(4 * mm, h - 4.2 * mm, "VeriCBAM Execution Gantt Chart & Milestone Timeline (Winter Semester 2026/2027)", fontName="Arial-Bold", fontSize=7.8, fillColor=colors.white))
+    d.add(Rect(0, h - 5.5 * mm, w, 5.5 * mm, fillColor=colors.HexColor("#1A365D"), strokeColor=None))
+    d.add(String(4 * mm, h - 3.8 * mm, "VeriCBAM Execution Gantt Chart & Milestone Timeline (Winter Semester 2026/2027)", fontName="Arial-Bold", fontSize=7.4, fillColor=colors.white))
 
-    # Timeline columns: Left label area = 54mm, Chart area = 124mm
+    # Timeline columns: Left label area = 54mm, Chart area = 126mm
     x0 = 54 * mm
-    cw = 124 * mm
+    cw = 126 * mm
     months = ["October 2026", "November 2026", "December 2026", "January 2027"]
     mw = cw / 4.0
 
     # Month headers
-    y_top = h - 10.5 * mm
+    y_top = h - 9.5 * mm
     for idx, m_label in enumerate(months):
         mx = x0 + idx * mw
-        d.add(Rect(mx, y_top, mw, 4.5 * mm, fillColor=colors.HexColor("#EDF2F7"), strokeColor=colors.HexColor("#CBD5E0"), strokeWidth=0.4))
-        d.add(String(mx + mw / 2.0, y_top + 1.3 * mm, m_label, fontName="Arial-Bold", fontSize=6.8, fillColor=colors.HexColor("#2D3748"), textAnchor="middle"))
+        d.add(Rect(mx, y_top, mw, 4.0 * mm, fillColor=colors.HexColor("#EDF2F7"), strokeColor=colors.HexColor("#CBD5E0"), strokeWidth=0.4))
+        d.add(String(mx + mw / 2.0, y_top + 1.1 * mm, m_label, fontName="Arial-Bold", fontSize=6.5, fillColor=colors.HexColor("#2D3748"), textAnchor="middle"))
         # Vertical grid line
         d.add(Line(mx, 2 * mm, mx, y_top, strokeColor=colors.HexColor("#E2E8F0"), strokeWidth=0.5))
     d.add(Line(x0 + cw, 2 * mm, x0 + cw, y_top, strokeColor=colors.HexColor("#CBD5E0"), strokeWidth=0.5))
@@ -246,29 +246,30 @@ def build_gantt_drawing() -> Drawing:
         ("Sprint 2: S-5P & Ratios [DONE]", 0.29, 0.40, "#2E7D32", "5-Stream Pipeline", 0.38),
         ("Sprint 3: Bayesian & Benchmark [DONE]", 0.41, 0.52, "#2E7D32", "325-Case Eval", 0.50),
         ("Sprint 4: Multi-Sensor & Quick Audit [DONE]", 0.53, 0.65, "#2E7D32", "Stage 2 EO Live", 0.63),
-        ("Sprint 5: Thesis Drafting & Defense [ACTIVE]", 0.66, 0.96, "#1565C0", "PR1: Nov 9 / Jan 18 Def", 0.95),
+        ("Sprint 5: Outreach & Deliverables [ACTIVE]", 0.66, 0.96, "#1565C0", "Bi-Weekly / Jan 04 Final", 0.95),
     ]
 
-    row_h = 5.2 * mm
+    row_h = 4.7 * mm
     for idx, (label, s_start, s_end, col_hex, m_label, m_pos) in enumerate(sprints):
-        ry = y_top - (idx + 1) * row_h - 0.5 * mm
+        ry = y_top - (idx + 1) * row_h - 0.2 * mm
         if idx % 2 == 1:
-            d.add(Rect(2 * mm, ry - 0.5 * mm, w - 4 * mm, row_h, fillColor=colors.HexColor("#F1F5F9"), strokeColor=None))
-        d.add(String(3.5 * mm, ry + 1.0 * mm, label, fontName="Arial-Bold", fontSize=6.6, fillColor=colors.HexColor("#1E293B")))
+            d.add(Rect(2 * mm, ry - 0.4 * mm, w - 4 * mm, row_h, fillColor=colors.HexColor("#F1F5F9"), strokeColor=None))
+        d.add(String(3.5 * mm, ry + 0.9 * mm, label, fontName="Arial-Bold", fontSize=6.3, fillColor=colors.HexColor("#1E293B")))
         bx = x0 + s_start * cw
         bw = (s_end - s_start) * cw
-        d.add(Rect(bx, ry + 0.4 * mm, bw, 3.3 * mm, fillColor=colors.HexColor(col_hex), strokeColor=None, rx=1.3, ry=1.3))
+        d.add(Rect(bx, ry + 0.4 * mm, bw, 3.0 * mm, fillColor=colors.HexColor(col_hex), strokeColor=None, rx=1.2, ry=1.2))
         mx_pt = x0 + m_pos * cw
-        d.add(Circle(mx_pt, ry + 2.0 * mm, 1.2 * mm, fillColor=colors.HexColor("#F6E05E"), strokeColor=colors.HexColor("#1A202C"), strokeWidth=0.6))
+        d.add(Circle(mx_pt, ry + 1.8 * mm, 1.1 * mm, fillColor=colors.HexColor("#F6E05E"), strokeColor=colors.HexColor("#1A202C"), strokeWidth=0.5))
         label_x = min(bx + bw + 2 * mm, x0 + cw - 26 * mm)
         if idx == 5:
             label_x = bx - 29 * mm
-        d.add(String(label_x, ry + 1.0 * mm, m_label, fontName="Arial-Italic", fontSize=6.2, fillColor=colors.HexColor("#1A365D")))
+        d.add(String(label_x, ry + 0.9 * mm, m_label, fontName="Arial-Italic", fontSize=5.9, fillColor=colors.HexColor("#1A365D")))
 
     return d
 
 
 def build_1page_proposal():
+
     print(f"Building 1-Page Proposal PDF: {PROPOSAL_1P_PDF}")
     content = PROPOSAL_1P_MD.read_text(encoding="utf-8")
     lines = content.splitlines()
@@ -278,20 +279,20 @@ def build_1page_proposal():
         pagesize=A4,
         leftMargin=13 * mm,
         rightMargin=13 * mm,
-        topMargin=11 * mm,
-        bottomMargin=13 * mm,
+        topMargin=9 * mm,
+        bottomMargin=9 * mm,
     )
 
     styles = getSampleStyleSheet()
-    title_style = ParagraphStyle("P1_Title", parent=styles["Normal"], fontName="Arial-Bold", fontSize=14.5, leading=17.5, textColor=colors.HexColor("#1A365D"), spaceAfter=1.5)
-    subtitle_style = ParagraphStyle("P1_Sub", parent=styles["Normal"], fontName="Arial-Bold", fontSize=9.5, leading=12, textColor=colors.HexColor("#2B6CB0"), spaceAfter=5)
-    h1_style = ParagraphStyle("P1_H1", parent=styles["Normal"], fontName="Arial-Bold", fontSize=9.8, leading=12.2, textColor=colors.HexColor("#1A365D"), spaceBefore=5.5, spaceAfter=2.2, keepWithNext=True)
-    body_style = ParagraphStyle("P1_Body", parent=styles["Normal"], fontName="Arial", fontSize=8.3, leading=10.8, textColor=colors.HexColor("#2D3748"), alignment=TA_JUSTIFY, spaceAfter=2.8)
-    bullet_style = ParagraphStyle("P1_Bullet", parent=styles["Normal"], fontName="Arial", fontSize=8.2, leading=10.6, textColor=colors.HexColor("#2D3748"), leftIndent=10, firstLineIndent=-6.5, spaceAfter=2.2)
-    callout_style = ParagraphStyle("P1_Callout", parent=styles["Normal"], fontName="Arial-BoldItalic", fontSize=8.3, leading=10.8, textColor=colors.HexColor("#1A365D"), alignment=TA_LEFT)
-    formula_style = ParagraphStyle("P1_Formula", parent=styles["Normal"], fontName="Arial-Bold", fontSize=8.2, leading=10.6, textColor=colors.HexColor("#1A365D"), alignment=TA_CENTER, spaceBefore=2, spaceAfter=2)
-    meta_k = ParagraphStyle("P1_MK", fontName="Arial-Bold", fontSize=7.8, leading=10, textColor=colors.HexColor("#2B6CB0"))
-    meta_v = ParagraphStyle("P1_MV", fontName="Arial", fontSize=7.8, leading=10, textColor=colors.HexColor("#2D3748"))
+    title_style = ParagraphStyle("P1_Title", parent=styles["Normal"], fontName="Arial-Bold", fontSize=13.5, leading=16.0, textColor=colors.HexColor("#1A365D"), spaceAfter=1.2)
+    subtitle_style = ParagraphStyle("P1_Sub", parent=styles["Normal"], fontName="Arial-Bold", fontSize=9.0, leading=11.2, textColor=colors.HexColor("#2B6CB0"), spaceAfter=3.5)
+    h1_style = ParagraphStyle("P1_H1", parent=styles["Normal"], fontName="Arial-Bold", fontSize=9.2, leading=11.5, textColor=colors.HexColor("#1A365D"), spaceBefore=4.0, spaceAfter=1.5, keepWithNext=True)
+    body_style = ParagraphStyle("P1_Body", parent=styles["Normal"], fontName="Arial", fontSize=7.9, leading=10.0, textColor=colors.HexColor("#2D3748"), alignment=TA_JUSTIFY, spaceAfter=2.0)
+    bullet_style = ParagraphStyle("P1_Bullet", parent=styles["Normal"], fontName="Arial", fontSize=7.8, leading=9.8, textColor=colors.HexColor("#2D3748"), leftIndent=9, firstLineIndent=-5.5, spaceAfter=1.6)
+    callout_style = ParagraphStyle("P1_Callout", parent=styles["Normal"], fontName="Arial-BoldItalic", fontSize=7.9, leading=10.0, textColor=colors.HexColor("#1A365D"), alignment=TA_LEFT)
+    formula_style = ParagraphStyle("P1_Formula", parent=styles["Normal"], fontName="Arial-Bold", fontSize=7.8, leading=9.8, textColor=colors.HexColor("#1A365D"), alignment=TA_CENTER, spaceBefore=1.5, spaceAfter=1.5)
+    meta_k = ParagraphStyle("P1_MK", fontName="Arial-Bold", fontSize=7.5, leading=9.5, textColor=colors.HexColor("#2B6CB0"))
+    meta_v = ParagraphStyle("P1_MV", fontName="Arial", fontSize=7.5, leading=9.5, textColor=colors.HexColor("#2D3748"))
 
     story = []
     story.append(Paragraph("Capstone Project Proposal: VeriCBAM", title_style))
@@ -308,13 +309,13 @@ def build_1page_proposal():
         ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#F7FAFC")),
         ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor("#CBD5E0")),
         ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#EDF2F7")),
-        ('TOPPADDING', (0, 0), (-1, -1), 2.2),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 2.2),
+        ('TOPPADDING', (0, 0), (-1, -1), 1.8),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 1.8),
         ('LEFTPADDING', (0, 0), (-1, -1), 4),
         ('RIGHTPADDING', (0, 0), (-1, -1), 4),
     ]))
     story.append(meta_tbl)
-    story.append(Spacer(1, 3))
+    story.append(Spacer(1, 2.5))
 
     start_idx = 0
     for idx, l in enumerate(lines[:15]):
@@ -363,22 +364,22 @@ def build_project_plan():
     doc = SimpleDocTemplate(
         str(PLAN_PDF),
         pagesize=A4,
-        leftMargin=14 * mm,
-        rightMargin=14 * mm,
-        topMargin=11 * mm,
-        bottomMargin=13 * mm,
+        leftMargin=12 * mm,
+        rightMargin=12 * mm,
+        topMargin=8 * mm,
+        bottomMargin=8 * mm,
     )
 
     styles = getSampleStyleSheet()
-    title_style = ParagraphStyle("PP_Title", parent=styles["Normal"], fontName="Arial-Bold", fontSize=13.0, leading=15.5, textColor=colors.HexColor("#1A365D"), spaceAfter=1)
-    subtitle_style = ParagraphStyle("PP_Sub", parent=styles["Normal"], fontName="Arial-Bold", fontSize=8.5, leading=10.5, textColor=colors.HexColor("#2B6CB0"), spaceAfter=2.5)
-    h1_style = ParagraphStyle("PP_H1", parent=styles["Normal"], fontName="Arial-Bold", fontSize=8.8, leading=10.8, textColor=colors.HexColor("#1A365D"), spaceBefore=3.0, spaceAfter=1.2, keepWithNext=True)
-    body_style = ParagraphStyle("PP_Body", parent=styles["Normal"], fontName="Arial", fontSize=7.2, leading=9.1, textColor=colors.HexColor("#2D3748"), alignment=TA_JUSTIFY, spaceAfter=1.5)
-    bullet_style = ParagraphStyle("PP_Bullet", parent=styles["Normal"], fontName="Arial", fontSize=7.1, leading=9.0, textColor=colors.HexColor("#2D3748"), leftIndent=8, firstLineIndent=-5.5, spaceAfter=1.2)
-    th_style = ParagraphStyle("PP_TH", parent=styles["Normal"], fontName="Arial-Bold", fontSize=7.0, leading=8.6, textColor=colors.white)
-    td_style = ParagraphStyle("PP_TD", parent=styles["Normal"], fontName="Arial", fontSize=6.8, leading=8.4, textColor=colors.HexColor("#2D3748"))
-    meta_k = ParagraphStyle("PP_MK", fontName="Arial-Bold", fontSize=7.3, leading=9.2, textColor=colors.HexColor("#2B6CB0"))
-    meta_v = ParagraphStyle("PP_MV", fontName="Arial", fontSize=7.3, leading=9.2, textColor=colors.HexColor("#2D3748"))
+    title_style = ParagraphStyle("PP_Title", parent=styles["Normal"], fontName="Arial-Bold", fontSize=12.0, leading=14.0, textColor=colors.HexColor("#1A365D"), spaceAfter=1)
+    subtitle_style = ParagraphStyle("PP_Sub", parent=styles["Normal"], fontName="Arial-Bold", fontSize=8.0, leading=9.8, textColor=colors.HexColor("#2B6CB0"), spaceAfter=2.0)
+    h1_style = ParagraphStyle("PP_H1", parent=styles["Normal"], fontName="Arial-Bold", fontSize=8.0, leading=9.8, textColor=colors.HexColor("#1A365D"), spaceBefore=2.2, spaceAfter=1.0, keepWithNext=True)
+    body_style = ParagraphStyle("PP_Body", parent=styles["Normal"], fontName="Arial", fontSize=6.5, leading=8.1, textColor=colors.HexColor("#2D3748"), alignment=TA_JUSTIFY, spaceAfter=1.0)
+    bullet_style = ParagraphStyle("PP_Bullet", parent=styles["Normal"], fontName="Arial", fontSize=6.4, leading=7.9, textColor=colors.HexColor("#2D3748"), leftIndent=7, firstLineIndent=-4.8, spaceAfter=0.8)
+    th_style = ParagraphStyle("PP_TH", parent=styles["Normal"], fontName="Arial-Bold", fontSize=6.6, leading=8.0, textColor=colors.white)
+    td_style = ParagraphStyle("PP_TD", parent=styles["Normal"], fontName="Arial", fontSize=6.3, leading=7.6, textColor=colors.HexColor("#2D3748"))
+    meta_k = ParagraphStyle("PP_MK", fontName="Arial-Bold", fontSize=7.0, leading=8.6, textColor=colors.HexColor("#2B6CB0"))
+    meta_v = ParagraphStyle("PP_MV", fontName="Arial", fontSize=7.0, leading=8.6, textColor=colors.HexColor("#2D3748"))
 
     story = []
     story.append(Paragraph("VeriCBAM: Capstone Project Work Plan, Risk Matrix & Execution Roadmap", title_style))
@@ -390,22 +391,22 @@ def build_project_plan():
         [Paragraph("Degree Program:", meta_k), Paragraph("Master of Science in Data Science (M.Sc. DSc)", meta_v),
          Paragraph("Faculty Supervisor:", meta_k), Paragraph("Dr. Humera Noor | Winter Semester 2026/2027", meta_v)],
     ]
-    meta_tbl = Table(meta_data, colWidths=[24 * mm, 64 * mm, 27 * mm, 67 * mm])
+    meta_tbl = Table(meta_data, colWidths=[24 * mm, 66 * mm, 27 * mm, 69 * mm])
     meta_tbl.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#F7FAFC")),
         ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor("#CBD5E0")),
         ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#EDF2F7")),
-        ('TOPPADDING', (0, 0), (-1, -1), 2.0),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 2.0),
-        ('LEFTPADDING', (0, 0), (-1, -1), 4),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+        ('TOPPADDING', (0, 0), (-1, -1), 1.5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5),
+        ('LEFTPADDING', (0, 0), (-1, -1), 3.5),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 3.5),
     ]))
     story.append(meta_tbl)
-    story.append(Spacer(1, 3.5))
+    story.append(Spacer(1, 2.0))
 
     # Add Visual Gantt Chart Drawing at top of Section 1
     story.append(build_gantt_drawing())
-    story.append(Spacer(1, 2.5))
+    story.append(Spacer(1, 1.8))
 
     start_idx = 0
     for idx, l in enumerate(lines[:15]):
@@ -425,11 +426,11 @@ def build_project_plan():
             parsed.append([Paragraph(clean_markdown_inline(c.strip()), style_to_use) for c in r])
         cols = len(parsed[0])
         if cols == 4:
-            col_w = [34 * mm, 29 * mm, 72 * mm, 45 * mm]
+            col_w = [34 * mm, 29 * mm, 74 * mm, 49 * mm]
         elif cols == 5:
-            col_w = [34 * mm, 16 * mm, 18 * mm, 42 * mm, 70 * mm]
+            col_w = [34 * mm, 16 * mm, 18 * mm, 44 * mm, 74 * mm]
         else:
-            col_w = [180 * mm / cols] * cols
+            col_w = [186 * mm / cols] * cols
         t = Table(parsed, colWidths=col_w, repeatRows=1)
         t.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#1A365D")),
@@ -437,10 +438,10 @@ def build_project_plan():
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
             ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor("#F8FAFC")]),
             ('GRID', (0, 0), (-1, -1), 0.4, colors.HexColor("#CBD5E0")),
-            ('TOPPADDING', (0, 0), (-1, -1), 1.8),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 1.8),
-            ('LEFTPADDING', (0, 0), (-1, -1), 3.5),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 3.5),
+            ('TOPPADDING', (0, 0), (-1, -1), 1.3),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 1.3),
+            ('LEFTPADDING', (0, 0), (-1, -1), 3.0),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 3.0),
         ]))
         return t
 

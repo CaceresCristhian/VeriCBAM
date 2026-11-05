@@ -17,7 +17,7 @@
 | **Sprint 2: Satellite & Baselines** | Oct 27 – Nov 04 | Ingested Sentinel-5P TROPOMI NO₂; built leave-one-year-out NOx/CO₂ ratios and one-sided robust pooled-MAD longitudinal drift scores. | **5-Stream Data Pipeline**<br/>`[COMPLETED]` |
 | **Sprint 3: Modeling & Evaluation** | Oct 28 – Nov 05 | Built Bayesian Log-Odds Fusion (Model E1) & GroupKFold Logistic Triage (Model E3); evaluated 325-case graded benchmark with 1,000 bootstrap CIs. | **325-Case Benchmark**<br/>`[COMPLETED]` |
 | **Sprint 4: Multi-Sensor & Dashboard** | Nov 01 – Nov 05 | Built live 8-tab Streamlit Cockpit with Tab 1 Quick Audit & PDF Dossier; integrated Stage 2 Multi-Sensor EO (Landsat 30m TIR, VIIRS 375m, Planet VHR). | **Live App & Quick Audit**<br/>`[COMPLETED]` |
-| **Sprint 5: Thesis & Defense** | Nov 06 – Jan 18 | Master thesis drafting (Chapters 1–6), code reproducibility audit, external verifier outreach, and final oral defense presentation. | **PR1 (Nov 09) / Final Sub (Jan 04)**<br/>`[ACTIVE]` |
+| **Sprint 5: Industry Outreach & Deliverables** | Nov 06 – Jan 18 | Real-world industry pilots (DNV, TÜV, DEHSt, importers), bi-weekly progress updates, presentation deck, walkthrough & pitch videos, and LinkedIn post. | **Bi-Weekly Updates / Jan 04 Final**<br/>`[ACTIVE]` |
 
 ---
 
@@ -34,15 +34,17 @@
 
 ### 3. Core Deliverables & Current Completion Status
 1. **VeriCBAM Python Engine (`src/`):** 100% complete and passing 30/30 unit tests (`pytest`).
-2. **Interactive Cloud Decision Cockpit:** Live at https://vericbam-uqpz4jrnpteqetfvjxtslh.streamlit.app/ featuring the new **Tab 1 Quick Audit & 1-Click PDF Dossier Generator**.
-3. **Stage 2 Multi-Sensor Satellite Dataset:** Cached 30-facility dataset combining USGS Landsat-8/9 30m TIR $\Delta T$, NASA FIRMS VIIRS 375m operating calendars, and Planet VHR freight contrast.
-4. **Master Thesis Manuscript:** Drafting in progress following academic structure under bi-weekly supervision of **Dr. Humera Noor**.
+2. **Interactive Cloud Decision Cockpit:** Live at https://vericbam-uqpz4jrnpteqetfvjxtslh.streamlit.app/ featuring the new **Tab 1 Quick Audit & 1-Click PDF Dossier Generator** for zero-friction industrial demonstrations.
+3. **Stage 2 Multi-Sensor Satellite Dataset:** Cached 30-facility dataset combining USGS Landsat-8/9 30m TIR $\Delta T$, NASA FIRMS VIIRS 375m daily operating calendars, and Planet VHR freight contrast.
+4. **Industry & Authority Outreach Suite:** Standalone 1-page Quick User Guide (`06_Quick_User_Guide.pdf`) and standardized demonstration protocol for verification bodies (DNV, TÜV, Bureau Veritas) and customs authorities (DEHSt).
 
 ---
 
-### 4. Remaining Roadmap Towards Master Thesis Submission (Winter 2026/2027)
-* **Nov 09, 2026:** Progress Report 1 Submission (Demonstrating completed Stage 1 & Stage 2 empirical evaluation).
-* **Nov 23, 2026:** Progress Report 2 Submission (Draft Thesis Methodology & Empirical Results chapters).
-* **Dec 07 – Dec 21, 2026:** Progress Reports 3 & 4 (Complete manuscript review, conclusion, and policy recommendations).
-* **Jan 04, 2027:** Final Master Thesis Submission (Binding university submission).
-* **Jan 18, 2027:** Master Thesis Oral Defense & Examination.
+### 4. Bi-Weekly Progress Roadmap & Final Deliverables Schedule (Winter 2026/2027)
+* **Bi-Weekly Progress Cadence:** Progress updates submitted to Dr. Humera Noor every two weeks: **Nov 09** (Update 1: Live Tab 1 Quick Audit & Stage 2 Multi-Sensor benchmark), **Nov 23** (Update 2: Industry pilot feedback & automated PDF dossier validation), **Dec 07** (Update 3: Multi-sector sensitivity & deck structure), and **Dec 21** (Update 4: Video walkthrough production & LinkedIn draft).
+* **Final Deliverables Package (Jan 04, 2027):**
+  1. **Presentation Deck:** Executive slide deck presenting operational ROI and physics-grounded AI methodology.
+  2. **Long-Form Video (15–20 min):** Technical walkthrough of the multimodal data pipeline and live interactive audit.
+  3. **Elevator Pitch Video (1–2 min):** Concise executive video demonstrating rapid declaration screening for CBAM importers.
+  4. **LinkedIn Post:** Public industry release driving adoption among EU climate verifiers and customs authorities.
+  5. **Open-Source Codebase & Live App:** Reproducible GitHub repository and live Streamlit cloud decision cockpit.
