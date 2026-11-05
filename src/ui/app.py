@@ -440,6 +440,10 @@ def load_cohort_data():
         facilities["latitude"] = facilities["Latitude"]
     if "Longitude" in facilities.columns and "longitude" not in facilities.columns:
         facilities["longitude"] = facilities["Longitude"]
+    if "facilityName" in facilities.columns and "facility_name" not in facilities.columns:
+        facilities["facility_name"] = facilities["facilityName"]
+    elif "facility_name" in facilities.columns and "facilityName" not in facilities.columns:
+        facilities["facilityName"] = facilities["facility_name"]
     return mgr, facilities
 
 
