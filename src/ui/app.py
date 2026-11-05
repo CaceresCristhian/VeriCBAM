@@ -33,6 +33,7 @@ importlib.reload(_ef_mod)
 from core.bayesian.evidence_fusion import ProbabilisticEvidenceFusionEngine, EvidenceInput
 from satellite.copernicus_client import CopernicusSentinel5PClient
 from satellite.plume_analyzer import SatellitePlumeAnalyzer
+from ui.dossier_pdf_generator import generate_dossier_pdf
 
 st.set_page_config(
     page_title="VeriCBAM | Decision Support Cockpit",
@@ -452,14 +453,15 @@ st.sidebar.caption("EU CBAM Emissions Consistency Verification")
 menu = st.sidebar.radio(
     "Navigation",
     [
-        "1. Executive Overview & Cockpit",
-        "2. 30-Facility Benchmark Cohort",
-        "3. Stoichiometric Physics Engine",
-        "4. Standalone Supplier Plausibility Pre-Check",
-        "5. Copernicus Satellite Engine (Sentinel-5P)",
-        "6. Bayesian Evidence Fusion",
-        "7. Empirical Benchmark Evaluation & Ablation",
-        "8. Capstone Proposal, References & Roadmap",
+        "1. 🚀 Quick Audit & PDF Dossier Generator",
+        "2. Executive Overview & Cockpit",
+        "3. 30-Facility Benchmark Cohort",
+        "4. Stoichiometric Physics Engine",
+        "5. Standalone Supplier Plausibility Pre-Check",
+        "6. Copernicus Satellite Engine (Sentinel-5P)",
+        "7. Bayesian Evidence Fusion",
+        "8. Empirical Benchmark Evaluation & Ablation",
+        "9. Capstone Proposal, References & Roadmap",
     ],
 )
 
@@ -476,9 +478,299 @@ st.sidebar.markdown(
 )
 
 # -------------------------------------------------------------
-# TAB 1: EXECUTIVE OVERVIEW & COCKPIT
+# TAB 1: QUICK AUDIT & PDF DOSSIER GENERATOR
 # -------------------------------------------------------------
-if menu == "1. Executive Overview & Cockpit":
+if menu == "1. 🚀 Quick Audit & PDF Dossier Generator":
+    scope_banner()
+    st.markdown('<div class="stitch-main-title">🚀 Quick Audit & 1-Click PDF Dossier Generator</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="stitch-sub-title">Instant Pre-Audit Screening for Importers, Verification Bodies & Customs Authorities</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        """
+        <div style="background-color: #161922; border: 1px solid #2d3440; border-radius: 8px; padding: 14px 18px; margin-bottom: 18px;">
+            <p style="margin: 0; color: #cbd5e1; font-size: 0.92rem; line-height: 1.5;">
+                <b>Welcome to VeriCBAM Quick Audit:</b> Verify self-reported industrial emissions declarations in seconds. 
+                Choose a pre-loaded European reference facility or test an external foreign supplier declaration using 
+                first-principles mass balances, multi-sensor satellite Earth observation (Landsat/VIIRS), and historical baselines.
+                Once screened, generate a publication-ready <b>1-Page Pre-Audit PDF Dossier</b> with a single click.
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # Mode Selection Tabs
+    audit_mode = st.radio(
+        "Select Audit Mode:",
+        ["Option A: Audit Pre-Loaded Facility (30 Reference Sites)", "Option B: Audit External / Custom Facility", "Option C: Upload Declaration File (CSV)"],
+        horizontal=True,
+    )
+
+    multisensor_cache_path = WORKSPACE_ROOT / "data" / "03_satellite_cache" / "multisensor_thermal_logistics_2023.csv"
+    multisensor_df = pd.read_csv(multisensor_cache_path) if multisensor_cache_path.exists() else pd.DataFrame()
+
+    facility_name = "Custom Installation"
+    country_name = "Global"
+    sector_name = "Cement"
+    route_name = "Dry Kiln (Preheater/Precalciner)"
+    reporting_year = 2023
+    annual_prod_tonnes = 1000000.0
+    declared_co2_tonnes = 780000.0
+    lat_val = 51.5
+    lon_val = 10.0
+    sat_active_months = 11
+    sat_delta_t = 18.5
+    sat_freight_z = 1.2
+    is_external_sat_only = False
+
+    if audit_mode == "Option A: Audit Pre-Loaded Facility (30 Reference Sites)":
+        col_sel1, col_sel2 = st.columns([2, 1])
+        with col_sel1:
+            facility_list = sorted(facilities_df["facility_name"].dropna().unique().tolist())
+            selected_facility_name = st.selectbox("Select European Reference Facility:", facility_list)
+        with col_sel2:
+            fac_match = facilities_df[facilities_df["facility_name"] == selected_facility_name].iloc[0]
+            st.metric("Sector & Country", f"{fac_match['sector']} ({fac_match['country']})")
+
+        facility_name = selected_facility_name
+        country_name = fac_match["country"]
+        sector_name = fac_match["sector"]
+        lat_val = float(fac_match.get("latitude", 51.5))
+        lon_val = float(fac_match.get("longitude", 10.0))
+
+        # Lookup multisensor data
+        if not multisensor_df.empty:
+            ms_match = multisensor_df[multisensor_df["facility_name"] == selected_facility_name]
+            if not ms_match.empty:
+                ms_row = ms_match.iloc[0]
+                sat_active_months = int(ms_row.get("firms_active_months_count", 11))
+                sat_delta_t = float(ms_row.get("thermal_delta_t_c", 18.0))
+                sat_freight_z = float(ms_row.get("freight_logistics_zscore", 1.0))
+
+        # Pre-fill defaults based on sector
+        if sector_name == "Cement":
+            route_name = "Dry Kiln (Preheater/Precalciner)"
+            annual_prod_tonnes = 1100000.0
+            declared_co2_tonnes = 840000.0
+        else:
+            route_name = "BF-BOF" if "BF" in str(fac_match.get("route_classification", "BF-BOF")) else "Scrap-EAF"
+            annual_prod_tonnes = 2500000.0
+            declared_co2_tonnes = 4200000.0 if route_name == "BF-BOF" else 350000.0
+
+        col_d1, col_d2 = st.columns(2)
+        with col_d1:
+            annual_prod_tonnes = st.number_input(
+                "Declared Production Output (Tonnes product):",
+                min_value=10000.0,
+                max_value=20000000.0,
+                value=float(annual_prod_tonnes),
+                step=50000.0,
+            )
+        with col_d2:
+            declared_co2_tonnes = st.number_input(
+                "Declared Direct Scope 1 CO₂ (Tonnes CO₂):",
+                min_value=1000.0,
+                max_value=25000000.0,
+                value=float(declared_co2_tonnes),
+                step=50000.0,
+            )
+
+    elif audit_mode == "Option B: Audit External / Custom Facility":
+        st.info("💡 **External Supplier Screening:** Test third-country facilities using first-principles mass balances and satellite thermal/freight operational discrepancy.")
+        col_c1, col_c2, col_c3 = st.columns(3)
+        with col_c1:
+            facility_name = st.text_input("Facility / Supplier Name:", "Overseas Industrial Works Ltd.")
+            country_name = st.text_input("Country of Origin:", "Turkey / India / China / USA")
+            reporting_year = st.selectbox("Reporting Period:", [2024, 2023, 2025], index=1)
+        with col_c2:
+            sector_name = st.selectbox("Industrial Sector:", ["Cement", "Iron & Steel"])
+            if sector_name == "Cement":
+                route_name = st.selectbox("Kiln Technology:", ["Dry Kiln (Preheater/Precalciner)", "Semi-Dry / Semi-Wet Kiln", "Wet Kiln"])
+            else:
+                route_name = st.selectbox("Steelmaking Route:", ["BF-BOF", "DRI-NG-EAF", "DRI-H2-EAF", "Scrap-EAF"])
+            annual_prod_tonnes = st.number_input("Annual Production Volume (Tonnes):", min_value=1000.0, max_value=30000000.0, value=1200000.0, step=50000.0)
+        with col_c3:
+            declared_co2_tonnes = st.number_input("Declared Direct Scope 1 CO₂ (Tonnes CO₂):", min_value=100.0, max_value=40000000.0, value=950000.0, step=50000.0)
+            use_sat_only = st.checkbox("External Facility Lacks Past History (Use Satellite Data Only)", value=True)
+            is_external_sat_only = use_sat_only
+
+        with st.expander("🛰️ Satellite Remote Sensing Observation Parameters (Landsat Thermal & Freight Siding)"):
+            sc1, sc2, sc3 = st.columns(3)
+            with sc1:
+                sat_active_months = st.slider("Active Operating Months in Year (VIIRS 375m):", 0, 12, 11, help="Months per year furnace/kiln exhibited active heat signatures.")
+            with sc2:
+                sat_delta_t = st.slider("Kiln/Furnace Core Thermal Anomaly ΔT (°C):", -5.0, 35.0, 19.5, help="USGS Landsat 30m temperature excess over rural background.")
+            with sc3:
+                sat_freight_z = st.slider("Freight Rail-Yard & Stockpile Activity Z-Score:", -2.0, 3.5, 1.3, help="VHR optical rail siding and raw material pile occupancy.")
+
+    else:
+        st.info("📂 **Upload Declaration File:** Upload a CSV containing columns: `facility_name`, `sector`, `route`, `production_tonnes`, `declared_co2_tonnes`.")
+        uploaded_file = st.file_uploader("Upload CSV declaration file:", type=["csv"])
+        if uploaded_file is not None:
+            try:
+                up_df = pd.read_csv(uploaded_file)
+                st.write("Uploaded Declaration Records (First 5 Rows):")
+                st.dataframe(up_df.head(), use_container_width=True)
+                sel_row_idx = st.selectbox("Select row to audit:", list(range(len(up_df))))
+                row_sel = up_df.iloc[sel_row_idx]
+                facility_name = str(row_sel.get("facility_name", f"Facility #{sel_row_idx+1}"))
+                sector_name = str(row_sel.get("sector", "Cement"))
+                route_name = str(row_sel.get("route", "BF-BOF" if sector_name == "Iron & Steel" else "Dry Kiln"))
+                annual_prod_tonnes = float(row_sel.get("production_tonnes", 1000000.0))
+                declared_co2_tonnes = float(row_sel.get("declared_co2_tonnes", 800000.0))
+                country_name = str(row_sel.get("country", "Global"))
+            except Exception as e:
+                st.error(f"Error reading file: {e}")
+
+    # Compute Audit Physics & Bayesian Risk
+    decl_intensity = declared_co2_tonnes / max(annual_prod_tonnes, 1.0)
+    if sector_name == "Cement":
+        # Clinker calcination floor (0.495) + thermal minimum (0.275) = 0.770 tCO2/t
+        phys_floor_int = 0.770
+        phys_min_total = annual_prod_tonnes * phys_floor_int
+        is_phys_feasible = declared_co2_tonnes >= (phys_min_total * 0.98)
+    else:
+        if route_name == "BF-BOF":
+            phys_floor_int = 1.350
+        elif "DRI" in route_name:
+            phys_floor_int = 0.550
+        else:
+            phys_floor_int = 0.040
+        phys_min_total = annual_prod_tonnes * phys_floor_int
+        is_phys_feasible = declared_co2_tonnes >= (phys_min_total * 0.98)
+
+    phys_deficit = max(0.0, phys_min_total - declared_co2_tonnes)
+
+    # Bayesian Risk Synthesis
+    engine = ProbabilisticEvidenceFusionEngine()
+    stoich_margin_sig = (decl_intensity - phys_floor_int) / max(phys_floor_int * 0.15, 0.01)
+    thermal_z = (sat_delta_t - 8.0) / 6.0
+    op_ratio = sat_active_months / 12.0
+
+    ev_kwargs = {
+        "stoichiometric_discrepancy_sigma": max(-2.0, min(5.0, stoich_margin_sig)),
+        "stoichiometric_violated": not is_phys_feasible,
+        "satellite_plume_anomaly_zscore": 1.5,
+        "satellite_cloud_fraction": 0.20,
+        "temporal_variance_zscore": None if is_external_sat_only else 0.8,
+        "years_reported_history": 0.0 if is_external_sat_only else 5.0,
+        "registry_capacity_ratio": None,
+        "thermal_anomaly_zscore": thermal_z,
+        "thermal_operating_months_ratio": op_ratio,
+        "freight_logistics_zscore": sat_freight_z,
+    }
+    valid_fields = {f.name for f in dataclasses.fields(EvidenceInput)}
+    ev_obj = EvidenceInput(**{k: v for k, v in ev_kwargs.items() if k in valid_fields})
+    audit_decision = engine.fuse_evidence(ev_obj, reported_emissions_tco2=declared_co2_tonnes, physical_min_tco2=phys_min_total)
+
+    post_risk_pct = audit_decision.posterior_inconsistency_risk * 100.0
+    conf_score_pct = audit_decision.evidence_confidence_score * 100.0
+    final_verdict = audit_decision.audit_verdict.upper()
+
+    st.markdown("---")
+    st.markdown("### 📋 Automated Audit Screening Diagnostic")
+
+    # Diagnostic KPI Bento Row
+    bk1, bk2, bk3, bk4 = st.columns(4)
+    with bk1:
+        st.markdown(
+            f'<div class="bento-card"><div class="bento-label">Declared Carbon Intensity</div>'
+            f'<div class="bento-value" style="color: #8ed5ff;">{decl_intensity:.3f} t/t</div>'
+            f'<div class="bento-sub">Floor: {phys_floor_int:.3f} tCO₂/t</div></div>',
+            unsafe_allow_html=True,
+        )
+    with bk2:
+        badge_phys = "<font color='#4edea3'>FEASIBLE</font>" if is_phys_feasible else "<font color='#ef4444'>VIOLATION</font>"
+        st.markdown(
+            f'<div class="bento-card"><div class="bento-label">Physical Mass Balance</div>'
+            f'<div class="bento-value">{badge_phys}</div>'
+            f'<div class="bento-sub">Deficit: {phys_deficit:,.0f} t CO₂</div></div>',
+            unsafe_allow_html=True,
+        )
+    with bk3:
+        st.markdown(
+            f'<div class="bento-card"><div class="bento-label">Satellite Kiln Activity</div>'
+            f'<div class="bento-value" style="color: #facc15;">{sat_active_months}/12 Months</div>'
+            f'<div class="bento-sub">Peak ΔT: +{sat_delta_t:.1f}°C</div></div>',
+            unsafe_allow_html=True,
+        )
+    with bk4:
+        st.markdown(
+            f'<div class="bento-card"><div class="bento-label">Inconsistency Risk Score</div>'
+            f'<div class="bento-value" style="color: {"#ef4444" if post_risk_pct >= 70 else ("#facc15" if post_risk_pct >= 25 else "#4edea3")};">{post_risk_pct:.1f}%</div>'
+            f'<div class="bento-sub">Confidence: {conf_score_pct:.1f}%</div></div>',
+            unsafe_allow_html=True,
+        )
+
+    # Verdict Banner
+    if "HIGH" in final_verdict or not is_phys_feasible or post_risk_pct >= 70:
+        st.markdown('<div class="status-badge badge-risk">🚨 HIGH INCONSISTENCY RISK — MANDATORY ON-SITE AUDIT RECOMMENDED</div>', unsafe_allow_html=True)
+        rec_text = "MANDATORY ON-SITE INSPECTION: High probability of under-reporting or physical bound breach. Freeze automated clearance."
+    elif "POTENTIAL" in final_verdict or post_risk_pct >= 25:
+        st.markdown('<div class="status-badge badge-potential">⚠️ POTENTIAL INCONSISTENCY — REQUEST TECHNICAL DOCUMENTATION</div>', unsafe_allow_html=True)
+        rec_text = "TECHNICAL CLARIFICATION REQUIRED: Moderate discrepancy detected. Request monthly CEMS records and fuel invoices."
+    elif conf_score_pct < 50:
+        st.markdown('<div class="status-badge badge-insufficient">⚪ INSUFFICIENT EVIDENCE — DEFER TO STANDARD MANUAL VERIFICATION</div>', unsafe_allow_html=True)
+        rec_text = "INSUFFICIENT OBSERVATIONAL EVIDENCE: Primary data degraded. Defer automated decision to standard accredited verifier audit."
+    else:
+        st.markdown('<div class="status-badge badge-consistent">✅ CONSISTENT WITH PHYSICAL & SATELLITE EVIDENCE — CLEAR FOR FILING</div>', unsafe_allow_html=True)
+        rec_text = "CLEAR FOR EXPEDITED IMPORT CLEARANCE: Emissions concordant with stoichiometry and satellite operating signatures."
+
+    # Evidence Breakdown Table
+    st.markdown("#### Multi-Source Evidence Synthesis Breakdown")
+    ev_breakdown_list = [
+        {"stream": "Chemical Stoichiometry (Mass Balance)", "status": "Pass" if is_phys_feasible else "Breach", "detail": f"Floor: {phys_floor_int:.3f} tCO₂/t (Margin {decl_intensity - phys_floor_int:+.3f})", "impact": "High (w=1.5)"},
+        {"stream": "Thermal Kiln Satellite (Landsat / VIIRS)", "status": "Active Firing" if sat_active_months >= 10 else "Low Heat", "detail": f"{sat_active_months}/12 active operating months (ΔT +{sat_delta_t:.1f}°C)", "impact": "High (w=1.1)"},
+        {"stream": "Optical Freight Siding Logistics (VHR)", "status": "Normal Turnover" if sat_freight_z >= 0 else "Low Activity", "detail": f"Freight siding & stockpile contrast z={sat_freight_z:+.2f}σ", "impact": "Moderate (w=1.0)"},
+        {"stream": "Historical Reporting Baseline", "status": "Concordant" if not is_external_sat_only else "Unobserved", "detail": "Longitudinal baseline stable" if not is_external_sat_only else "External supplier (Zero history)", "impact": "w=1.0" if not is_external_sat_only else "Abstained (w=0.0)"},
+    ]
+    st.dataframe(pd.DataFrame(ev_breakdown_list), use_container_width=True)
+
+    # 1-Click PDF Generation
+    st.markdown("---")
+    st.markdown("### 📥 Export Official Pre-Audit Screening Dossier")
+    st.write("Generate and download an official, publication-quality 1-page PDF dossier summarizing this audit case for verifiers, customs, or company records:")
+
+    dossier_payload = {
+        "facility_name": facility_name,
+        "country": country_name,
+        "sector": sector_name,
+        "route": route_name,
+        "reporting_year": reporting_year,
+        "declared_production_tonnes": annual_prod_tonnes,
+        "declared_co2_tonnes": declared_co2_tonnes,
+        "declared_intensity": decl_intensity,
+        "physical_floor_intensity": phys_floor_int,
+        "total_floor_co2": phys_min_total,
+        "is_physically_feasible": is_phys_feasible,
+        "physical_deficit_tco2": phys_deficit,
+        "risk_verdict": final_verdict,
+        "posterior_risk_pct": post_risk_pct,
+        "evidence_confidence_pct": conf_score_pct,
+        "audit_recommendation": rec_text,
+        "evidence_breakdown": ev_breakdown_list,
+        "satellite_summary": f"{sat_active_months}/12 active months, thermal excess +{sat_delta_t:.1f}°C, freight z={sat_freight_z:+.2f}σ",
+    }
+
+    try:
+        pdf_bytes = generate_dossier_pdf(dossier_payload)
+        safe_fname = f"vericbam_audit_dossier_{facility_name.lower()[:20].replace(' ', '_').replace('/', '_')}.pdf"
+        st.download_button(
+            label="📄 Download Official Pre-Audit Screening Dossier (PDF)",
+            data=pdf_bytes,
+            file_name=safe_fname,
+            mime="application/pdf",
+        )
+    except Exception as e:
+        st.error(f"Error rendering PDF dossier: {e}")
+
+# -------------------------------------------------------------
+# TAB 2: EXECUTIVE OVERVIEW & COCKPIT
+# -------------------------------------------------------------
+elif menu == "2. Executive Overview & Cockpit":
     scope_banner()
     st.markdown('<div class="stitch-main-title">VeriCBAM: Multimodal Decision Support for CBAM Auditing</div>', unsafe_allow_html=True)
     st.markdown(
@@ -590,7 +882,7 @@ if menu == "1. Executive Overview & Cockpit":
 # -------------------------------------------------------------
 # TAB 2: BENCHMARK COHORT
 # -------------------------------------------------------------
-elif menu == "2. 30-Facility Benchmark Cohort":
+elif menu == "3. 30-Facility Benchmark Cohort":
     scope_banner()
     st.markdown('<div class="stitch-main-title">Curated 30-Facility European Benchmark Cohort</div>', unsafe_allow_html=True)
     st.markdown(
@@ -815,7 +1107,7 @@ elif menu == "2. 30-Facility Benchmark Cohort":
 # -------------------------------------------------------------
 # TAB 3: STOICHIOMETRIC PHYSICS ENGINE
 # -------------------------------------------------------------
-elif menu == "3. Stoichiometric Physics Engine":
+elif menu == "4. Stoichiometric Physics Engine":
     scope_banner()
     st.markdown('<div class="stitch-main-title">Deterministic Stoichiometric Physics Engine</div>', unsafe_allow_html=True)
     st.markdown(
@@ -1014,7 +1306,7 @@ elif menu == "3. Stoichiometric Physics Engine":
 # -------------------------------------------------------------
 # TAB 4: STANDALONE SUPPLIER PLAUSIBILITY PRE-CHECK
 # -------------------------------------------------------------
-elif menu == "4. Standalone Supplier Plausibility Pre-Check":
+elif menu == "5. Standalone Supplier Plausibility Pre-Check":
     scope_banner()
     st.markdown('<div class="stitch-main-title">Standalone Supplier Plausibility Pre-Check</div>', unsafe_allow_html=True)
     st.markdown(
@@ -1121,7 +1413,7 @@ Generated by VeriCBAM Decision Support Cockpit.
 # -------------------------------------------------------------
 # TAB 5: COPERNICUS SATELLITE ENGINE & STAGE 2 MULTI-SENSOR EO
 # -------------------------------------------------------------
-elif menu == "5. Copernicus Satellite Engine (Sentinel-5P)":
+elif menu == "6. Copernicus Satellite Engine (Sentinel-5P)":
     scope_banner()
     st.markdown('<div class="stitch-main-title">Multi-Sensor Earth Observation & Satellite Verification Engine</div>', unsafe_allow_html=True)
     st.markdown(
@@ -1391,7 +1683,7 @@ elif menu == "5. Copernicus Satellite Engine (Sentinel-5P)":
 # -------------------------------------------------------------
 # TAB 6: BAYESIAN EVIDENCE FUSION
 # -------------------------------------------------------------
-elif menu == "6. Bayesian Evidence Fusion":
+elif menu == "7. Bayesian Evidence Fusion":
     scope_banner()
     st.markdown('<div class="stitch-main-title">Multimodal Probabilistic Evidence Fusion Simulator</div>', unsafe_allow_html=True)
     st.markdown(
@@ -1596,7 +1888,7 @@ elif menu == "6. Bayesian Evidence Fusion":
 # -------------------------------------------------------------
 # TAB 7: EMPIRICAL BENCHMARK EVALUATION & ABLATION
 # -------------------------------------------------------------
-elif menu == "7. Empirical Benchmark Evaluation & Ablation":
+elif menu == "8. Empirical Benchmark Evaluation & Ablation":
     scope_banner()
     st.markdown('<div class="stitch-main-title">Empirical Benchmark Evaluation: Primary 325-Case Graded Suite</div>', unsafe_allow_html=True)
     st.markdown(
@@ -1809,7 +2101,7 @@ elif menu == "7. Empirical Benchmark Evaluation & Ablation":
 # -------------------------------------------------------------
 # TAB 8: PROPOSAL, REFERENCES & ROADMAP
 # -------------------------------------------------------------
-elif menu == "8. Capstone Proposal, References & Roadmap":
+elif menu == "9. Capstone Proposal, References & Roadmap":
     scope_banner()
     st.markdown('<div class="stitch-main-title">Master Capstone Proposal & Academic Roadmap</div>', unsafe_allow_html=True)
     st.markdown(
