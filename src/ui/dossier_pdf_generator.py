@@ -7,86 +7,75 @@ import io
 import os
 from datetime import datetime
 from pathlib import Path
-from reportlab.lib.pagesizes import A4
-from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import mm
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
-from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
-from reportlab.pdfgen import canvas
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
 
-FONTS_DIR = Path(os.environ.get("WINDIR", r"C:\Windows")) / "Fonts"
 try:
-    pdfmetrics.registerFont(TTFont("Arial", str(FONTS_DIR / "arial.ttf")))
-    pdfmetrics.registerFont(TTFont("Arial-Bold", str(FONTS_DIR / "arialbd.ttf")))
-    pdfmetrics.registerFont(TTFont("Arial-Italic", str(FONTS_DIR / "ariali.ttf")))
-    MAIN_FONT = "Arial"
-    BOLD_FONT = "Arial-Bold"
-    ITALIC_FONT = "Arial-Italic"
-except Exception:
-    MAIN_FONT = "Helvetica"
-    BOLD_FONT = "Helvetica-Bold"
-    ITALIC_FONT = "Helvetica-Oblique"
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib import colors
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.units import mm
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
+    from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
+    from reportlab.pdfgen import canvas
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+    REPORTLAB_AVAILABLE = True
+except ImportError:
+    REPORTLAB_AVAILABLE = False
 
+if REPORTLAB_AVAILABLE:
+    FONTS_DIR = Path(os.environ.get("WINDIR", r"C:\Windows")) / "Fonts"
+    try:
+        pdfmetrics.registerFont(TTFont("Arial", str(FONTS_DIR / "arial.ttf")))
+        pdfmetrics.registerFont(TTFont("Arial-Bold", str(FONTS_DIR / "arialbd.ttf")))
+        pdfmetrics.registerFont(TTFont("Arial-Italic", str(FONTS_DIR / "ariali.ttf")))
+        MAIN_FONT = "Arial"
+        BOLD_FONT = "Arial-Bold"
+        ITALIC_FONT = "Arial-Italic"
+    except Exception:
+        MAIN_FONT = "Helvetica"
+        BOLD_FONT = "Helvetica-Bold"
+        ITALIC_FONT = "Helvetica-Oblique"
 
-class DossierCanvas(canvas.Canvas):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._saved_page_states = []
+    class DossierCanvas(canvas.Canvas):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self._saved_page_states = []
 
-    def showPage(self):
-        self._saved_page_states.append(dict(self.__dict__))
-        self._startPage()
+        def showPage(self):
+            self._saved_page_states.append(dict(self.__dict__))
+            self._startPage()
 
-    def save(self):
-        num_pages = len(self._saved_page_states)
-        for state in self._saved_page_states:
-            self.__dict__.update(state)
-            self.draw_footer(num_pages)
-            super().showPage()
-        super().save()
+        def save(self):
+            num_pages = len(self._saved_page_states)
+            for state in self._saved_page_states:
+                self.__dict__.update(state)
+                self.draw_footer(num_pages)
+                super().showPage()
+            super().save()
 
-    def draw_footer(self, page_count):
-        self.saveState()
-        self.setFont(MAIN_FONT, 7.2)
-        self.setFillColor(colors.HexColor("#4A5568"))
-        self.setStrokeColor(colors.HexColor("#CBD5E0"))
-        self.setLineWidth(0.5)
-        self.line(13 * mm, 11 * mm, 197 * mm, 11 * mm)
-        self.drawString(
-            13 * mm, 7.8 * mm,
-            "VeriCBAM Audit Dossier | Decision Support for Accredited Verifiers under Regulation (EU) 2025/2546 | Strictly Advisory"
-        )
-        self.drawRightString(197 * mm, 7.8 * mm, f"Page {self._pageNumber} of {page_count}")
-        self.restoreState()
+        def draw_footer(self, page_count):
+            self.saveState()
+            self.setFont(MAIN_FONT, 7.2)
+            self.setFillColor(colors.HexColor("#4A5568"))
+            self.setStrokeColor(colors.HexColor("#CBD5E0"))
+            self.setLineWidth(0.5)
+            self.line(13 * mm, 11 * mm, 197 * mm, 11 * mm)
+            self.drawString(
+                13 * mm, 7.8 * mm,
+                "VeriCBAM Audit Dossier | Decision Support for Accredited Verifiers under Regulation (EU) 2025/2546 | Strictly Advisory"
+            )
+            self.drawRightString(197 * mm, 7.8 * mm, f"Page {self._pageNumber} of {page_count}")
+            self.restoreState()
+else:
+    DossierCanvas = None
 
 
 def generate_dossier_pdf(audit_data: dict) -> bytes:
     """
     Generates a 1-page PDF Audit Dossier in memory.
-
-    Expected audit_data keys:
-      - facility_name: str
-      - country: str
-      - sector: str
-      - route: str
-      - reporting_year: int
-      - declared_production_tonnes: float
-      - declared_co2_tonnes: float
-      - declared_intensity: float
-      - physical_floor_intensity: float
-      - total_floor_co2: float
-      - is_physically_feasible: bool
-      - physical_deficit_tco2: float
-      - risk_verdict: str ('CONSISTENT', 'POTENTIAL INCONSISTENCY', 'HIGH INCONSISTENCY RISK', 'INSUFFICIENT EVIDENCE')
-      - posterior_risk_pct: float (0 to 100)
-      - evidence_confidence_pct: float (0 to 100)
-      - audit_recommendation: str
-      - evidence_breakdown: list of dict(stream, status, detail, impact)
-      - satellite_summary: str (optional)
     """
+    if not REPORTLAB_AVAILABLE:
+        raise ImportError("ReportLab is not installed in the current environment.")
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(
         buffer,

@@ -33,7 +33,10 @@ importlib.reload(_ef_mod)
 from core.bayesian.evidence_fusion import ProbabilisticEvidenceFusionEngine, EvidenceInput
 from satellite.copernicus_client import CopernicusSentinel5PClient
 from satellite.plume_analyzer import SatellitePlumeAnalyzer
-from ui.dossier_pdf_generator import generate_dossier_pdf
+try:
+    from ui.dossier_pdf_generator import generate_dossier_pdf
+except ImportError:
+    generate_dossier_pdf = None
 
 st.set_page_config(
     page_title="VeriCBAM | Decision Support Cockpit",

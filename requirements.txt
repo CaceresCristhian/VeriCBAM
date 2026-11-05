@@ -21,6 +21,7 @@ streamlit>=1.30.0
 plotly>=5.18.0
 
 # PDF & Document Processing
+reportlab>=4.0.0
 pymupdf>=1.24.0
 pypdf>=4.0.0
 
