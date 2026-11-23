@@ -33,7 +33,7 @@
 ---
 
 ### 3. Core Deliverables & Current Completion Status
-1. **VeriCBAM Python Engine (`src/`):** 100% complete and passing 30/30 unit tests (`pytest`).
+1. **VeriCBAM Python Engine (`src/`):** 100% complete and passing 32/32 unit & integration tests (`pytest`).
 2. **Interactive Cloud Decision Cockpit:** Live at https://vericbam-uqpz4jrnpteqetfvjxtslh.streamlit.app/ featuring the new **Tab 1 Quick Audit & 1-Click PDF Dossier Generator** for zero-friction industrial demonstrations.
 3. **Stage 2 Multi-Sensor Satellite Dataset:** Cached 30-facility dataset combining USGS Landsat-8/9 30m TIR $\Delta T$, NASA FIRMS VIIRS 375m daily operating calendars, and Planet VHR freight contrast.
 4. **Industry & Authority Outreach Suite:** Standalone 1-page Quick User Guide (`06_Quick_User_Guide.pdf`) and standardized demonstration protocol for verification bodies (DNV, TÜV, Bureau Veritas) and customs authorities (DEHSt).
@@ -41,7 +41,7 @@
 ---
 
 ### 4. Bi-Weekly Progress Roadmap & Final Deliverables Schedule (Winter 2026/2027)
-* **Bi-Weekly Progress Cadence:** Progress updates submitted to Dr. Humera Noor every two weeks: **Nov 09** (Update 1: Live Tab 1 Quick Audit & Stage 2 Multi-Sensor benchmark), **Nov 23** (Update 2: Industry pilot feedback & automated PDF dossier validation), **Dec 07** (Update 3: Multi-sector sensitivity & deck structure), and **Dec 21** (Update 4: Video walkthrough production & LinkedIn draft).
+* **Bi-Weekly Progress Cadence:** Progress updates submitted to Dr. Humera Noor every two weeks: **Nov 09 [DONE]** (Update 1: Live Tab 1 Quick Audit & Stage 2 Multi-Sensor benchmark), **Nov 23 [DONE]** (Update 2: External third-country satellite-only screening & automated PDF dossier validation), **Dec 07 [NEXT]** (Update 3: Multi-sector sensitivity & deck structure), and **Dec 21** (Update 4: Video walkthrough production & LinkedIn draft).
 * **Final Deliverables Package (Jan 04, 2027):**
   1. **Presentation Deck:** Executive slide deck presenting operational ROI and physics-grounded AI methodology.
   2. **Long-Form Video (15–20 min):** Technical walkthrough of the multimodal data pipeline and live interactive audit.

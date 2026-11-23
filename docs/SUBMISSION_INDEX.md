@@ -30,6 +30,6 @@
    * Section 5 of `05_Project_Summary_and_Status_Report_v1.pdf` documents the newly deployed **Tab 1 Quick Audit & PDF Dossier Generator** designed specifically for demonstration to verification bodies (DNV, TÜV) and customs authorities.
 2. **User Guide for External Reviewers:**
    * `06_Quick_User_Guide.pdf` provides external reviewers with a 4-step walkthrough to test declarations online in 30 seconds with zero installation.
-3. **Current Capstone Status & Final Deliverables:**
-   * Sprints 0 through 4 are complete. All 30 unit tests pass.
+3. **Current Capstone Status & Final Deliverables (Updated 23 Nov 2026):**
+   * Sprints 0 through 4 are complete. Bi-Weekly Progress Updates 1 (Nov 09) and 2 (Nov 23) are completed. All 32 unit & integration tests pass.
    * Project is in active **Industry Outreach & Real-World Validation (Sprint 5)** with bi-weekly updates every 2 weeks leading into the final January deliverables (Presentation Deck, 15–20 min Walkthrough Video, 1–2 min Elevator Pitch, LinkedIn Post, and GitHub Repository).

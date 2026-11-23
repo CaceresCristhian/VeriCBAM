@@ -42,6 +42,6 @@ Instead of acting as a "black box," **VeriCBAM** evaluates each emissions report
 * **Validation Benchmark (325 Test Cases):** Because real fraudulent reports are confidential, the models will be tested on a benchmark of **325 scenarios** combining the 177 real compliant factory-years with 148 simulated under-reporting cases (ranging from subtle $5\%\text{--}10\%$ reductions to severe $30\%\text{--}50\%$ understatements and technology misclassifications). Models will be compared using **ROC-AUC**, **Precision-Recall**, **False Positive Rate**, and **Ablation Studies** (testing whether combining all five sources beats using any single source alone).
 
 ### 5. Expected Deliverables & Industry Adoption
-1. **Modular Python Pipeline (`src/`):** Clean, reproducible Python code for data ingestion, feature extraction, and risk modeling passing 30/30 unit tests.
+1. **Modular Python Pipeline (`src/`):** Clean, reproducible Python code for data ingestion, feature extraction, and risk modeling passing 32/32 unit tests.
 2. **Interactive Streamlit Web Dashboard:** A user-friendly visual application where auditors or companies can test any facility, inspect multi-source evidence side-by-side, and export a 1-page **Pre-Audit Dossier PDF**.
 3. **Applied Capstone Deliverables Package:** Professional Presentation Deck, 15–20 min technical video walkthrough, 1–2 min executive elevator pitch video, public LinkedIn announcement, and active industry engagement with EU verifiers and importers.

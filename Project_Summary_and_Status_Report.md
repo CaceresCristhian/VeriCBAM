@@ -17,7 +17,7 @@ VeriCBAM is an open-source, explainable decision-support framework designed to s
   * `src/data_loaders/`: Ingestion pipelines for the EEA E-PRTR / IED panel registry, Global Energy Monitor technology trackers, and leave-one-year-out co-pollutant combustion ratio baselines (`nox_baseline.py`).
   * `src/satellite/`: Copernicus Data Space Ecosystem client (`copernicus_client.py`) extracting Sentinel-5P TROPOMI Level-2 tropospheric $\text{NO}_2$ column density, alongside the **Stage 2 Multi-Sensor Thermal & Logistics Extractor** (`multisensor_client.py`) integrating USGS M2M Landsat-8/9 Collection-2 Level-2 TIRS 30 m surface temperature ($\Delta T$), NASA FIRMS VIIRS 375 m daily active kiln/furnace timelines, and PlanetScope / VHR optical rail-yard logistics analysis across all 30 facilities.
   * `src/ui/`: Full-featured 8-tab Streamlit decision cockpit (`app.py`) featuring interactive geospatial maps, stoichiometric sandboxes, visual multi-sensor thermal/freight verification cards, waterfall Bayesian evidence graphs, and 1-click audit dossier generation.
-* **Test Suite & Tooling:** 30 modular unit and integration tests (`pytest`) covering physical mass conservation, boundary rules, and inference calibration. Built using Python 3.12, Streamlit, Scikit-Learn, ReportLab, Pandas, NumPy, SciPy, Rasterio, and Plotly.
+* **Test Suite & Tooling:** 32 modular unit and integration tests (`pytest`) covering physical mass conservation, boundary rules, inference calibration, external third-country satellite-only screening, and 1-page PDF dossier generation. Built using Python 3.12, Streamlit, Scikit-Learn, ReportLab, Pandas, NumPy, SciPy, Rasterio, and Plotly.
 
 ---
 
@@ -62,9 +62,9 @@ During project execution, several critical real-world industrial constraints nec
 
 ---
 
-### 5. Verdict on Current Stage & Industry Demonstration Setup
+### 5. Verdict on Current Stage & Industry Demonstration Setup (Bi-Weekly Update — Nov 2026)
 * **Core Strength:** VeriCBAM now operates a complete 6-stream multimodal verification architecture combining thermodynamic mass-balance bounds, longitudinal E-PRTR baselines, co-pollutant ratios, Sentinel-5P $\text{NO}_2$, 30 m/375 m thermal infrared operating timelines, and VHR freight rail-yard activity across all 30 European reference installations.
-* **Industry & Institutional Outreach Setup:** To enable direct, friction-free engagement with verification bodies (DNV, TÜV, Bureau Veritas), customs authorities (DEHSt), and industrial importers, we deployed **Tab 1: Quick Audit & 1-Click PDF Dossier Generator** in the cloud cockpit. External stakeholders can test any facility in 30 seconds—either by selecting pre-loaded European sites, inputting custom numbers, or testing third-country suppliers using satellite data alone—and immediately export an official 1-page Pre-Audit Dossier PDF without touching raw code.
+* **Industry & Institutional Outreach Setup (Updates 1 & 2 Validated):** To enable direct, friction-free engagement with verification bodies (DNV, TÜV, Bureau Veritas), customs authorities (DEHSt), and industrial importers, we deployed and validated **Tab 1: Quick Audit & 1-Click PDF Dossier Generator** alongside the standalone user guide (`06_Quick_User_Guide.pdf`). External stakeholders can test any facility in 30 seconds—including non-EU third-country suppliers with zero E-PRTR history using global Stage 2 satellite EO + stoichiometry alone—and immediately export a strictly formatted 1-page Pre-Audit Dossier PDF (verified by 32/32 passing automated unit and integration tests).
 * **Remaining Scope Boundaries:**
   1. *Proxy Qualification:* Public E-PRTR records report annual facility mass emissions ($t\text{CO}_2$), whereas CBAM regulates product-level specific embedded emissions ($t\text{CO}_2e/t$).
   2. *Optical Cloud Constraint:* Passive VHR optical imagery and Landsat thermal passes remain subject to cloud cover; all-weather Synthetic Aperture Radar (SAR) is the logical next step.
