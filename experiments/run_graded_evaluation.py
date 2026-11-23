@@ -23,7 +23,6 @@ WORKSPACE_ROOT = Path(__file__).parents[1]
 sys.path.insert(0, str(WORKSPACE_ROOT))
 
 from src.core.bayesian.evidence_fusion import ProbabilisticEvidenceFusionEngine, EvidenceInput
-from src.benchmark.graded_benchmark_generator import generate_graded_benchmark
 
 
 def compute_ece(probs: np.ndarray, labels: np.ndarray, n_bins: int = 10) -> float:
@@ -37,7 +36,8 @@ def compute_ece(probs: np.ndarray, labels: np.ndarray, n_bins: int = 10) -> floa
     bin_boundaries = np.linspace(0, 1, n_bins + 1)
     ece = 0.0
     for i in range(n_bins):
-        in_bin = (p_clean >= bin_boundaries[i]) & (p_clean < bin_boundaries[i + 1])
+        upper_cmp = (p_clean <= bin_boundaries[i + 1]) if i == n_bins - 1 else (p_clean < bin_boundaries[i + 1])
+        in_bin = (p_clean >= bin_boundaries[i]) & upper_cmp
         if np.sum(in_bin) > 0:
             bin_acc = np.mean(y_clean[in_bin])
             bin_conf = np.mean(p_clean[in_bin])
@@ -666,138 +666,7 @@ def run_graded_evaluation():
     triage_df.to_csv(WORKSPACE_ROOT / "experiments" / "results" / "triage_auditor_simulation.csv", index=False)
 
     # -------------------------------------------------------------------------
-    # 9. Step-by-Step Attribution Study (Phase 2 Requirement - Real Executions)
-    # -------------------------------------------------------------------------
-    print("\nExecuting Step-by-Step Attribution Study Across Methodological Configurations...")
-    def eval_cfg_metrics(df_c, hist_variant, l_col):
-        y_c = df_c[l_col].values
-        groups_c = df_c["facility_id"].values
-        
-        # B
-        s_avail = df_c["stoich_available"].fillna(False)
-        r_margin = df_c["stoich_margin_tonnes"] / (df_c["stoich_floor_central_tco2"].replace(0, np.nan) + 1e-4)
-        p_b = np.where(
-            df_c["stoich_violation_conservative"],
-            0.99,
-            1.0 / (1.0 + np.exp(np.clip(r_margin.fillna(0.0), -10, 10))),
-        )
-        p_b_eval = np.where(s_avail, p_b, np.nan)
-        
-        # D
-        if hist_variant == "onesided":
-            f_hist = np.maximum(0.0, -df_c["historical_z_robust"].fillna(0.0).values).reshape(-1, 1)
-        else:
-            f_hist = np.abs(df_c["historical_z_robust"].fillna(0.0).values).reshape(-1, 1)
-        gkf_cfg = GroupKFold(n_splits=5)
-        oof_d_cfg = np.zeros(len(df_c))
-        for tr, val in gkf_cfg.split(f_hist, y_c, groups_c):
-            clf_cfg = LogisticRegression(class_weight="balanced", C=1.0, max_iter=1000)
-            clf_cfg.fit(f_hist[tr], y_c[tr])
-            oof_d_cfg[val] = clf_cfg.predict_proba(f_hist[val])[:, 1]
-            
-        # E1
-        eng = ProbabilisticEvidenceFusionEngine(prior_inconsistency_prob=0.08)
-        p_e1 = []
-        for _, r_row in df_c.iterrows():
-            if r_row.get("stoich_available", True) and pd.notna(r_row["stoich_floor_central_tco2"]):
-                m_tonnes = float(r_row["stoich_margin_tonnes"])
-                s_m = max(1e4, abs(float(r_row["stoich_floor_central_tco2"])) * 0.15)
-                d_sig = max(0.0, m_tonnes / s_m)
-                s_violated = bool(r_row["stoich_violation_conservative"])
-                p_min_cfg = float(r_row["stoich_floor_central_tco2"])
-            else:
-                d_sig = None
-                s_violated = False
-                p_min_cfg = None
-            ev_cfg = EvidenceInput(
-                stoichiometric_discrepancy_sigma=d_sig,
-                stoichiometric_violated=s_violated,
-                satellite_plume_anomaly_zscore=float(r_row["satellite_zscore"]) if pd.notna(r_row["satellite_zscore"]) else None,
-                satellite_cloud_fraction=float(r_row["satellite_cloud_fraction"]),
-                temporal_variance_zscore=float(f_hist[len(p_e1)][0]),
-                years_reported_history=int(r_row["n_historical_years"]),
-                nox_co2_anomaly_zscore=float(r_row["nox_co2_anomaly_zscore"]) if pd.notna(r_row["nox_co2_anomaly_zscore"]) else None,
-                route_mismatch_detected=bool(r_row["route_mismatch_detected"]),
-            )
-            dec_cfg = eng.fuse_evidence(ev_cfg, reported_emissions_tco2=float(r_row["declared_co2_tonnes"]), physical_min_tco2=p_min_cfg)
-            p_e1.append(dec_cfg.posterior_inconsistency_risk)
-        p_e1 = np.array(p_e1)
-        
-        # E2
-        s_z = df_c["satellite_zscore"].fillna(0.0)
-        f_rm = np.where(s_avail, r_margin.fillna(0.0), 0.0)
-        f_viol = np.where(s_avail, df_c["stoich_violation_conservative"].astype(float), 0.0)
-        X_cfg = np.column_stack([
-            f_rm,
-            f_viol,
-            f_hist,
-            df_c["nox_co2_anomaly_zscore"].fillna(0.0),
-            s_z,
-            df_c["route_mismatch_detected"].astype(float),
-        ])
-        oof_e2 = np.zeros(len(df_c))
-        for tr, val in gkf_cfg.split(X_cfg, y_c, groups_c):
-            clf_cfg = LogisticRegression(class_weight="balanced", C=1.0, max_iter=1000)
-            clf_cfg.fit(X_cfg[tr], y_c[tr])
-            oof_e2[val] = clf_cfg.predict_proba(X_cfg[val])[:, 1]
-            
-        v_b = ~np.isnan(p_b_eval)
-        return {
-            "B": {"auc": roc_auc_score(y_c[v_b], p_b_eval[v_b]), "pr": average_precision_score(y_c[v_b], p_b_eval[v_b]), "brier": brier_score_loss(y_c[v_b], p_b_eval[v_b]), "ece": compute_ece(p_b_eval[v_b], y_c[v_b])},
-            "D": {"auc": roc_auc_score(y_c, oof_d_cfg), "pr": average_precision_score(y_c, oof_d_cfg), "brier": brier_score_loss(y_c, oof_d_cfg), "ece": compute_ece(oof_d_cfg, y_c)},
-            "E1": {"auc": roc_auc_score(y_c, p_e1), "pr": average_precision_score(y_c, p_e1), "brier": brier_score_loss(y_c, p_e1), "ece": compute_ece(p_e1, y_c)},
-            "E2": {"auc": roc_auc_score(y_c, oof_e2), "pr": average_precision_score(y_c, oof_e2), "brier": brier_score_loss(y_c, oof_e2), "ece": compute_ece(oof_e2, y_c)},
-        }
-
-    attribution_rows = []
-    attr_configs = [
-        ("1. Baseline (Phase 0)", True, "all_years", False, "twosided", "label_delta_10pct"),
-        ("2. +M3 (No Cap Fallback)", False, "all_years", False, "twosided", "label_delta_10pct"),
-        ("3. +M6 (Leave-One-Out NOx)", False, "leave_one_year_out", False, "twosided", "label_delta_10pct"),
-        ("4. +M5 & Boundary Fix (Primary)", False, "leave_one_year_out", True, "onesided", "label_delta_10pct"),
-        ("5. Sensitivity (delta >= 5%)", False, "leave_one_year_out", True, "onesided", "label_delta_5pct"),
-    ]
-
-    for step_label, cap_fb, nox_m, s_filt, h_mode, l_col in attr_configs:
-        if step_label.startswith("4.") or step_label.startswith("5."):
-            df_c = df.copy()
-        else:
-            df_c = generate_graded_benchmark(
-                use_missing_capacity_fallback=cap_fb,
-                nox_baseline_mode=nox_m,
-                stoich_applicability_filter=s_filt,
-                save_files=False,
-            )
-            df_c["label_delta_10pct"] = df_c["benchmark_label"]
-            df_c["label_delta_5pct"] = np.where(
-                (df_c["understatement_delta_pct"] >= 5.0) | (df_c["evaluation_split"] == "Route_Mismatch"),
-                1,
-                0,
-            )
-
-        res_c = eval_cfg_metrics(df_c, hist_variant=h_mode, l_col=l_col)
-        for m_key, m_name in [("B", "Model B (Stoich)"), ("D", "Model D (Historical)"), ("E1", "Model E1 (Bayesian)"), ("E2", "Model E2 (Logistic)")]:
-            if step_label in ["2. +M3 (No Cap Fallback)", "3. +M6 (Leave-One-Out NOx)"] and m_key == "D":
-                continue
-            if step_label == "5. Sensitivity (delta >= 5%)" and m_key in ["B", "D"]:
-                continue
-            m_res = res_c[m_key]
-            attribution_rows.append({
-                "step": step_label,
-                "model": m_name,
-                "roc_auc": round(m_res["auc"], 4),
-                "pr_auc": round(m_res["pr"], 4),
-                "brier": round(m_res["brier"], 4),
-                "ece": round(m_res["ece"], 4),
-                "cases": len(df_c),
-            })
-
-    attribution_df = pd.DataFrame(attribution_rows)
-    attribution_df.to_csv(WORKSPACE_ROOT / "experiments" / "results" / "attribution_study.csv", index=False)
-    print("Saved true attribution study to experiments/results/attribution_study.csv")
-
-    # -------------------------------------------------------------------------
-    # 10. Save Updated Predictions Parquet & CSV
+    # 9. Save Updated Predictions Parquet & CSV
     # -------------------------------------------------------------------------
     out_pq = WORKSPACE_ROOT / "experiments" / "results" / "graded_benchmark_predictions.parquet"
     out_csv = WORKSPACE_ROOT / "experiments" / "results" / "graded_benchmark_predictions.csv"
@@ -805,6 +674,12 @@ def run_graded_evaluation():
     df.to_csv(out_csv, index=False)
     print(f"Saved predictions table to {out_pq} and {out_csv}")
     print("\nGraded evaluation completed successfully.")
+
+    return {
+        "n_cases": len(df),
+        "n_facilities": int(df["facility_id"].nunique()),
+        "models": primary_results,
+    }
 
 
 if __name__ == "__main__":

@@ -1,91 +1,91 @@
 """
-Unit tests for VeriCBAM Ablation Study and Calibration Pipelines.
+Unit and integration tests for the 325-case graded evaluation pipeline and sensitivity metrics.
 """
 
 from pathlib import Path
-import pytest
 import numpy as np
 import pandas as pd
 
-from experiments.run_ablation_study import (
-    run_ablation_experiment,
-    compute_expected_calibration_error,
-)
-from experiments.calibrate_probabilities import (
-    run_probability_calibration,
+from experiments.run_graded_evaluation import (
     compute_ece,
+    compute_recall_at_fpr,
+    compute_triage_metrics,
 )
+from src.core.bayesian.evidence_fusion import ProbabilisticEvidenceFusionEngine, EvidenceInput
+
+RESULTS_DIR = Path(__file__).parents[1] / "experiments" / "results"
 
 
 def test_ece_metric_calculation():
-    """Verify Expected Calibration Error calculation against synthetic calibrated probabilities."""
+    """Verify Expected Calibration Error returns 0 for perfect calibration and 1 for inverted predictions."""
     y_true = np.array([0, 0, 1, 1])
-    # Perfectly calibrated probabilities
-    y_prob_perfect = np.array([0.0, 0.0, 1.0, 1.0])
-    ece_perf = compute_expected_calibration_error(y_true, y_prob_perfect, n_bins=5)
-    assert ece_perf == 0.0
-
-    # Inverted probabilities (worst calibration)
-    y_prob_inverted = np.array([1.0, 1.0, 0.0, 0.0])
-    ece_inv = compute_expected_calibration_error(y_true, y_prob_inverted, n_bins=5)
-    assert ece_inv == 1.0
+    assert compute_ece(np.array([0.0, 0.0, 1.0, 1.0]), y_true, n_bins=5) == 0.0
+    assert compute_ece(np.array([1.0, 1.0, 0.0, 0.0]), y_true, n_bins=5) == 1.0
 
 
-def test_ablation_study_execution():
-    """Verify that the 5-Model Ablation Study executes and outputs all 5 models."""
-    results = run_ablation_experiment()
-    assert results["n_cases"] == 101
-    assert len(results["models"]) == 5
+def test_recall_at_fpr_and_triage_metrics():
+    """Verify fixed-FPR recall ignores NaN abstentions and triage ranks highest-risk cases first."""
+    scores = np.array([0.05, 0.10, 0.15, 0.20, np.nan, 0.85, 0.90, 0.95, 0.30, np.nan])
+    auth_mask = np.array([True, True, True, True, True, False, False, False, False, False])
+    pos_mask = np.array([False, False, False, False, False, True, True, True, True, True])
 
-    model_names = [m["model_name"] for m in results["models"]]
-    assert any("Model A" in n for n in model_names)
-    assert any("Model B" in n for n in model_names)
-    assert any("Model C" in n for n in model_names)
-    assert any("Model D" in n for n in model_names)
-    assert any("Model E" in n for n in model_names)
+    rec, th = compute_recall_at_fpr(scores, auth_mask, pos_mask, target_fpr=0.20)
+    assert 0.5 <= rec <= 1.0
+    assert 0.15 <= th <= 0.25
 
-    # Model E (Fused) must strictly outperform Model A and Model B in F1-score
-    f1_a = next(m["f1_score"] for m in results["models"] if "Model A" in m["model_name"])
-    f1_b = next(m["f1_score"] for m in results["models"] if "Model B" in m["model_name"])
-    f1_e = next(m["f1_score"] for m in results["models"] if "Model E" in m["model_name"])
-    assert f1_e > f1_a
-    assert f1_e > f1_b
-    assert f1_e >= 0.90
+    df_triage = pd.DataFrame({"prob": scores, "label": pos_mask.astype(int)})
+    records = compute_triage_metrics(df_triage, "prob", "label", k_pcts=[30])
+    assert records[0]["caught_cases"] == 3
+    assert records[0]["precision_at_k"] == 1.0
 
 
-def test_probability_calibration_execution():
-    """Verify that probability calibration completes 5-fold CV and reduces Brier score."""
-    cal_res = run_probability_calibration(n_splits=5, seed=42)
-    assert cal_res["dataset_size"] == 101
-    assert len(cal_res["comparison"]) == 3
+def test_graded_model_summary_results_consistency():
+    """Verify authoritative 325-case summary CSV includes Stage 1 + Stage 2 models and expected hierarchy."""
+    summary_path = RESULTS_DIR / "graded_model_comparison_summary.csv"
+    assert summary_path.exists()
+    df_sum = pd.read_csv(summary_path).set_index("model_name")
 
-    uncal_brier = next(c["brier_score"] for c in cal_res["comparison"] if "Uncalibrated" in c["calibration_method"])
-    platt_brier = next(c["brier_score"] for c in cal_res["comparison"] if "Platt" in c["calibration_method"])
-    assert platt_brier < uncal_brier
+    assert len(df_sum) == 7
+    auc_c1 = df_sum.loc["Model C1 (Stage 1 Satellite: TROPOMI NO2)", "roc_auc"]
+    auc_c2 = df_sum.loc["Model C2 (Stage 2 Satellite: Thermal & Freight EO)", "roc_auc"]
+    auc_e1 = df_sum.loc["Model E1 (Stage 1 Expert Bayesian Fusion)", "roc_auc"]
+    auc_e2 = df_sum.loc["Model E2 (Stage 2 Multi-Sensor Bayesian Fusion)", "roc_auc"]
+    auc_e3 = df_sum.loc["Model E3 (Learned Logistic Regression - GroupKFold)", "roc_auc"]
 
-
-def test_facility_grouped_validation_execution():
-    """Verify that GroupKFold cross-validation holds out entire facilities without data leakage."""
-    from experiments.run_grouped_validation import run_facility_grouped_validation
-    res = run_facility_grouped_validation(n_splits=5)
-    assert res["n_splits"] == 5
-    assert res["n_facilities"] == 30
-    assert res["n_cases"] == 101
-    assert len(res["metrics"]) == 3
-    # Platt scaling should achieve lower Brier score than raw posterior
-    raw_brier = next(m["brier_score"] for m in res["metrics"] if "Raw" in m["calibration_method"])
-    platt_brier = next(m["brier_score"] for m in res["metrics"] if "Platt" in m["calibration_method"])
-    assert platt_brier <= raw_brier
+    assert auc_c2 > 0.95 and auc_c2 > auc_c1
+    assert auc_e2 > auc_e1
+    assert auc_e3 > 0.95
 
 
-def test_sensitivity_analysis_execution():
-    """Verify that LR and Prior sensitivity analyses evaluate all scaling factors and preserve ranking."""
-    from experiments.run_lr_sensitivity import run_sensitivity_analysis
-    res = run_sensitivity_analysis()
-    assert len(res["prior_sensitivity"]) == 5
-    assert len(res["lr_sensitivity"]) == 5
-    # Spearman rank correlation should be >= 0.95 across all variations
-    for item in res["prior_sensitivity"]:
-        assert item["spearman_rank_corr"] >= 0.95
-    for item in res["lr_sensitivity"]:
-        assert item["spearman_rank_corr"] >= 0.95
+def test_bayesian_prior_sensitivity_monotonicity():
+    """Verify posterior risk increases monotonically across base priors from 2% to 15%."""
+    engine = ProbabilisticEvidenceFusionEngine()
+    ev = EvidenceInput(
+        stoichiometric_discrepancy_sigma=0.6,
+        stoichiometric_violated=False,
+        satellite_plume_anomaly_zscore=2.2,
+        satellite_cloud_fraction=0.15,
+        temporal_variance_zscore=2.5,
+        years_reported_history=5,
+        thermal_anomaly_zscore=2.1,
+        thermal_operating_months_ratio=0.92,
+        freight_logistics_zscore=1.5,
+    )
+    sens = engine.evaluate_prior_sensitivity(
+        ev, reported_emissions_tco2=750_000, physical_min_tco2=700_000,
+        candidate_priors=[0.02, 0.05, 0.08, 0.12, 0.15],
+    )
+    probs = list(sens.values())
+    assert probs == sorted(probs)
+    assert probs[-1] > probs[0]
+
+
+def test_ui_theme_bento_card_escaping():
+    """Verify UI bento_card helper escapes label/subtitle HTML and applies custom value color."""
+    from src.ui.theme import bento_card
+
+    html_out = bento_card("Test <Metric>", "96.6%", "Sub & Check", value_color="#4edea3")
+    assert "Test &lt;Metric&gt;" in html_out
+    assert "Sub &amp; Check" in html_out
+    assert 'style="color: #4edea3;"' in html_out
+    assert "96.6%" in html_out

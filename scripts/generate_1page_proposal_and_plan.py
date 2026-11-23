@@ -1,11 +1,11 @@
 """
-Generates:
-1. Capstone_Proposal_1Page.pdf (strictly 1-page core Stage 1 proposal from Capstone_Proposal_1Page.md)
-2. Capstone_Project_Plan.pdf (standalone Project Plan with visual Gantt chart, Sprint Schedule, Risk Matrix, Deliverables, and Roadmap from Capstone_Project_Plan.md)
+Generates directly into submissions/:
+1. 02_Project_Proposal.pdf (strictly 1-page core proposal from docs/sources/Capstone_Proposal_1Page.md)
+2. 03_Project_Execution_Plan.pdf (strictly 1-page plan with Gantt chart from docs/sources/Capstone_Project_Plan.md)
 """
 
-import os
 import re
+import sys
 from pathlib import Path
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
@@ -15,200 +15,25 @@ from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
 )
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_JUSTIFY
-from reportlab.pdfgen import canvas
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.graphics.shapes import Drawing, Rect, String, Line, Circle
 
-WORKSPACE = Path(r"c:\Users\crist\Projects\UEprojects\Capstone")
-PROPOSAL_1P_MD = WORKSPACE / "Capstone_Proposal_1Page.md"
-PROPOSAL_1P_PDF = WORKSPACE / "Capstone_Proposal_1Page.pdf"
+sys.path.insert(0, str(Path(__file__).parent))
+from pdf_utils import (
+    DOCS_SOURCES_DIR,
+    SUBMISSIONS_DIR,
+    MAIN_FONT,
+    BOLD_FONT,
+    ITALIC_FONT,
+    make_numbered_canvas,
+    convert_latex_math,
+    clean_markdown_inline,
+)
 
-PLAN_MD = WORKSPACE / "Capstone_Project_Plan.md"
-PLAN_PDF = WORKSPACE / "Capstone_Project_Plan.pdf"
+PROPOSAL_1P_MD = DOCS_SOURCES_DIR / "Capstone_Proposal_1Page.md"
+PROPOSAL_1P_PDF = SUBMISSIONS_DIR / "02_Project_Proposal.pdf"
 
-FONTS_DIR = Path(os.environ.get("WINDIR", r"C:\Windows")) / "Fonts"
-pdfmetrics.registerFont(TTFont("Arial", str(FONTS_DIR / "arial.ttf")))
-pdfmetrics.registerFont(TTFont("Arial-Bold", str(FONTS_DIR / "arialbd.ttf")))
-pdfmetrics.registerFont(TTFont("Arial-Italic", str(FONTS_DIR / "ariali.ttf")))
-pdfmetrics.registerFont(TTFont("Arial-BoldItalic", str(FONTS_DIR / "arialbi.ttf")))
-
-
-class Proposal1PageCanvas(canvas.Canvas):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._saved_page_states = []
-
-    def showPage(self):
-        self._saved_page_states.append(dict(self.__dict__))
-        self._startPage()
-
-    def save(self):
-        num_pages = len(self._saved_page_states)
-        print(f"  [Page Check] Rendered {num_pages} page(s)")
-        for state in self._saved_page_states:
-            self.__dict__.update(state)
-            self.draw_footer(num_pages)
-            super().showPage()
-        super().save()
-
-    def draw_footer(self, page_count):
-        self.saveState()
-        self.setFont("Arial", 7.2)
-        self.setFillColor(colors.HexColor("#4A5568"))
-        self.setStrokeColor(colors.HexColor("#CBD5E0"))
-        self.setLineWidth(0.5)
-        self.line(13 * mm, 11 * mm, 197 * mm, 11 * mm)
-        self.drawString(
-            13 * mm, 7.8 * mm,
-            "VeriCBAM Capstone Proposal (Stage 1 Core) | Cristhian David Cáceres Mateus (93515346) | Supervisor: Dr. Humera Noor | UE Germany (Potsdam)"
-        )
-        self.drawRightString(197 * mm, 7.8 * mm, f"Page {self._pageNumber} of {page_count}")
-        self.restoreState()
-
-
-class ProjectPlanCanvas(canvas.Canvas):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._saved_page_states = []
-
-    def showPage(self):
-        self._saved_page_states.append(dict(self.__dict__))
-        self._startPage()
-
-    def save(self):
-        num_pages = len(self._saved_page_states)
-        print(f"  [Page Check] Rendered {num_pages} page(s)")
-        for state in self._saved_page_states:
-            self.__dict__.update(state)
-            self.draw_header_footer(num_pages)
-            super().showPage()
-        super().save()
-
-    def draw_header_footer(self, page_count):
-        self.saveState()
-        self.setFont("Arial", 7.5)
-        self.setFillColor(colors.HexColor("#4A5568"))
-        if self._pageNumber > 1:
-            self.drawString(15 * mm, 287 * mm, "VeriCBAM — Capstone Project Work Plan, Risk Matrix & Execution Roadmap")
-            self.setStrokeColor(colors.HexColor("#CBD5E0"))
-            self.setLineWidth(0.5)
-            self.line(15 * mm, 284 * mm, 195 * mm, 284 * mm)
-        self.setStrokeColor(colors.HexColor("#CBD5E0"))
-        self.setLineWidth(0.5)
-        self.line(15 * mm, 12 * mm, 195 * mm, 12 * mm)
-        self.drawString(
-            15 * mm, 8.5 * mm,
-            "VeriCBAM Project Plan | Cristhian David Cáceres Mateus (93515346) | Supervisor: Dr. Humera Noor | UE Germany (Potsdam)"
-        )
-        self.drawRightString(195 * mm, 8.5 * mm, f"Page {self._pageNumber} of {page_count}")
-        self.restoreState()
-
-
-def parse_braced_arg(s: str, start_idx: int):
-    if start_idx >= len(s) or s[start_idx] != '{':
-        return None, start_idx
-    depth = 0
-    for i in range(start_idx, len(s)):
-        if s[i] == '{':
-            depth += 1
-        elif s[i] == '}':
-            depth -= 1
-            if depth == 0:
-                return s[start_idx + 1:i], i + 1
-    return None, start_idx
-
-
-def replace_fractions(text: str) -> str:
-    while r"\frac" in text:
-        idx = text.find(r"\frac")
-        num, next_idx = parse_braced_arg(text, idx + 5)
-        if num is None:
-            break
-        den, end_idx = parse_braced_arg(text, next_idx)
-        if den is None:
-            break
-        num_clean = replace_fractions(num.strip())
-        den_clean = replace_fractions(den.strip())
-        num_expr = f"({num_clean})" if any(op in num_clean for op in ["+", "-", "×", "·", " "]) else num_clean
-        den_expr = f"({den_clean})" if any(op in den_clean for op in ["+", "-", "×", "·", " "]) else den_clean
-        text = text[:idx] + f"({num_expr} / {den_expr})" + text[end_idx:]
-    return text
-
-
-def convert_latex_math(s: str, is_display: bool = False) -> str:
-    text = s.strip()
-    if is_display:
-        if text.startswith("$$"):
-            text = text[2:].strip()
-        if text.endswith("$$"):
-            text = text[:-2].strip()
-    else:
-        if text.startswith("$") and text.endswith("$"):
-            text = text[1:-1].strip()
-
-    text = re.sub(r"(\d+(?:,\d+)?)\s*\^\\circ\\text\{C\}", r"\1°C", text)
-    text = re.sub(r"\^\\circ\\text\{C\}", "°C", text)
-    text = re.sub(r"\^\\circ", "°", text)
-    text = replace_fractions(text)
-
-    text = text.replace(r"\text{CaCO}_3", "CaCO<sub>3</sub>").replace(r"CaCO_3", "CaCO<sub>3</sub>")
-    text = text.replace(r"\text{CaO}", "CaO")
-    text = text.replace(r"\text{CO}_2", "CO<sub>2</sub>").replace(r"CO_2", "CO<sub>2</sub>").replace(r"\text{CO}", "CO")
-    text = text.replace(r"\text{NO}_x", "NO<sub>x</sub>").replace(r"NO_x", "NO<sub>x</sub>")
-    text = text.replace(r"\text{NO}_2", "NO<sub>2</sub>").replace(r"NO_2", "NO<sub>2</sub>")
-    text = text.replace(r"\text{SO}_x", "SO<sub>x</sub>").replace(r"SO_x", "SO<sub>x</sub>")
-    text = text.replace(r"\text{Fe}_2\text{O}_3", "Fe<sub>2</sub>O<sub>3</sub>")
-    text = text.replace(r"\text{Fe}", "Fe")
-    text = text.replace(r"t\text{CO}_2e", "t CO<sub>2</sub>e")
-    text = text.replace(r"\text{ t CO}_2/\text{t clinker}", " t CO<sub>2</sub>/t clinker")
-    text = text.replace(r"\text{ t CO}_2/\text{t}", " t CO<sub>2</sub>/t")
-    text = text.replace(r"\text{ t/t}", " t/t")
-    text = text.replace(r"\text{ km}", " km")
-    text = text.replace(r"\text{qa\_value}", "qa_value")
-
-    text = text.replace(r"\gamma", "γ").replace(r"\delta", "δ").replace(r"\Delta", "Δ")
-    text = text.replace(r"\sigma", "σ").replace(r"\Sigma", "Σ").replace(r"\eta", "η")
-    text = text.replace(r"\operatorname{logit}", "logit").replace(r"\operatorname{LR}", "LR")
-    text = text.replace(r"\hat{Q}", "Q̂").replace(r"\hat{p}", "p̂")
-    text = text.replace(r"\bar{V}_{\text{target}}", "V<sub>target</sub>").replace(r"\bar{V}_{\text{bg}}", "V<sub>bg</sub>")
-    text = text.replace(r"\ln", "ln").replace(r"\max", "max").replace(r"\min", "min")
-    text = text.replace(r"\sum_{k=1}^{5}", "Σ<sub>k=1..5</sub>").replace(r"\sum_{k=1}^5", "Σ<sub>k=1..5</sub>")
-    text = text.replace(r"\left(", "(").replace(r"\right)", ")")
-    text = text.replace(r"\mid", "|").replace(r"\approx", "≈").replace(r"\le", "≤").replace(r"\ge", "≥")
-    text = text.replace(r"\in", " in ").replace(r"\times", "×").replace(r"\cdot", "·")
-    text = text.replace(r"\Rightarrow", " → ").replace(r"\rightarrow", " → ")
-    text = text.replace(r"\delta^*", "δ<sup>*</sup>")
-    text = text.replace(r"\qquad", " &nbsp; &nbsp; &nbsp; ")
-    text = text.replace(r"\%", "%").replace(r"\{", "{").replace(r"\}", "}")
-    text = re.sub(r"\\text\{([^}]+)\}", r"\1", text)
-    text = re.sub(r"_\{([^}]+)\}", r"<sub>\1</sub>", text)
-    text = re.sub(r"_([A-Za-z0-9]+)", r"<sub>\1</sub>", text)
-    text = text.replace("qa<sub>value</sub>", "qa_value")
-    text = text.replace(r"--", "–")
-    return re.sub(r"\s+", " ", text).strip()
-
-
-def clean_markdown_inline(text: str) -> str:
-    text = re.sub(r"\[(.*?)\]\((.*?)\)", r'<font color="#2B6CB0"><u>\1</u></font>', text)
-
-    def replace_code(m):
-        code_val = m.group(1).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-        return f'<font face="Courier" color="#1A365D">{code_val}</font>'
-    text = re.sub(r"`(.*?)`", replace_code, text)
-
-    def replace_inline_math(m):
-        raw_math = m.group(1)
-        conv = convert_latex_math(raw_math, is_display=False)
-        return f'<i>{conv}</i>'
-    text = re.sub(r"\$([^\$\n]+)\$", replace_inline_math, text)
-
-    text = re.sub(r"\*\*\*(.*?)\*\*\*", r"<b><i>\1</i></b>", text)
-    text = re.sub(r"\*\*(.*?)\*\*", r"<b>\1</b>", text)
-    text = re.sub(r"(?<!\w)\*([^\*]+)\*(?!\w)", r"<i>\1</i>", text)
-    text = text.replace("CO2", "CO<sub>2</sub>").replace("NOx", "NO<sub>x</sub>").replace("SOx", "SO<sub>x</sub>")
-    text = text.replace("CaCO3", "CaCO<sub>3</sub>").replace("Fe2O3", "Fe<sub>2</sub>O<sub>3</sub>")
-    return text
+PLAN_MD = DOCS_SOURCES_DIR / "Capstone_Project_Plan.md"
+PLAN_PDF = SUBMISSIONS_DIR / "03_Project_Execution_Plan.pdf"
 
 
 def build_gantt_drawing() -> Drawing:
@@ -217,26 +42,20 @@ def build_gantt_drawing() -> Drawing:
     h = 41 * mm
     d = Drawing(w, h)
 
-    # Background card
     d.add(Rect(0, 0, w, h, fillColor=colors.HexColor("#F8FAFC"), strokeColor=colors.HexColor("#CBD5E0"), strokeWidth=0.6, rx=3, ry=3))
-
-    # Title banner
     d.add(Rect(0, h - 5.5 * mm, w, 5.5 * mm, fillColor=colors.HexColor("#1A365D"), strokeColor=None))
-    d.add(String(4 * mm, h - 3.8 * mm, "VeriCBAM Execution Gantt Chart & Milestone Timeline (Winter Semester 2026/2027)", fontName="Arial-Bold", fontSize=7.4, fillColor=colors.white))
+    d.add(String(4 * mm, h - 3.8 * mm, "VeriCBAM Execution Gantt Chart & Milestone Timeline (Winter Semester 2026/2027)", fontName=BOLD_FONT, fontSize=7.4, fillColor=colors.white))
 
-    # Timeline columns: Left label area = 54mm, Chart area = 126mm
     x0 = 54 * mm
     cw = 126 * mm
     months = ["October 2026", "November 2026", "December 2026", "January 2027"]
     mw = cw / 4.0
 
-    # Month headers
     y_top = h - 9.5 * mm
     for idx, m_label in enumerate(months):
         mx = x0 + idx * mw
         d.add(Rect(mx, y_top, mw, 4.0 * mm, fillColor=colors.HexColor("#EDF2F7"), strokeColor=colors.HexColor("#CBD5E0"), strokeWidth=0.4))
-        d.add(String(mx + mw / 2.0, y_top + 1.1 * mm, m_label, fontName="Arial-Bold", fontSize=6.5, fillColor=colors.HexColor("#2D3748"), textAnchor="middle"))
-        # Vertical grid line
+        d.add(String(mx + mw / 2.0, y_top + 1.1 * mm, m_label, fontName=BOLD_FONT, fontSize=6.5, fillColor=colors.HexColor("#2D3748"), textAnchor="middle"))
         d.add(Line(mx, 2 * mm, mx, y_top, strokeColor=colors.HexColor("#E2E8F0"), strokeWidth=0.5))
     d.add(Line(x0 + cw, 2 * mm, x0 + cw, y_top, strokeColor=colors.HexColor("#CBD5E0"), strokeWidth=0.5))
 
@@ -254,25 +73,21 @@ def build_gantt_drawing() -> Drawing:
         ry = y_top - (idx + 1) * row_h - 0.2 * mm
         if idx % 2 == 1:
             d.add(Rect(2 * mm, ry - 0.4 * mm, w - 4 * mm, row_h, fillColor=colors.HexColor("#F1F5F9"), strokeColor=None))
-        d.add(String(3.5 * mm, ry + 0.9 * mm, label, fontName="Arial-Bold", fontSize=6.3, fillColor=colors.HexColor("#1E293B")))
+        d.add(String(3.5 * mm, ry + 0.9 * mm, label, fontName=BOLD_FONT, fontSize=6.3, fillColor=colors.HexColor("#1E293B")))
         bx = x0 + s_start * cw
         bw = (s_end - s_start) * cw
         d.add(Rect(bx, ry + 0.4 * mm, bw, 3.0 * mm, fillColor=colors.HexColor(col_hex), strokeColor=None, rx=1.2, ry=1.2))
         mx_pt = x0 + m_pos * cw
         d.add(Circle(mx_pt, ry + 1.8 * mm, 1.1 * mm, fillColor=colors.HexColor("#F6E05E"), strokeColor=colors.HexColor("#1A202C"), strokeWidth=0.5))
-        label_x = min(bx + bw + 2 * mm, x0 + cw - 26 * mm)
-        if idx == 5:
-            label_x = bx - 29 * mm
-        d.add(String(label_x, ry + 0.9 * mm, m_label, fontName="Arial-Italic", fontSize=5.9, fillColor=colors.HexColor("#1A365D")))
+        label_x = min(bx + bw + 2 * mm, x0 + cw - 26 * mm) if idx != 5 else bx - 29 * mm
+        d.add(String(label_x, ry + 0.9 * mm, m_label, fontName=ITALIC_FONT, fontSize=5.9, fillColor=colors.HexColor("#1A365D")))
 
     return d
 
 
 def build_1page_proposal():
-
     print(f"Building 1-Page Proposal PDF: {PROPOSAL_1P_PDF}")
-    content = PROPOSAL_1P_MD.read_text(encoding="utf-8")
-    lines = content.splitlines()
+    lines = PROPOSAL_1P_MD.read_text(encoding="utf-8").splitlines()
 
     doc = SimpleDocTemplate(
         str(PROPOSAL_1P_PDF),
@@ -280,23 +95,24 @@ def build_1page_proposal():
         leftMargin=13 * mm,
         rightMargin=13 * mm,
         topMargin=9 * mm,
-        bottomMargin=9 * mm,
+        bottomMargin=12 * mm,
     )
 
     styles = getSampleStyleSheet()
-    title_style = ParagraphStyle("P1_Title", parent=styles["Normal"], fontName="Arial-Bold", fontSize=13.5, leading=16.0, textColor=colors.HexColor("#1A365D"), spaceAfter=1.2)
-    subtitle_style = ParagraphStyle("P1_Sub", parent=styles["Normal"], fontName="Arial-Bold", fontSize=9.0, leading=11.2, textColor=colors.HexColor("#2B6CB0"), spaceAfter=3.5)
-    h1_style = ParagraphStyle("P1_H1", parent=styles["Normal"], fontName="Arial-Bold", fontSize=9.2, leading=11.5, textColor=colors.HexColor("#1A365D"), spaceBefore=4.0, spaceAfter=1.5, keepWithNext=True)
-    body_style = ParagraphStyle("P1_Body", parent=styles["Normal"], fontName="Arial", fontSize=7.9, leading=10.0, textColor=colors.HexColor("#2D3748"), alignment=TA_JUSTIFY, spaceAfter=2.0)
-    bullet_style = ParagraphStyle("P1_Bullet", parent=styles["Normal"], fontName="Arial", fontSize=7.8, leading=9.8, textColor=colors.HexColor("#2D3748"), leftIndent=9, firstLineIndent=-5.5, spaceAfter=1.6)
-    callout_style = ParagraphStyle("P1_Callout", parent=styles["Normal"], fontName="Arial-BoldItalic", fontSize=7.9, leading=10.0, textColor=colors.HexColor("#1A365D"), alignment=TA_LEFT)
-    formula_style = ParagraphStyle("P1_Formula", parent=styles["Normal"], fontName="Arial-Bold", fontSize=7.8, leading=9.8, textColor=colors.HexColor("#1A365D"), alignment=TA_CENTER, spaceBefore=1.5, spaceAfter=1.5)
-    meta_k = ParagraphStyle("P1_MK", fontName="Arial-Bold", fontSize=7.5, leading=9.5, textColor=colors.HexColor("#2B6CB0"))
-    meta_v = ParagraphStyle("P1_MV", fontName="Arial", fontSize=7.5, leading=9.5, textColor=colors.HexColor("#2D3748"))
+    title_style = ParagraphStyle("P1_Title", parent=styles["Normal"], fontName=BOLD_FONT, fontSize=13.5, leading=16.0, textColor=colors.HexColor("#1A365D"), spaceAfter=1.2)
+    subtitle_style = ParagraphStyle("P1_Sub", parent=styles["Normal"], fontName=BOLD_FONT, fontSize=9.0, leading=11.2, textColor=colors.HexColor("#2B6CB0"), spaceAfter=3.5)
+    h1_style = ParagraphStyle("P1_H1", parent=styles["Normal"], fontName=BOLD_FONT, fontSize=9.2, leading=11.5, textColor=colors.HexColor("#1A365D"), spaceBefore=4.0, spaceAfter=1.5, keepWithNext=True)
+    body_style = ParagraphStyle("P1_Body", parent=styles["Normal"], fontName=MAIN_FONT, fontSize=7.9, leading=10.0, textColor=colors.HexColor("#2D3748"), alignment=TA_JUSTIFY, spaceAfter=2.0)
+    bullet_style = ParagraphStyle("P1_Bullet", parent=styles["Normal"], fontName=MAIN_FONT, fontSize=7.8, leading=9.8, textColor=colors.HexColor("#2D3748"), leftIndent=9, firstLineIndent=-5.5, spaceAfter=1.6)
+    callout_style = ParagraphStyle("P1_Callout", parent=styles["Normal"], fontName="Arial-BoldItalic" if BOLD_FONT == "Arial-Bold" else BOLD_FONT, fontSize=7.9, leading=10.0, textColor=colors.HexColor("#1A365D"), alignment=TA_LEFT)
+    formula_style = ParagraphStyle("P1_Formula", parent=styles["Normal"], fontName=BOLD_FONT, fontSize=7.8, leading=9.8, textColor=colors.HexColor("#1A365D"), alignment=TA_CENTER, spaceBefore=1.5, spaceAfter=1.5)
+    meta_k = ParagraphStyle("P1_MK", fontName=BOLD_FONT, fontSize=7.5, leading=9.5, textColor=colors.HexColor("#2B6CB0"))
+    meta_v = ParagraphStyle("P1_MV", fontName=MAIN_FONT, fontSize=7.5, leading=9.5, textColor=colors.HexColor("#2D3748"))
 
-    story = []
-    story.append(Paragraph("Capstone Project Proposal: VeriCBAM", title_style))
-    story.append(Paragraph("A Data-Driven Decision-Support Tool for Screening Carbon Border (CBAM) Emissions Reports", subtitle_style))
+    story = [
+        Paragraph("Capstone Project Proposal: VeriCBAM", title_style),
+        Paragraph("A Data-Driven Decision-Support Tool for Screening Carbon Border (CBAM) Emissions Reports", subtitle_style),
+    ]
 
     meta_data = [
         [Paragraph("Student Name:", meta_k), Paragraph("Cristhian David Cáceres Mateus (ID: 93515346)", meta_v),
@@ -306,22 +122,18 @@ def build_1page_proposal():
     ]
     meta_tbl = Table(meta_data, colWidths=[24 * mm, 64 * mm, 27 * mm, 69 * mm])
     meta_tbl.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#F7FAFC")),
-        ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor("#CBD5E0")),
-        ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#EDF2F7")),
-        ('TOPPADDING', (0, 0), (-1, -1), 1.8),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 1.8),
-        ('LEFTPADDING', (0, 0), (-1, -1), 4),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#F7FAFC")),
+        ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#CBD5E0")),
+        ("INNERGRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#EDF2F7")),
+        ("TOPPADDING", (0, 0), (-1, -1), 1.8),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 1.8),
+        ("LEFTPADDING", (0, 0), (-1, -1), 4),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 4),
     ]))
     story.append(meta_tbl)
     story.append(Spacer(1, 2.5))
 
-    start_idx = 0
-    for idx, l in enumerate(lines[:15]):
-        if l.strip() == "---":
-            start_idx = idx + 1
-            break
+    start_idx = next((idx + 1 for idx, l in enumerate(lines[:15]) if l.strip() == "---"), 0)
 
     for line in lines[start_idx:]:
         s = line.strip()
@@ -331,15 +143,14 @@ def build_1page_proposal():
             story.append(Paragraph(clean_markdown_inline(s[4:]), h1_style))
             story.append(HRFlowable(width="100%", thickness=0.4, color=colors.HexColor("#CBD5E0"), spaceAfter=1.8))
         elif s.startswith("> "):
-            q_text = clean_markdown_inline(s[2:])
-            q_box = Table([[Paragraph(q_text, callout_style)]], colWidths=[184 * mm])
+            q_box = Table([[Paragraph(clean_markdown_inline(s[2:]), callout_style)]], colWidths=[184 * mm])
             q_box.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#EBF8FF")),
-                ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor("#90CDF4")),
-                ('TOPPADDING', (0, 0), (-1, -1), 2.5),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 2.5),
-                ('LEFTPADDING', (0, 0), (-1, -1), 5),
-                ('RIGHTPADDING', (0, 0), (-1, -1), 5),
+                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#EBF8FF")),
+                ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#90CDF4")),
+                ("TOPPADDING", (0, 0), (-1, -1), 2.5),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 2.5),
+                ("LEFTPADDING", (0, 0), (-1, -1), 5),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 5),
             ]))
             story.append(q_box)
             story.append(Spacer(1, 1.8))
@@ -353,13 +164,18 @@ def build_1page_proposal():
         else:
             story.append(Paragraph(clean_markdown_inline(s), body_style))
 
-    doc.build(story, canvasmaker=Proposal1PageCanvas)
+    canvas_cls = make_numbered_canvas(
+        "VeriCBAM Capstone Proposal (Stage 1 Core) | Cristhian David Cáceres Mateus (93515346) | Supervisor: Dr. Humera Noor | UE Germany (Potsdam)",
+        margin_mm=13.0,
+        font_size=7.2,
+        report_page_check=True,
+    )
+    doc.build(story, canvasmaker=canvas_cls)
 
 
 def build_project_plan():
     print(f"Building Standalone Project Plan PDF: {PLAN_PDF}")
-    content = PLAN_MD.read_text(encoding="utf-8")
-    lines = content.splitlines()
+    lines = PLAN_MD.read_text(encoding="utf-8").splitlines()
 
     doc = SimpleDocTemplate(
         str(PLAN_PDF),
@@ -367,23 +183,24 @@ def build_project_plan():
         leftMargin=12 * mm,
         rightMargin=12 * mm,
         topMargin=8 * mm,
-        bottomMargin=8 * mm,
+        bottomMargin=12 * mm,
     )
 
     styles = getSampleStyleSheet()
-    title_style = ParagraphStyle("PP_Title", parent=styles["Normal"], fontName="Arial-Bold", fontSize=12.0, leading=14.0, textColor=colors.HexColor("#1A365D"), spaceAfter=1)
-    subtitle_style = ParagraphStyle("PP_Sub", parent=styles["Normal"], fontName="Arial-Bold", fontSize=8.0, leading=9.8, textColor=colors.HexColor("#2B6CB0"), spaceAfter=2.0)
-    h1_style = ParagraphStyle("PP_H1", parent=styles["Normal"], fontName="Arial-Bold", fontSize=8.0, leading=9.8, textColor=colors.HexColor("#1A365D"), spaceBefore=2.2, spaceAfter=1.0, keepWithNext=True)
-    body_style = ParagraphStyle("PP_Body", parent=styles["Normal"], fontName="Arial", fontSize=6.5, leading=8.1, textColor=colors.HexColor("#2D3748"), alignment=TA_JUSTIFY, spaceAfter=1.0)
-    bullet_style = ParagraphStyle("PP_Bullet", parent=styles["Normal"], fontName="Arial", fontSize=6.4, leading=7.9, textColor=colors.HexColor("#2D3748"), leftIndent=7, firstLineIndent=-4.8, spaceAfter=0.8)
-    th_style = ParagraphStyle("PP_TH", parent=styles["Normal"], fontName="Arial-Bold", fontSize=6.6, leading=8.0, textColor=colors.white)
-    td_style = ParagraphStyle("PP_TD", parent=styles["Normal"], fontName="Arial", fontSize=6.3, leading=7.6, textColor=colors.HexColor("#2D3748"))
-    meta_k = ParagraphStyle("PP_MK", fontName="Arial-Bold", fontSize=7.0, leading=8.6, textColor=colors.HexColor("#2B6CB0"))
-    meta_v = ParagraphStyle("PP_MV", fontName="Arial", fontSize=7.0, leading=8.6, textColor=colors.HexColor("#2D3748"))
+    title_style = ParagraphStyle("PP_Title", parent=styles["Normal"], fontName=BOLD_FONT, fontSize=12.0, leading=14.0, textColor=colors.HexColor("#1A365D"), spaceAfter=1)
+    subtitle_style = ParagraphStyle("PP_Sub", parent=styles["Normal"], fontName=BOLD_FONT, fontSize=8.0, leading=9.8, textColor=colors.HexColor("#2B6CB0"), spaceAfter=2.0)
+    h1_style = ParagraphStyle("PP_H1", parent=styles["Normal"], fontName=BOLD_FONT, fontSize=8.0, leading=9.8, textColor=colors.HexColor("#1A365D"), spaceBefore=2.0, spaceAfter=0.8, keepWithNext=True)
+    body_style = ParagraphStyle("PP_Body", parent=styles["Normal"], fontName=MAIN_FONT, fontSize=6.5, leading=8.0, textColor=colors.HexColor("#2D3748"), alignment=TA_JUSTIFY, spaceAfter=1.0)
+    bullet_style = ParagraphStyle("PP_Bullet", parent=styles["Normal"], fontName=MAIN_FONT, fontSize=6.4, leading=7.8, textColor=colors.HexColor("#2D3748"), leftIndent=7, firstLineIndent=-4.8, spaceAfter=0.7)
+    th_style = ParagraphStyle("PP_TH", parent=styles["Normal"], fontName=BOLD_FONT, fontSize=6.5, leading=7.8, textColor=colors.white)
+    td_style = ParagraphStyle("PP_TD", parent=styles["Normal"], fontName=MAIN_FONT, fontSize=6.2, leading=7.5, textColor=colors.HexColor("#2D3748"))
+    meta_k = ParagraphStyle("PP_MK", fontName=BOLD_FONT, fontSize=7.0, leading=8.6, textColor=colors.HexColor("#2B6CB0"))
+    meta_v = ParagraphStyle("PP_MV", fontName=MAIN_FONT, fontSize=7.0, leading=8.6, textColor=colors.HexColor("#2D3748"))
 
-    story = []
-    story.append(Paragraph("VeriCBAM: Capstone Project Work Plan, Risk Matrix & Execution Roadmap", title_style))
-    story.append(Paragraph("A Data-Driven Decision-Support Tool for Screening Carbon Border (CBAM) Emissions Reports", subtitle_style))
+    story = [
+        Paragraph("VeriCBAM: Capstone Project Work Plan, Risk Matrix & Execution Roadmap", title_style),
+        Paragraph("A Data-Driven Decision-Support Tool for Screening Carbon Border (CBAM) Emissions Reports", subtitle_style),
+    ]
 
     meta_data = [
         [Paragraph("Student Name:", meta_k), Paragraph("Cristhian David Cáceres Mateus (ID: 93515346)", meta_v),
@@ -393,58 +210,43 @@ def build_project_plan():
     ]
     meta_tbl = Table(meta_data, colWidths=[24 * mm, 66 * mm, 27 * mm, 69 * mm])
     meta_tbl.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#F7FAFC")),
-        ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor("#CBD5E0")),
-        ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#EDF2F7")),
-        ('TOPPADDING', (0, 0), (-1, -1), 1.5),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5),
-        ('LEFTPADDING', (0, 0), (-1, -1), 3.5),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 3.5),
+        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#F7FAFC")),
+        ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#CBD5E0")),
+        ("INNERGRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#EDF2F7")),
+        ("TOPPADDING", (0, 0), (-1, -1), 1.5),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 1.5),
+        ("LEFTPADDING", (0, 0), (-1, -1), 3.5),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 3.5),
     ]))
     story.append(meta_tbl)
     story.append(Spacer(1, 2.0))
-
-    # Add Visual Gantt Chart Drawing at top of Section 1
     story.append(build_gantt_drawing())
-    story.append(Spacer(1, 1.8))
+    story.append(Spacer(1, 1.5))
 
-    start_idx = 0
-    for idx, l in enumerate(lines[:15]):
-        if l.strip() == "---":
-            start_idx = idx + 1
-            break
-
-    in_table = False
-    table_rows = []
+    start_idx = next((idx + 1 for idx, l in enumerate(lines[:15]) if l.strip() == "---"), 0)
 
     def flush_table(rows):
         if not rows:
             return None
-        parsed = []
-        for r_idx, r in enumerate(rows):
-            style_to_use = th_style if r_idx == 0 else td_style
-            parsed.append([Paragraph(clean_markdown_inline(c.strip()), style_to_use) for c in r])
+        parsed = [[Paragraph(clean_markdown_inline(c.strip()), th_style if r_idx == 0 else td_style) for c in r] for r_idx, r in enumerate(rows)]
         cols = len(parsed[0])
-        if cols == 4:
-            col_w = [34 * mm, 29 * mm, 74 * mm, 49 * mm]
-        elif cols == 5:
-            col_w = [34 * mm, 16 * mm, 18 * mm, 44 * mm, 74 * mm]
-        else:
-            col_w = [186 * mm / cols] * cols
+        col_w = [34 * mm, 29 * mm, 74 * mm, 49 * mm] if cols == 4 else ([34 * mm, 16 * mm, 18 * mm, 44 * mm, 74 * mm] if cols == 5 else [186 * mm / cols] * cols)
         t = Table(parsed, colWidths=col_w, repeatRows=1)
         t.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#1A365D")),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor("#F8FAFC")]),
-            ('GRID', (0, 0), (-1, -1), 0.4, colors.HexColor("#CBD5E0")),
-            ('TOPPADDING', (0, 0), (-1, -1), 1.3),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 1.3),
-            ('LEFTPADDING', (0, 0), (-1, -1), 3.0),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 3.0),
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1A365D")),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#F8FAFC")]),
+            ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#CBD5E0")),
+            ("TOPPADDING", (0, 0), (-1, -1), 1.2),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 1.2),
+            ("LEFTPADDING", (0, 0), (-1, -1), 3.0),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 3.0),
         ]))
         return t
 
+    in_table = False
+    table_rows = []
     for line in lines[start_idx:]:
         s = line.strip()
         if s.startswith("|") and s.endswith("|"):
@@ -454,20 +256,19 @@ def build_project_plan():
             in_table = True
             table_rows.append(inner)
             continue
-        else:
-            if in_table:
-                tbl = flush_table(table_rows)
-                if tbl:
-                    story.append(tbl)
-                    story.append(Spacer(1, 3.5))
-                in_table = False
-                table_rows = []
+        elif in_table:
+            tbl = flush_table(table_rows)
+            if tbl:
+                story.append(tbl)
+                story.append(Spacer(1, 2.5))
+            in_table = False
+            table_rows = []
 
         if not s or s == "---":
             continue
         if s.startswith("### "):
             story.append(Paragraph(clean_markdown_inline(s[4:]), h1_style))
-            story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#CBD5E0"), spaceAfter=2.5))
+            story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#CBD5E0"), spaceAfter=1.8))
         elif s.startswith("* ") or s.startswith("- "):
             story.append(Paragraph(f"• {clean_markdown_inline(s[2:])}", bullet_style))
         elif re.match(r"^\d+\.\s", s):
@@ -481,7 +282,14 @@ def build_project_plan():
         if tbl:
             story.append(tbl)
 
-    doc.build(story, canvasmaker=ProjectPlanCanvas)
+    canvas_cls = make_numbered_canvas(
+        "VeriCBAM Project Plan | Cristhian David Cáceres Mateus (93515346) | Supervisor: Dr. Humera Noor | UE Germany (Potsdam)",
+        header_text="VeriCBAM — Capstone Project Work Plan, Risk Matrix & Execution Roadmap",
+        margin_mm=12.0,
+        font_size=7.2,
+        report_page_check=True,
+    )
+    doc.build(story, canvasmaker=canvas_cls)
 
 
 if __name__ == "__main__":

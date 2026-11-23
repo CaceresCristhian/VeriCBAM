@@ -43,7 +43,7 @@
   * Open the live app (`https://vericbam-uqpz4jrnpteqetfvjxtslh.streamlit.app/`).
   * **Demo 1 (Option A — Pre-Loaded EU Plant):** Audit an authentic compliant plant vs. a 35% under-reporting simulation and download the **1-Page PDF Pre-Audit Dossier**.
   * **Demo 2 (Option B — External Non-EU Exporter):** Audit an overseas integrated steelworks with zero EU reporting history using only satellite thermal/freight observations + stoichiometry.
-  * **Demo 3 (Tabs 2–8):** Briefly tour the Geospatial Map, Multi-Sensor Visual Cards, Bayesian Log-Odds Waterfall, and 325-Case Empirical Benchmark tab.
+  * **Demo 3 (Tabs 2–7):** Briefly tour the Regulatory Framework, 30-Facility Cohort Map, Multi-Sensor EO Visual Cards, Bayesian Log-Odds Simulator, and 325-Case Empirical Benchmark tab.
 * **14:30 – 17:30 | Part 5: Codebase Architecture, 32/32 Automated Tests & Industry Next Steps**
   * Show the clean repository layout, `GroupKFold` cross-validation without facility leakage, and `pytest` passing 32/32 tests.
 

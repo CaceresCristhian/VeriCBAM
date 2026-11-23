@@ -1,257 +1,104 @@
-# VeriCBAM: Multimodal Evidence Fusion & Decision Support for CBAM Emissions Consistency Assessment
+# VeriCBAM: Multimodal Evidence Fusion & Decision Support for CBAM Emissions Auditing
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Tests: 19/19 Passed](https://img.shields.io/badge/tests-19%2F19%20passed-brightgreen.svg)](tests/)
-[![Real Copernicus EO](https://img.shields.io/badge/Copernicus-Sentinel--5P%20TROPOMI-orange.svg)](https://sentinel.esa.int/web/sentinel/missions/sentinel-5p)
+[![Live Cockpit](https://img.shields.io/badge/Live%20App-Streamlit%20Cloud-ff4b4b.svg)](https://vericbam-uqpz4jrnpteqetfvjxtslh.streamlit.app/)
 [![GitHub Repository](https://img.shields.io/badge/GitHub-VeriCBAM-blue?logo=github)](https://github.com/CaceresCristhian/VeriCBAM)
 
-**Master's Capstone Project**  
-*M.Sc. Data Science | University of Europe for Applied Sciences (UE Germany)*  
-*Candidate:* Cristhian David Cáceres Mateus (Matriculation No. 93515346)  
-*Supervisor:* Dr. Humera Noor  
-*Repository:* [https://github.com/CaceresCristhian/VeriCBAM](https://github.com/CaceresCristhian/VeriCBAM)  
+**Applied Capstone Project** — M.Sc. in Data Science, University of Europe for Applied Sciences (Potsdam Campus)  
+**Author:** Cristhian David Cáceres Mateus (ID: 93515346) | **Supervisor:** Dr. Humera Noor
 
 ---
 
-## 1. Executive Summary & Research Question
+## 1. Purpose & Live Platform
 
-Under **Regulation (EU) 2023/956**, **Commission Implementing Regulation (EU) 2025/2546** (verification rules), **Commission Delegated Regulation (EU) 2025/2551** (verifier accreditation), and **Commission Implementing Regulation (EU) 2025/2547** (calculation of embedded emissions), EU importers of carbon-intensive commodities (**Cement and Steel**) declaring actual embedded Scope 1 emissions face an acute verification bottleneck:
-- Complex facility audits cost **€50,000 to €150,000+** per integrated site when factoring in international auditor travel to third countries (industry estimates; GMK Center, 2024; EC SWD(2021) 643).
-- Only **~403 verification bodies globally** currently hold EU ETS accreditation under the EU Accreditation and Verification Regulation (**AVR 2018/2067**; dedicated CBAM verifier accreditations under **Commission Delegated Regulation (EU) 2025/2551** roll out from late 2026) to serve an estimated **~12,000 EU import entities**.
-- Audit cycles require **3 to 6 months**, causing administrative backlogs and exposing importers to punitive mark-up penalties (+10% in 2026, +20% in 2027, +30% in 2028).
+Under **Regulation (EU) 2023/956** (CBAM) and **Implementing Regulation (EU) 2025/2546**, accredited verification bodies and customs authorities must screen thousands of self-reported cement and steel emissions declarations before commissioning €50k–€150k physical site inspections.
 
-### Central Research Question
-> **To what extent can heterogeneous physical, observational, historical, and documentary evidence be fused into an explainable decision-support model that identifies controlled CBAM emissions inconsistencies more reliably than isolated evidence sources?**
+**VeriCBAM** provides an interactive, physics-and-satellite decision-support cockpit where verifiers, importers, and customs authorities can test any declaration in 30 seconds and export a **1-page Pre-Audit Screening Dossier PDF**:
 
-**Scientific Position:** VeriCBAM does **not** claim autonomous legal CBAM compliance certification or real-world fraud detection. It provides explainable, probabilistic decision support for human verifiers and customs authorities to prioritize high-risk installations and clear concordant claims.
+* **Live Cloud Cockpit (Tab 1 Quick Audit):** [https://vericbam-uqpz4jrnpteqetfvjxtslh.streamlit.app/](https://vericbam-uqpz4jrnpteqetfvjxtslh.streamlit.app/)
+* **External User Guide:** [`submissions/06_Quick_User_Guide.pdf`](submissions/06_Quick_User_Guide.pdf)
+
+> VeriCBAM serves strictly as an advisory pre-audit screening tool (`Insufficient Evidence` when observational confidence $C_{\text{overall}} < 0.50$). It does not issue autonomous legal compliance certifications.
 
 ---
 
-## 2. Four-Level Evidence Hierarchy
+## 2. Six-Stream Multimodal Verification Architecture
 
 ```
-CBAM Importer Declaration
-           ↓
- ┌─────────────────────┬─────────────────────┬─────────────────────┐
- ↓                     ↓                     ↓                     ↓
-Level 1: Stoichiometry Level 2: Satellite   Level 3: Historical   Level 4: Registry
-Chemical Mass Balance  Copernicus EO Plume   Longitudinal Drift    Nameplate Capacity
-Process Lower Bounds   TROPOMI NO₂ Contrast  EEA E-PRTR 6-Yr Trend Verified Routes
- └─────────────────────┴─────────────────────┴─────────────────────┘
-                                  ↓
-           Probabilistic Evidence-Fusion Risk Engine
-               logit P(H|E) = logit P(H) + Σ wᵢ Cᵢ log(LRᵢ)
-                                  ↓
-           ┌──────────────────────┴──────────────────────┐
-           ↓                                             ↓
-Inconsistency Risk P(H|E)                     Evidence Confidence C_overall
-(Signal Strength)                             (Observational Completeness)
-           ↓                                             ↓
-                      Four Formal Outcomes:
-  [Consistent | Potential Inconsistency | High Risk | Insufficient Evidence]
-                                  ↓
-                     Human Verifier Cockpit
+CBAM Declaration (EU Plant, Third-Country Supplier, or CSV Upload)
+   │
+   ├── 1. Stoichiometric Mass Balance     (Cement calcination & Steel Fe2O3 reduction floors)
+   ├── 2. Longitudinal E-PRTR Baseline    (2018–2023 leave-one-year-out robust MAD drift)
+   ├── 3. Multi-Pollutant Ratio           (Within-plant leave-one-year-out NOx / CO2)
+   ├── 4. Stage 1 Satellite Plumes        (Copernicus Sentinel-5P TROPOMI NO2 contrast)
+   ├── 5. Stage 2 Multi-Sensor EO         (Landsat-8/9 30m TIR ΔT + VIIRS 375m + Planet/VHR)
+   └── 6. Technology Route Registry       (GEM capacity & process gas-export boundaries)
+   │
+   ▼
+Confidence-Weighted Bayesian Log-Odds Fusion & GroupKFold Logistic Triage
+   └─► Verdict: Consistent | Potential Inconsistency | High Risk | Insufficient Evidence
+   └─► 1-Click Pre-Audit Screening Dossier (1-Page PDF)
 ```
 
-- **Level 1 — Physical Consistency:** First-principles chemical calcination ($\text{CaCO}_3 \xrightarrow{\Delta} \text{CaO} + \text{CO}_2$) and carbothermic iron reduction ($\text{Fe}_2\text{O}_3 + 3\text{C} \rightarrow 2\text{Fe} + 3\text{CO}$) establishing model-based lower bounds under specified engineering assumptions.
-- **Level 2 — Operational Consistency:** Real Copernicus Sentinel-5P TROPOMI Level-2 tropospheric $\text{NO}_2$ columns range-read over facility coordinates to infer active combustion plume enhancements ($Z$-scores) versus regional background (Sentinel-5P $\text{CO}$ and Sentinel-2 SWIR B11/B12 designed as planned extensions).
-- **Level 3 — Historical Consistency:** Longitudinal multi-year reference trajectories (2018–2023) to detect abrupt, uncharacteristic emissions drops ($>3.5\sigma$).
-- **Level 4 — Multimodal Synthesis:** Confidence-weighted log-odds fusion decoupling inconsistency risk from data confidence.
+---
+
+## 3. Empirical Results (325-Case Graded Benchmark)
+
+Evaluated across **30 EU cement & steel facilities** (177 authentic real-year negatives from EEA E-PRTR v16 + 140 graded understatements $\delta \in \{5\%, 10\%, 20\%, 30\%, 50\%\}$ + 8 route misclassifications) with strict 5-fold `GroupKFold(groups=facility_id)` and 1,000 facility-cluster bootstrap CIs:
+
+| Model Architecture | ROC-AUC (95% CI) | PR-AUC | Brier | Authentic FPR | Recall @ 10% FPR | Role |
+| :--- | :---: | :---: | :---: | :---: | :---: | :--- |
+| **Model B (Stoichiometry Alone)** | 0.7909 [0.719, 0.891] | 0.7326 | 0.1884 | 1.55% | 54.22% | Hard physical bound; abstains on off-gas exports |
+| **Model C1 (Stage 1 Satellite: S-5P NO₂)** | 0.5183 [0.499, 0.544] | 0.3781 | 0.3731 | 96.61% | 10.83% | Auxiliary coarse plume check |
+| **Model C2 (Stage 2 Multi-Sensor EO)** | **0.9658** [0.958, 0.975] | **0.9462** | 0.1634 | 24.86% | **92.50%** | Thermal + freight activity vs. declared CO₂ (works on zero-history third-country plants) |
+| **Model D (Historical Alone)** | 0.9631 [0.957, 0.972] | 0.9428 | 0.0826 | 6.78% | 90.83% | Longitudinal drift anomaly detector |
+| **Model E1 (Stage 1 Bayesian Fusion)** | 0.8935 [0.865, 0.924] | 0.8684 | 0.1530 | **0.56%** | 70.00% | Ultra-low false alarm dossier |
+| **Model E2 (Stage 2 Bayesian Fusion)** | **0.9077** [0.885, 0.934] | **0.8763** | **0.1282** | 3.39% | **75.00%** | White-box verifier audit dossier |
+| **Model E3 (Logistic GroupKFold Triage)** | **0.9646** [0.957, 0.974] | **0.9478** | **0.0777** | 7.34% | **92.50%** | High-throughput port triage queue ($2.71\times$ lift) |
 
 ---
 
-## 3. Data Layers (Zero Synthetic Data Fallback)
+## 4. Repository Structure
 
-| Dataset Layer | Records / Scale | Data Provenance | Status |
-| :--- | :---: | :--- | :---: |
-| **Layer A: Reference Cohort** | 177 facility-years (30 facilities) | European Environment Agency (EEA) Industrial Reporting Database (E-PRTR / IED v16). Accounts for the 3 missing facility-years. | **Authentic Reference** |
-| **Multi-Pollutant Panel** | 177 facility-years | Authentic $\text{NO}_x/\text{CO}_2$ and $\text{SO}_x/\text{CO}_2$ combustion co-emission ratios across 30 European installations. | **Multi-Pollutant** |
-| **Technology Registry** | 30 facilities | Global Energy Monitor (GEM) Global Steel & Cement Trackers + Corporate Permits. Conservative utilization factors $\eta \in [0.50, 0.95]$. | **Verified Real Data** |
-| **Sentinel-5P Earth Observation** | 301 overpasses + 2019–2023 panel | ESA Copernicus Sentinel-5P Level-2 OFFL product via Planetary Computer STAC & CDSE OAuth2. Zero synthetic fallback. | **Real Remote Sensing** |
-| **Layer B: Graded Evaluation Benchmark** | **325 cases** | 177 authentic real-year negatives (pooled MAD $\sigma = 0.0911$), 140 graded understatements ($\delta \in \{5\%, 10\%, 20\%, 30\%, 50\%\}$), and 8 route mismatches. | **Graded Benchmark** |
-
----
-
-## 4. Probabilistic Evidence-Fusion Formulation
-
-$$\text{logit } P(H \mid E) = \text{logit } P(H) + \sum_{i=1}^M w_i \cdot C_i \cdot \ln(\text{LR}_i)$$
-
-Where:
-- $H$: Hypothesis of material declaration inconsistency.
-- $P(H)$: Baseline prior probability ($8\%$ historical discrepancy baseline, evaluated via sensitivity analysis across $[2\%, 15\%]$).
-- $\text{LR}_i = \frac{P(E_i \mid H)}{P(E_i \mid \neg H)}$: Evidence-specific likelihood ratio.
-- $C_i \in [0, 1]$: Observational confidence factor (accounting for cloud fraction, QA flags, and historical data completeness).
-- $w_i > 0$: Evidential reliability weights from `src/core/bayesian/evidence_fusion.py`:
-  - $w_{\text{stoich}} = 1.50$ (Stoichiometric lower bounds)
-  - $w_{\text{sat}} = 1.00$ (Satellite remote sensing activity proxy)
-  - $w_{\text{hist}} = 1.00$ (Longitudinal historical drift)
-  - $w_{\text{nox}} = 1.20$ (Multi-pollutant $\text{NO}_x/\text{CO}_2$ combustion ratio)
-  - $w_{\text{reg}} = 0.80$ (Registry nameplate capacity utilization)
-  - $w_{\text{route}} = 2.00$ (Process technology route verification)
-- **Uncertainty Interval:** 95% sensitivity bounds generated via Monte Carlo sampling under likelihood-ratio parameter uncertainty.
-- **Formal Insufficient Evidence Gate:** If $C_{\text{overall}} < 0.50$, the system automatically outputs `Insufficient Evidence` to prevent false positive screening under overcast skies or missing baselines.
-
----
-
-## 5. Repository Structure
-
-```
+```text
 VeriCBAM/
-├── docs/
-│   ├── DATA_PROVENANCE.md            # Detailed scientific data lineage & metadata
-│   ├── MODEL_CARD.md                 # Formal model card & empirical benchmark specifications
-│   ├── TAB_7_EMPIRICAL_BENCHMARK_GUIDE.md # Scientific guide to Tab 7 metrics and models
-│   ├── STITCH_DESIGN.md              # Google Stitch UI design system tokens & specification
-│   └── VeriCBAM_Project_Plan.md      # Sprint execution roadmap & academic plan
-├── scripts/
-│   ├── reproduce_all.py              # Master deterministic reproduction pipeline
-│   └── build_reproducible_zip.py     # Self-contained distribution archiver
+├── submissions/                      # Clean enumerated submission PDFs (01 through 06)
+├── docs/                             # Data provenance, model card, deliverables playbook & MD sources
 ├── data/
 │   ├── 01_raw/eprtr_reference/       # Official EEA E-PRTR / IED v16 database
-│   ├── 02_processed/
-│   │   ├── benchmark_cohort.parquet              # 177 authentic facility-year observations
-│   │   ├── facility_technology_registry.csv      # Verified plant capacities, routes, and utilization
-│   │   ├── facility_nox_co2_ratios.csv           # Multi-pollutant NOx/CO2 combustion ratios
-│   │   ├── graded_evaluation_benchmark.parquet   # 325-case graded evaluation benchmark
-│   │   └── controlled_perturbation_benchmark.parquet # 101-case ablation suite
-│   └── 03_satellite_cache/
-│       ├── s5p_no2_annual_stats_2019_2023.csv    # Multi-year Copernicus Sentinel-5P cache
-│       └── s5p_no2_overpasses_2023.parquet       # Real Sentinel-5P Level-2 overpasses
+│   ├── 02_processed/                 # 30-facility cohort, registry, NOx/CO2 ratios & 325-case benchmark
+│   └── 03_satellite_cache/           # Cached Sentinel-5P, Landsat TIR, FIRMS VIIRS & VHR yard imagery
 ├── src/
 │   ├── core/
-│   │   ├── stoichiometry/            # Cement & Steel chemical mass balance models
-│   │   └── bayesian/                 # Weighted log-odds evidence fusion engine
-│   ├── satellite/
-│   │   ├── copernicus_client.py      # Real Sentinel-5P HDF5 range-read client
-│   │   ├── copernicus_multiyear_client.py # Multi-year CDSE OAuth2 client
-│   │   └── plume_analyzer.py         # Plume contrast Z-score & operational state analyzer
-│   ├── benchmark/
-│   │   ├── graded_benchmark_generator.py # 325-case graded benchmark generator
-│   │   └── perturbation_generator.py # 101-case perturbation suite generator
-│   ├── data_loaders/
-│   │   ├── cohort_manager.py         # 30-facility cohort data access
-│   │   ├── build_cohort.py           # Multi-pollutant cohort builder
-│   │   └── technology_registry.py    # Verified technology metadata builder
-│   └── ui/
-│       ├── app.py                    # Streamlit decision-support cockpit (with dark Stitch theme)
-│       └── stitch_cockpit.html       # Embedded Google Stitch high-fidelity decision cockpit
+│   │   ├── stoichiometry/            # Cement calcination & Steel reduction mass-balance models
+│   │   └── bayesian/                 # Confidence-weighted log-odds evidence fusion engine
+│   ├── data_loaders/                 # EEA cohort builder, CohortManager, GEM registry & LOO NOx ratios
+│   ├── satellite/                    # Sentinel-5P client, plume analyzer & Stage 2 multi-sensor EO engine
+│   ├── benchmark/                    # 325-case graded benchmark generator
+│   └── ui/                           # Streamlined 7-tab Streamlit cockpit, theme & PDF dossier generator
 ├── experiments/
-│   ├── run_graded_evaluation.py      # Benchmark: Logistic Regression vs Expert Bayesian Fusion
-│   ├── run_ablation_study.py         # Automated 5-Model Ablation Benchmark
-│   ├── calibrate_probabilities.py    # Platt Scaling & Isotonic Regression (5-fold CV)
-│   ├── run_grouped_validation.py     # GroupKFold (facility_id) out-of-facility cross-validation
-│   ├── run_lr_sensitivity.py         # Likelihood Ratio & Prior sensitivity analyses
-│   └── results/                      # Parquet predictions, CSV summaries, Plotly HTML
-├── tests/                            # Pytest test suite (19/19 passing)
-├── requirements.txt                  # Python environment dependencies
-├── pytest.ini                       # Test configuration
-├── .gitignore                       # Repository exclusions
-├── admin/                           # Submission paperwork & official forms
-│   ├── Capstone_Application_Form.pdf
-│   ├── VeriCBAM_Capstone_Application_Form_Filled_v2.pdf
-│   └── generate_official_application_pdf.py
-└── Capstone_Proposal_Document.md    # Full academic capstone proposal
+│   ├── run_graded_evaluation.py      # 325-case benchmark evaluation & Stage 2 EO comparison
+│   └── results/                      # Summary CSVs, predictions parquet & sensitivity tables
+├── scripts/                          # PDF builders (with shared pdf_utils.py) & reproduce_all.py
+└── tests/                            # Automated pytest suite
 ```
 
 ---
 
-## 6. Experimental Benchmarks & Empirical Findings
+## 5. Quick Start
 
-### 6.1 Advanced Graded Evaluation Benchmark (325 Cases)
-Evaluated across 177 authentic real-year negatives (pooled MAD $\sigma = 0.0911$), 140 graded understatements ($\delta \in \{5\%, 10\%, 20\%, 30\%, 50\%\}$), and 8 route mismatches across 30 European installations (with 95% facility-level cluster bootstrap confidence intervals across 1,000 resamples of facilities):
-
-| Model Architecture | ROC-AUC (95% CI) | PR-AUC (95% CI) | Brier Score | ECE (10 Bins) | False Positive Rate (Real Years) |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| **Model B (Stoichiometry Alone)** | 0.7909 [0.719, 0.891] | 0.7326 [0.641, 0.845] | 0.1884 | 0.1571 | 1.55% |
-| **Model C (Satellite Alone)** | 0.5183 [0.499, 0.544] | 0.3781 [0.359, 0.396] | 0.3731 | 0.3474 | 96.61% |
-| **Model D (Historical Alone)** | 0.9631 [0.957, 0.972] | 0.9428 [0.931, 0.957] | 0.0826 | 0.0632 | 6.78% |
-| **Model E1 (Expert Bayesian Fusion)** | 0.8935 [0.865, 0.924] | 0.8684 [0.832, 0.901] | 0.1530 | 0.1652 | 0.56% |
-| **Model E2 (Learned Logistic Regression - GroupKFold)** | 0.9643 [0.956, 0.973] | 0.9484 [0.938, 0.961] | 0.0787 | 0.0630 | 6.78% |
-
-#### Attribution Study across Methodological Fixes
-| Step | Model Architecture | ROC-AUC | PR-AUC | Brier Score | ECE | Cases |
-| :--- | :--- | :---: | :---: | :---: | :---: | :---: |
-| 1. Baseline (Phase 0) | Model B (Stoich) | 0.6931 | 0.5481 | 0.2380 | 0.1916 | 326 |
-| 1. Baseline (Phase 0) | Model D (Historical) | 0.9507 | 0.9029 | 0.0882 | 0.0689 | 326 |
-| 1. Baseline (Phase 0) | Model E1 (Bayesian) | 0.8404 | 0.7516 | 0.2007 | 0.1882 | 326 |
-| 1. Baseline (Phase 0) | Model E2 (Logistic) | 0.9531 | 0.9114 | 0.0773 | 0.0457 | 326 |
-| 2. +M3 (No Cap Fallback) | Model B (Stoich) | 0.7275 | 0.5793 | 0.2173 | 0.1645 | 325 |
-| 2. +M3 (No Cap Fallback) | Model E1 (Bayesian) | 0.8432 | 0.7596 | 0.1849 | 0.1747 | 325 |
-| 2. +M3 (No Cap Fallback) | Model E2 (Logistic) | 0.9335 | 0.9059 | 0.0848 | 0.0592 | 325 |
-| 3. +M6 (Leave-One-Out NOx) | Model B (Stoich) | 0.7275 | 0.5793 | 0.2173 | 0.1645 | 325 |
-| 3. +M6 (Leave-One-Out NOx) | Model E1 (Bayesian) | 0.8382 | 0.7567 | 0.1845 | 0.1764 | 325 |
-| 3. +M6 (Leave-One-Out NOx) | Model E2 (Logistic) | 0.9333 | 0.8996 | 0.0913 | 0.0464 | 325 |
-| 4. +M5 & Boundary Fix (Primary) | Model B (Stoich) | 0.7909 | 0.7326 | 0.1884 | 0.1571 | 325 |
-| 4. +M5 & Boundary Fix (Primary) | Model D (Historical) | 0.9631 | 0.9428 | 0.0826 | 0.0632 | 325 |
-| 4. +M5 & Boundary Fix (Primary) | Model E1 (Bayesian) | 0.8935 | 0.8684 | 0.1530 | 0.1652 | 325 |
-| 4. +M5 & Boundary Fix (Primary) | Model E2 (Logistic) | 0.9643 | 0.9484 | 0.0787 | 0.0630 | 325 |
-| 5. Sensitivity (delta >= 5%) | Model E1 (Bayesian) | 0.8679 | 0.8709 | 0.2189 | 0.2389 | 325 |
-| 5. Sensitivity (delta >= 5%) | Model E2 (Logistic) | 0.9509 | 0.9482 | 0.0925 | 0.0483 | 325 |
-
-### 6.2 5-Model Ablation Study Results (Layer B: 101 Controlled Cases)
-Evaluated across 30 Baseline Concordant, 30 Physical Bound Violations, 30 Historical Drop Anomalies, and 11 controlled route-mismatch cases constructed from facilities with independently documented production routes:
-
-| Model ID & Architecture | Precision | Recall | F1-Score | FPR | ROC-AUC | PR-AUC | Brier Score | ECE |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Model A (Declaration Baseline)** | 0.943 | 0.704 | 0.807 | 0.100 | 0.8671 | 0.9515 | 0.1807 | 0.1864 |
-| **Model B (Stoichiometry Alone)** | **1.000** | 0.648 | 0.786 | **0.000** | 0.8692 | 0.9384 | 0.1685 | 0.1467 |
-| **Model C (Satellite Alone)** | 0.000 | 0.000 | 0.000 | **0.000** | 0.5174 | 0.7112 | 0.5425 | 0.5751 |
-| **Model D (Historical Alone)** | 0.000 | 0.000 | 0.000 | **0.000** | 0.9859 | 0.9916 | 0.3094 | 0.4525 |
-| **Model E (VeriCBAM Fused)** | **1.000** | **0.930** | **0.964** | **0.000** | **0.9991** | **0.9996** | **0.0423** | **0.0763** |
-
-### Probability Calibration & Facility-Grouped Generalization
-> **Methodological Qualification:** Probability calibration is evaluated against the controlled evaluation benchmark (101 cases). Real-world prevalence calibration remains a stated research limitation due to absent public CBAM violation datasets.
-
-| Calibration Method & Validation Scheme | Brier Score | ECE (10 Bins) | F1-Score | ROC-AUC | PR-AUC |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| **Raw Bayesian Posterior (Uncalibrated)** | 0.0423 | 0.0763 | 0.9635 | 0.9991 | 0.9996 |
-| **Platt Scaling (Stratified 5-Fold CV)** | **0.0195** | 0.0322 | **0.9859** | 0.9972 | — |
-| **Isotonic Regression (Stratified 5-Fold CV)** | 0.0297 | **0.0297** | 0.9790 | 0.9596 | — |
-| **Platt Scaling (GroupKFold, groups=`facility_id`)** | **0.0168** | 0.0312 | **0.9859** | 0.9977 | 0.9991 |
-| **Isotonic Regression (GroupKFold, groups=`facility_id`)** | 0.0186 | **0.0192** | **0.9859** | 0.9927 | 0.9958 |
-
-*Methodological Finding on Calibration & Evaluation Scope:*
-- The evaluation benchmark positive prevalence is 36.9% (120 positives under primary delta >= 10% rule out of 325 cases). Real-world customs prevalence is typically lower.
-- The sample comprises 30 premier European industrial facilities (15 cement, 15 steel) observed over 2015–2022. While GroupKFold cross-validation ensures no facility overlap across folds, performance is indicative of European heavy industrial installations.
-- At matched false alarms (FPR <= 10%), Model D (Historical Alone) achieves Recall@5% = 83.3% and Recall@10% = 90.8%, comparable to Model E2 (85.0% and 91.7%). Multimodal Bayesian fusion (Model E1) provides physical explainability, confidence gating, and a near-zero authentic false positive rate (0.56%).
-
----
-
-## 7. Installation & Execution
-
-### 1. Set Up Environment
 ```powershell
-cd <path-to-repo>
 python -m venv venv
 .\venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-```
 
-### 2. Run Test Suite
-```powershell
-pytest -v
-```
-*Expected: 28/28 tests pass.*
+# Run automated test suite
+pytest tests/ -v
 
-### 3. Run Master Deterministic Reproduction Pipeline
-```powershell
+# Reproduce data, 325-case benchmark evaluation & tests end-to-end
 python scripts/reproduce_all.py
-```
-*Executes all 7 data generation, experimental, calibration, and test stages end-to-end.*
 
-### 4. Launch the Streamlit Cockpit
-```powershell
+# Launch local Streamlit cockpit
 python -m streamlit run src/ui/app.py
 ```
-Open [http://localhost:8501](http://localhost:8501) in your browser.
-
----
-
-## 8. Compliance with Academic Capstone Guidelines
-
-1. **Independent Reference vs. Controlled Evaluation:** Clear separation between Layer A (authentic historical reference from EEA) and Layer B (controlled evaluation cases). E-PRTR is never termed "ground truth".
-2. **Zero Fabricated Satellite Data:** Complete removal of synthetic fallback branches; client extracts authentic Sentinel-5P granules with complete provenance.
-3. **Decoupled Risk and Confidence:** Separate gauges for Inconsistency Risk and Evidence Confidence with explicit `Insufficient Evidence` gate.
-4. **Prior Sensitivity Analysis:** Automated evaluation across base priors from $2\%$ to $15\%$ demonstrating risk ranking stability.
-5. **Human-in-the-Loop Positioning:** System framed strictly as verification decision support, preserving human authority.
