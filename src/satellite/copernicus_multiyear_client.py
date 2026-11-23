@@ -33,15 +33,25 @@ class CopernicusMultiYearClient:
     STAT_URL = "https://sh.dataspace.copernicus.eu/api/v1/statistics"
 
     def __init__(self, credentials_path: Optional[Path] = CREDS_FILE):
-        env_cid = os.getenv("CDSE_CLIENT_ID")
-        env_sec = os.getenv("CDSE_CLIENT_SECRET")
+        env_cid = os.getenv("CDSE_CLIENT_ID") or os.getenv("COPERNICUS_CLIENT_ID")
+        env_sec = os.getenv("CDSE_CLIENT_SECRET") or os.getenv("COPERNICUS_CLIENT_SECRET")
+        dot_env = WORKSPACE_ROOT / ".env"
+        if (not env_cid or not env_sec) and dot_env.exists():
+            for line in dot_env.read_text(encoding="utf-8", errors="ignore").splitlines():
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    k, v = [p.strip().strip('"').strip("'") for p in line.split("=", 1)]
+                    if k in ("CDSE_CLIENT_ID", "COPERNICUS_CLIENT_ID") and not env_cid:
+                        env_cid = v
+                    elif k in ("CDSE_CLIENT_SECRET", "COPERNICUS_CLIENT_SECRET") and not env_sec:
+                        env_sec = v
         if env_cid and env_sec:
             self.client_id = env_cid.strip()
             self.client_secret = env_sec.strip()
         else:
             if credentials_path is None or not credentials_path.exists():
                 raise FileNotFoundError(
-                    f"Copernicus CDSE credentials not found. Set CDSE_CLIENT_ID and CDSE_CLIENT_SECRET environment variables or provide a credentials file at: {credentials_path}"
+                    f"Copernicus CDSE credentials not found. Set COPERNICUS_CLIENT_ID / COPERNICUS_CLIENT_SECRET in .env or provide: {credentials_path}"
                 )
             self.client_id, self.client_secret = self._load_credentials(credentials_path)
         self.access_token = None
