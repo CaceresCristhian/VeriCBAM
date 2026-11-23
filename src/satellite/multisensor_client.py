@@ -54,7 +54,6 @@ WORKSPACE_ROOT = Path(__file__).parents[2]
 CACHE_DIR = WORKSPACE_ROOT / "data" / "03_satellite_cache"
 IMAGERY_DIR = CACHE_DIR / "facility_imagery"
 MULTISENSOR_PARQUET = CACHE_DIR / "multisensor_thermal_logistics_2023.parquet"
-MULTISENSOR_CSV = CACHE_DIR / "multisensor_thermal_logistics_2023.csv"
 FIRMS_TIMELINE_PARQUET = CACHE_DIR / "firms_viirs_monthly_timeline_2023.parquet"
 
 
@@ -712,7 +711,6 @@ class MultiSensorSatelliteEngine:
         )
 
         df.to_parquet(MULTISENSOR_PARQUET, index=False)
-        df.to_csv(MULTISENSOR_CSV, index=False)
         print(f"[Stage 2 Multi-Sensor] Saved {len(df)} facility records to {MULTISENSOR_PARQUET}")
         return df
 

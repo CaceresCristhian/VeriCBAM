@@ -120,13 +120,11 @@ def build_cohort():
         ]
     ].sort_values(by=["sector", "facilityName", "reportingYear"])
 
-    # Save to parquet and csv
-    out_parquet = PROCESSED_DIR / "benchmark_cohort_multipollutant.parquet"
-    out_csv = PROCESSED_DIR / "benchmark_cohort_multipollutant.csv"
+    # Save to unified parquet
+    out_parquet = PROCESSED_DIR / "benchmark_cohort.parquet"
     cohort_output.to_parquet(out_parquet, index=False)
-    cohort_output.to_csv(out_csv, index=False)
 
-    print(f"Successfully generated multi-pollutant cohort: {out_parquet}")
+    print(f"Successfully generated unified cohort: {out_parquet}")
     print(f"Total facility-year records: {len(cohort_output)}")
     print(f"Facility-years with CO2: {cohort_output['co2_tonnes'].notna().sum()}")
     print(f"Facility-years with NOx: {cohort_output['nox_tonnes'].notna().sum()}")

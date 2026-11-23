@@ -9,7 +9,6 @@ from typing import Dict, List, Optional
 import pandas as pd
 
 COHORT_PARQUET = Path(__file__).parents[2] / "data" / "02_processed" / "benchmark_cohort.parquet"
-COHORT_CSV = Path(__file__).parents[2] / "data" / "02_processed" / "benchmark_cohort.csv"
 FACILITIES_META_CSV = Path(__file__).parents[2] / "data" / "02_processed" / "benchmark_facilities_meta.csv"
 
 
@@ -18,10 +17,7 @@ class CohortManager:
 
     def __init__(self, data_path: Optional[Path] = None):
         path = data_path or COHORT_PARQUET
-        if path.exists():
-            self._df = pd.read_parquet(path)
-        else:
-            self._df = pd.read_csv(COHORT_CSV)
+        self._df = pd.read_parquet(path)
 
         meta_path = FACILITIES_META_CSV
         if meta_path.exists():

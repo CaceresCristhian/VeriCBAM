@@ -666,13 +666,11 @@ def run_graded_evaluation():
     triage_df.to_csv(WORKSPACE_ROOT / "experiments" / "results" / "triage_auditor_simulation.csv", index=False)
 
     # -------------------------------------------------------------------------
-    # 9. Save Updated Predictions Parquet & CSV
+    # 9. Save Updated Predictions Parquet
     # -------------------------------------------------------------------------
     out_pq = WORKSPACE_ROOT / "experiments" / "results" / "graded_benchmark_predictions.parquet"
-    out_csv = WORKSPACE_ROOT / "experiments" / "results" / "graded_benchmark_predictions.csv"
     df.to_parquet(out_pq, index=False)
-    df.to_csv(out_csv, index=False)
-    print(f"Saved predictions table to {out_pq} and {out_csv}")
+    print(f"Saved predictions table to {out_pq}")
     print("\nGraded evaluation completed successfully.")
 
     return {

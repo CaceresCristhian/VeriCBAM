@@ -77,8 +77,8 @@ def render_tab_quick_audit(facilities_df: pd.DataFrame):
         horizontal=True,
     )
 
-    ms_cache = WORKSPACE_ROOT / "data" / "03_satellite_cache" / "multisensor_thermal_logistics_2023.csv"
-    multisensor_df = pd.read_csv(ms_cache) if ms_cache.exists() else pd.DataFrame()
+    ms_cache = WORKSPACE_ROOT / "data" / "03_satellite_cache" / "multisensor_thermal_logistics_2023.parquet"
+    multisensor_df = pd.read_parquet(ms_cache) if ms_cache.exists() else pd.DataFrame()
 
     facility_name, country_name, sector_name = "Custom Installation", "Global", "Cement"
     route_name, reporting_year = "Dry Kiln (Preheater/Precalciner)", 2023

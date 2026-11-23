@@ -201,10 +201,7 @@ def _build_facility_case(
 def generate_graded_benchmark(save_files: bool = True) -> pd.DataFrame:
     """Generates and optionally persists the 325-case graded multi-source evaluation benchmark."""
     print("Generating 325-case graded evaluation benchmark...")
-    cohort_path = PROCESSED_DIR / "benchmark_cohort_multipollutant.parquet"
-    if not cohort_path.exists():
-        cohort_path = PROCESSED_DIR / "benchmark_cohort.parquet"
-
+    cohort_path = PROCESSED_DIR / "benchmark_cohort.parquet"
     cohort = pd.read_parquet(cohort_path)
     reg = pd.read_csv(PROCESSED_DIR / "facility_technology_registry.csv").set_index("FacilityInspireId")
 
@@ -313,9 +310,7 @@ def generate_graded_benchmark(save_files: bool = True) -> pd.DataFrame:
     df_cases = pd.DataFrame([asdict(c) for c in cases])
     if save_files:
         out_parquet = PROCESSED_DIR / "graded_evaluation_benchmark.parquet"
-        out_csv = PROCESSED_DIR / "graded_evaluation_benchmark.csv"
         df_cases.to_parquet(out_parquet, index=False)
-        df_cases.to_csv(out_csv, index=False)
         print(f"Saved {len(df_cases)} cases to {out_parquet}")
 
     return df_cases
